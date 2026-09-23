@@ -7,6 +7,7 @@ code elegance. Everything you do should make the final 5‑minute demo video bet
 Read these before doing anything, every session:
 1. `docs/PLAN.md` — phases, tasks, current status. This is the source of truth for "what next".
 2. `docs/DECISIONS.md` — decisions already made. Never re-ask or re-open these.
+3. `AGENTS.md` — Next.js version notes (this Next.js has breaking changes; check `node_modules/next/dist/docs/`).
 
 ## Product in one paragraph
 Homerob = "Torob for home": an AI-powered meta-search for rental listings (rahn/ejare) in
