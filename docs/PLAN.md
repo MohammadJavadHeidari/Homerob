@@ -4,26 +4,34 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 
 ## Status
 - **Current phase:** Phase 0
-- **Done:** nothing yet (repo has README only)
-- **Next:** Phase 0 → scaffold project
-- **Blocked:** Phase 2/3 real LLM calls need an API key (see Open questions) — use mock provider until then
+- **Done:** Phase 0 code tasks — Next.js 16 (App Router, TS, Tailwind v4, ESLint), shadcn/ui
+  (base-ui, base-nova style), RTL + Vazirmatn + `src/lib/persian.ts` digit/Toman helpers,
+  `.env.example`, placeholder home page (checked at 390px and 1280px). Build + lint green.
+- **Next:** Phase 1 → `Listing` type + seed data
+- **Blocked:** Vercel deploy — owner must import the repo in Vercel (see Open questions).
+  Phase 2/3 real LLM calls need an API key — use mock provider until then.
 - **Cut / deferred:** —
+- **Notes:** `ui.shadcn.com` is blocked by the dev sandbox network policy, so `npx shadcn add`
+  fails; shadcn components are written by hand into `src/components/ui/` (base-ui primitives).
+  `AGENTS.md` is managed by `next dev` — leave it; it keeps Next from editing `CLAUDE.md`.
 - **Preview URL:** —
 
 ## Open questions
 - [DECISION] **API key:** Claude key not obtained yet. Options: (a) get a Claude key now
   (recommended — primary choice), (b) start with the OpenAI key, switch later.
   Until answered: build with a deterministic mock provider.
+- **Vercel:** owner imports `MohammadJavadHeidari/Homerob` in Vercel (framework: Next.js, no env
+  vars needed yet — `AI_PROVIDER` defaults to mock) and shares the preview URL.
 
 ---
 
 ## Day 1
 
 ### Phase 0 — Setup & first deploy (≤ 1h)
-- [ ] Scaffold Next.js (App Router) + TypeScript + Tailwind + ESLint
-- [ ] shadcn/ui with base-ui preset
-- [ ] RTL: `<html lang="fa" dir="rtl">`, Persian font (Vazirmatn), Persian digits helper
-- [ ] `.env.example` (`AI_PROVIDER=mock|claude|openai`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); `.env.local` gitignored
+- [x] Scaffold Next.js (App Router) + TypeScript + Tailwind + ESLint
+- [x] shadcn/ui with base-ui preset
+- [x] RTL: `<html lang="fa" dir="rtl">`, Persian font (Vazirmatn), Persian digits helper
+- [x] `.env.example` (`AI_PROVIDER=mock|claude|openai`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); `.env.local` gitignored
 - [ ] Placeholder home page, push, confirm Vercel deploy works (owner connects Vercel to repo if not yet)
 
 ### Phase 1 — Seed data & normalization (≤ 2h)
