@@ -41,6 +41,26 @@ describe("search ranking", () => {
     expect(results[0].listing.parking).toBe(true);
   });
 
+  it("keeps placeholder prices and shared rooms out, and counts them", () => {
+    const vakil = search(intent({ neighborhoods: ["وکیل‌آباد"] }));
+    expect(vakil.results.map((r) => r.listing.id)).not.toContain("dv-0907");
+    expect(vakil.excluded.placeholderPrice).toBe(1);
+
+    const cheap = search(intent({ maxRent: 5 * M }));
+    expect(cheap.results.map((r) => r.listing.id)).not.toContain("sp-0910");
+    expect(cheap.excluded.sharedRoom).toBe(2);
+
+    const shared = search(intent({ maxRent: 5 * M, sharedRoom: true }));
+    expect(shared.results.map((r) => r.listing.id).sort()).toEqual(["dv-0909", "sp-0910"]);
+  });
+
+  it("states the sample size of the neighborhood median", () => {
+    const r = search(intent({ maxDeposit: 500 * M, neighborhoods: ["وکیل‌آباد"], minRooms: 2 })).results.find(
+      (x) => x.listing.id === "dv-0901",
+    )!;
+    expect(r.highlights.map((h) => h.text).join(" ")).toMatch(/میانهٔ [۰-۹]+ آگهی وکیل‌آباد/);
+  });
+
   it("scores stay within 0–100", () => {
     for (const r of search(intent({})).results) {
       expect(r.score).toBeGreaterThanOrEqual(0);

@@ -256,6 +256,35 @@ const HERO = [
     description: "طبقه ۲ از ۵، ۸ سال ساخت. دارای آسانسور، پارکینگ اختصاصی و انباری. کف سرامیک، کمد دیواری، آشپزخانه اپن. بالکن. مناسب خانواده. رهن کامل، قابل تبدیل به رهن و اجاره. بازدید با هماهنگی.",
     postedAt: "2026-09-20T11:30:00.000Z",
   },
+  // Data-quality cases: placeholder ("توافقی") prices and shared rooms — must not pollute ranking.
+  {
+    id: "dv-0907", source: "divar", title: "آپارتمان ۱۱۰ متری دوخوابه وکیل‌آباد - توافقی", neighborhood: "وکیل‌آباد", street: "وکیل‌آباد ۳۴",
+    deposit: 1_000, monthlyRent: 1_000, areaM2: 110, rooms: 2, floor: 2, totalFloors: 5, buildingAge: 4,
+    elevator: true, parking: true, storage: true, tags: ["بالکن"], convertible: true,
+    description: "طبقه ۲ از ۵، ۴ سال ساخت. دارای آسانسور، پارکینگ اختصاصی و انباری. رهن و اجاره توافقی، برای قیمت تماس بگیرید.",
+    postedAt: "2026-09-23T10:15:00.000Z",
+  },
+  {
+    id: "sp-0908", source: "sheypoor", title: "رهن و اجاره آپارتمان ۹۰ متری دوخوابه در هاشمیه", neighborhood: "هاشمیه", street: "هاشمیه ۶۴",
+    deposit: 1_111_111, monthlyRent: 111_111, areaM2: 90, rooms: 2, floor: 3, totalFloors: 4, buildingAge: 9,
+    elevator: false, parking: true, storage: true, tags: [], convertible: true,
+    description: "واحد ۹۰ متری دو خواب، طبقه سوم. قیمت واقعی نیست، مبلغ پس از بازدید توافق می‌شود.",
+    postedAt: "2026-09-22T16:40:00.000Z",
+  },
+  {
+    id: "dv-0909", source: "divar", title: "اجاره اتاق در واحد دوخوابه، همخونه خانم - سجاد", neighborhood: "سجاد", street: "بلوار سجاد",
+    deposit: 30e6, monthlyRent: 4e6, areaM2: 85, rooms: 2, floor: 3, totalFloors: 5, buildingAge: 7,
+    elevator: true, parking: false, storage: false, tags: ["مبله"], convertible: false,
+    description: "یک اتاق مبله در واحد دوخوابه، آشپزخانه و سرویس مشترک. فقط همخونه خانم دانشجو یا شاغل. قبوض تقسیم می‌شود.",
+    postedAt: "2026-09-24T05:30:00.000Z",
+  },
+  {
+    id: "sp-0910", source: "sheypoor", title: "هم‌خونه آقا، اتاق مبله نزدیک قطار شهری - قاسم‌آباد", neighborhood: "قاسم‌آباد", street: "بلوار امامیه",
+    deposit: 20e6, monthlyRent: 3.5e6, areaM2: 75, rooms: 2, floor: 1, totalFloors: 4, buildingAge: 12,
+    elevator: false, parking: false, storage: false, tags: ["مبله", "نزدیک قطار شهری"], convertible: false,
+    description: "اجاره اتاق در واحد ۷۵ متری، هم‌خونه آقا. اینترنت و قبوض نصف. مناسب دانشجو.",
+    postedAt: "2026-09-23T21:10:00.000Z",
+  },
 ];
 
 // ---------- build ----------

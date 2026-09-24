@@ -17,6 +17,8 @@ export const SearchIntentSchema = z.object({
   minArea: z.number().positive().nullable(),
   mustHave: z.array(z.enum(AMENITY_KEYS)),
   niceToHave: z.array(z.enum(AMENITY_KEYS)),
+  /** User wants a room in a shared flat (همخونه / اجاره اتاق). Default false = whole units only. */
+  sharedRoom: z.boolean(),
   /** Anything else worth keeping, in Persian (e.g. "خانواده سه نفره"). */
   freeTextNotes: z.string().nullable(),
 });
@@ -33,5 +35,6 @@ export const EMPTY_INTENT: SearchIntent = {
   minArea: null,
   mustHave: [],
   niceToHave: [],
+  sharedRoom: false,
   freeTextNotes: null,
 };
