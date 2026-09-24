@@ -38,3 +38,6 @@
   (~0.7s) on 429/503 — `gemini-2.5-*` is closed to new users and `gemini-3.8-flash` /
   `gemini-flash-latest` returned 503 (high demand) when tested. Free-tier daily caps apply,
   so cache repeated queries. Provider abstraction keeps `mock`/`deepseek`/`claude`/`openai`.
+- 2026-09-24 — Gemini model order changed after load testing: `gemini-3.5-flash-lite` first
+  (~0.8s when healthy), then `gemini-flash-lite-latest`, then `gemini-3.6-flash` (mostly 503).
+  Requests are hedged (next model after 1.5s, 5s deadline) and fall back to the rule parser.
