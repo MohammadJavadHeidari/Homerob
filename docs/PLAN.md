@@ -18,9 +18,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URL:** —
 
 ## Open questions
-- **API credits:** Provider is DeepSeek (see DECISIONS). Key works but balance is $0
-  ("Insufficient Balance"; the Claude key also has $0). Owner tops up ~$2–5 at platform.deepseek.com.
-  Until then: mock provider.
+- [DECISION] **Free AI provider:** owner has no budget for credits (Claude & DeepSeek keys both $0).
+  Options: (a) Google Gemini API free tier via AI Studio (recommended — Flash models free, good Persian,
+  JSON mode, OpenAI-compatible endpoint), (b) Groq free tier (~1,000 req/day, very fast, weaker Persian),
+  (c) OpenRouter `:free` models (~50 req/day, lineup changes). Until answered: mock provider.
+  Implementation note: one OpenAI-compatible provider with configurable base URL covers all of these + DeepSeek.
 - **Vercel:** owner imports `MohammadJavadHeidari/Homerob` in Vercel (framework: Next.js, no env
   vars needed yet — `AI_PROVIDER` defaults to mock) and shares the preview URL.
 
