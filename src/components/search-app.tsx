@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, RotateCcw, Search, SearchX, TriangleAlert } from "lucide-react";
+import { ListOrdered, LoaderCircle, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { IntentChips } from "@/components/intent-chips";
@@ -145,6 +145,8 @@ export function SearchApp() {
         </div>
       )}
 
+      {!compact && <HowItWorks />}
+
       {status === "loading" && <LoadingState />}
       {status === "error" && <ErrorState onRetry={() => run(query)} />}
       {status === "done" && data && (
@@ -184,7 +186,38 @@ export function SearchApp() {
           )}
         </section>
       )}
+
+      <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
+        هومراب یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+        هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
+        تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
+      </footer>
     </div>
+  );
+}
+
+function HowItWorks() {
+  const steps = [
+    { icon: MessageSquareText, title: "بنویس چی می‌خوای", text: "بودجه، محله، تعداد خواب — هر جور راحتی" },
+    { icon: Sparkles, title: "هوش مصنوعی می‌فهمه", text: "و به فیلتر تبدیلش می‌کنه؛ هر کدوم رو خواستی حذف کن" },
+    { icon: ListOrdered, title: "بهترین‌ها با دلیل", text: "رهن و اجاره هم‌تراز می‌شن و هر آگهی می‌گه چرا به دردت می‌خوره" },
+  ];
+  return (
+    <ol className="mx-auto mt-4 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
+      {steps.map(({ icon: Icon, title, text }, i) => (
+        <li key={title} className="bg-card flex gap-3 rounded-2xl border p-4">
+          <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl">
+            <Icon className="size-4.5" />
+          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-bold">
+              {toFaDigits(i + 1)}. {title}
+            </span>
+            <span className="text-muted-foreground text-xs leading-5">{text}</span>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 

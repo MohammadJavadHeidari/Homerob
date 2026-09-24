@@ -57,7 +57,7 @@ export async function explainResults(
       user: JSON.stringify({ query, intent: summarizeIntent(intent), listings: results.map(facts) }),
       temperature: 0.6,
       hedgeMs: 3_000,
-      deadlineMs: 9_000,
+      deadlineMs: 7_000,
     });
     const parsed = Output.parse(data);
     const byId: Record<string, string> = {};
