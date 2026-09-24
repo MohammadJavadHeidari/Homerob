@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 3
+- **Current phase:** Phase 5
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -15,7 +15,16 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     LLM parser with few-shot prompt; cache), `src/lib/ai/client.ts` (OpenAI-compatible, hedged
     model race), `src/lib/search/budget.ts` (hard budget filter, conversion, implicit cap on the
     unstated side), `POST /api/search`, `src/lib/demo-queries.ts`. 31 tests passing.
-- **Next:** Phase 3 → soft scoring (neighborhood/adjacent, rooms, area, amenities, recency) + explanations
+  - Phase 3: `src/lib/search/score.ts` (WEIGHTS config, 0–100 match score, pros/cons highlights,
+    rule explanation), `dedup.ts` (Divar/Sheypoor duplicate → `alsoOn`, pulled forward from Stretch),
+    `src/lib/explain/` + `POST /api/explain` (batched AI explanations, number-grounding guard,
+    rules fallback). 39 tests passing. PR #2 (Phases 1–2) merged; Production uses Gemini.
+  - Phase 4: `src/components/search-app.tsx` (hero, search, `?q=` URLs, loading/empty/error states),
+    `intent-chips.tsx` (removable chips → re-search with edited intent, no LLM), `listing-card.tsx`
+    (source + "also on", match score, listed vs normalized vs converted price, amenities, AI
+    explanation swapped in from `/api/explain`), `src/lib/search/suggest.ts` (empty-state relaxed
+    budget, one click). Checked at 390px and 1280px; screenshots in `docs/screenshots/`.
+- **Next:** Phase 5 → response time check, OG/meta/favicon/about line, production deploy
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -27,6 +36,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   Gemini free tier is flaky (503 / hangs): models raced `3.5-flash-lite` → `flash-lite-latest` →
   `3.6-flash`, 1.5s hedge, 5s deadline, then rule parser (same quality on demo queries). Check
   `meta.intentSource` in the API response ("ai" vs "rules").
+  Gemini free tier also rate-limits (429) under bursts — explanations then fall back to rules.
+  Idea for Phase 5: ship pre-generated AI outputs for the demo queries so the recording is instant.
+  Low budgets surface smaller units with a clear con («سوئیت است، نه ۲ خوابه») — good "tricky budget" demo;
+  a "what budget would I need" hint would fit the Phase 4 empty/weak state.
   Demo query «دانشجوام… ماهی ۵ تومن» returns 0 results on purpose → good empty-state demo (Phase 4).
   `AGENTS.md` is managed by `next dev` — leave it; it keeps Next from editing `CLAUDE.md`.
 - **Production URL:** https://homerob.vercel.app (public; deploys from `main`)
@@ -67,20 +80,20 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 
 ### Phase 3 — Ranking & explanations (≤ 3h)
 - [x] Hard filter on budget (using normalization when `flexibleConversion`) — done in Phase 2
-- [ ] Soft score: neighborhood match, rooms, area, amenities, recency; weights in one config
-- [ ] One batched LLM call for top ~10 results → 1–2 sentence Persian explanation each,
+- [x] Soft score: neighborhood match, rooms, area, amenities, recency; weights in one config
+- [x] One batched LLM call for top ~10 results → 1–2 sentence Persian explanation each,
       mentioning concrete trade-offs ("۵۰ میلیون زیر بودجه‌ته ولی پارکینگ نداره")
-- [ ] Graceful fallback: if LLM fails, show rule-based explanation
+- [x] Graceful fallback: if LLM fails, show rule-based explanation
 
 ## Day 2
 
 ### Phase 4 — UI (≤ 4h)
-- [ ] Hero with big natural-language search box + clickable example queries
-- [ ] Intent chips row (what the AI understood); chips removable to refine
-- [ ] Result cards: title, neighborhood, deposit/rent + normalized price, key features,
+- [x] Hero with big natural-language search box + clickable example queries
+- [x] Intent chips row (what the AI understood); chips removable to refine
+- [x] Result cards: title, neighborhood, deposit/rent + normalized price, key features,
       source badge (دیوار/شیپور), AI explanation highlighted, match score
-- [ ] Loading skeletons, empty state ("هیچ آگهی‌ای با این بودجه نیست — …" + suggestion), error state
-- [ ] Mobile-first check at 390px and desktop
+- [x] Loading skeletons, empty state ("هیچ آگهی‌ای با این بودجه نیست — …" + suggestion), error state
+- [x] Mobile-first check at 390px and desktop
 
 ### Phase 5 — Polish & production (≤ 2h)
 - [ ] Response time check (target < 5s); cache repeated queries in memory
@@ -94,5 +107,5 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [ ] README updated with live link, screenshot, how it works
 
 ## Stretch (only if everything above is done)
-- [ ] Cross-source duplicate detection (same listing on Divar & Sheypoor merged — very "Torob")
+- [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
 - [ ] "Compare" view for 2–3 listings
