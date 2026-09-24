@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 6
+- **Current phase:** Extended development (Phases 0–5 done; Phase 6 demo on hold)
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -34,7 +34,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     4 new seed listings → 100), `sharedRoom` intent field + chip, excluded-count notes in UI with
     «نشونم بده» for shared rooms, median sample size in price verdict, `compare-dialog.tsx`
     (only differing rows, best per row), DEMO_SCRIPT/README updated. 47 tests passing.
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video.
+- **Next:** waiting for the owner's next development requests. Demo is **on hold** (owner decides
+  when); `docs/DEMO_SCRIPT.md` is a draft. All AI calls stay live (no demo cache).
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -58,16 +59,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
-  to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
-  3 demo queries as a static cache so the recording is instant and reliable (recommended),
-  (b) keep everything live and re-record if Gemini is slow. Until answered: live only.
-  Evidence (2026-09-24 evening): `gemini-3.6-flash` daily quota exhausted (429); lite models took
-  6–13 s per call → most requests fell back to the rule parser/explanations.
-- [DECISION] **Demo script:** approve the 3 queries in `docs/DEMO_SCRIPT.md` — (1) «یه آپارتمان
-  دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن» (simple), (2) «دانشجوام… ماهی ۵ تومن» (tricky budget →
-  empty state + suggestion), (3) «دوخوابه بالکن‌دار سجاد، پارکینگ مهم نیست، رهن ۴۰۰ میلیون»
-  (trade-off + remove a chip) — and the narration.
+- — (demo cache answered: stay live; demo script approval on hold until the owner calls the demo)
 
 ---
 
@@ -124,7 +116,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ### Phase 6 — Demo package (≤ 2h)
 - [x] `docs/DEMO_SCRIPT.md`: Persian narration, ≤ 5 min: problem → solution → 3 live queries
       (simple, tricky budget, trade-off) → what's next (live aggregation, dedup across sources, more cities)
-- [ ] [DECISION] Owner approves the 3 demo queries and the script
+- [ ] [DECISION] Owner approves the 3 demo queries and the script — on hold, owner will call the demo
 - [x] README updated with live link, screenshot, how it works
 
 ## Follow-ups from divar-mcp decision (owner: options 1 + 4)

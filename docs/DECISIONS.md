@@ -45,3 +45,6 @@
   detection, shared-room flag, sample size in price verdicts, "only differing specs" compare view)
   and mention a live read-only listings source (e.g. an MCP server) as future work in the video.
   No calls to the service; the "no live scraping" hard stop stays. Its text/branding are not reused.
+- 2026-09-24 — **No demo cache: everything stays live.** No pre-generated AI outputs.
+- 2026-09-24 — **Demo is on hold.** The owner wants more development first and will say when to
+  prepare the demo. Until then `docs/DEMO_SCRIPT.md` stays a draft; don't ask to approve it.
