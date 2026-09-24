@@ -50,6 +50,53 @@
     "postedAt": "2026-09-24T06:12:18.558Z"
   },
   {
+    "id": "dv-0909",
+    "source": "divar",
+    "title": "اجاره اتاق در واحد دوخوابه، همخونه خانم - سجاد",
+    "neighborhood": "سجاد",
+    "street": "بلوار سجاد",
+    "deposit": 30000000,
+    "monthlyRent": 4000000,
+    "areaM2": 85,
+    "rooms": 2,
+    "floor": 3,
+    "totalFloors": 5,
+    "buildingAge": 7,
+    "elevator": true,
+    "parking": false,
+    "storage": false,
+    "tags": [
+      "مبله"
+    ],
+    "convertible": false,
+    "description": "یک اتاق مبله در واحد دوخوابه، آشپزخانه و سرویس مشترک. فقط همخونه خانم دانشجو یا شاغل. قبوض تقسیم می‌شود.",
+    "postedAt": "2026-09-24T05:30:00.000Z"
+  },
+  {
+    "id": "sp-0910",
+    "source": "sheypoor",
+    "title": "هم‌خونه آقا، اتاق مبله نزدیک قطار شهری - قاسم‌آباد",
+    "neighborhood": "قاسم‌آباد",
+    "street": "بلوار امامیه",
+    "deposit": 20000000,
+    "monthlyRent": 3500000,
+    "areaM2": 75,
+    "rooms": 2,
+    "floor": 1,
+    "totalFloors": 4,
+    "buildingAge": 12,
+    "elevator": false,
+    "parking": false,
+    "storage": false,
+    "tags": [
+      "مبله",
+      "نزدیک قطار شهری"
+    ],
+    "convertible": false,
+    "description": "اجاره اتاق در واحد ۷۵ متری، هم‌خونه آقا. اینترنت و قبوض نصف. مناسب دانشجو.",
+    "postedAt": "2026-09-23T21:10:00.000Z"
+  },
+  {
     "id": "sp-0905",
     "source": "sheypoor",
     "title": "آپارتمان ۹۵ متر دوخوابه - وکیل‌آباد",
@@ -192,6 +239,29 @@
     "postedAt": "2026-09-23T15:16:10.903Z"
   },
   {
+    "id": "dv-0907",
+    "source": "divar",
+    "title": "آپارتمان ۱۱۰ متری دوخوابه وکیل‌آباد - توافقی",
+    "neighborhood": "وکیل‌آباد",
+    "street": "وکیل‌آباد ۳۴",
+    "deposit": 1000,
+    "monthlyRent": 1000,
+    "areaM2": 110,
+    "rooms": 2,
+    "floor": 2,
+    "totalFloors": 5,
+    "buildingAge": 4,
+    "elevator": true,
+    "parking": true,
+    "storage": true,
+    "tags": [
+      "بالکن"
+    ],
+    "convertible": true,
+    "description": "طبقه ۲ از ۵، ۴ سال ساخت. دارای آسانسور، پارکینگ اختصاصی و انباری. رهن و اجاره توافقی، برای قیمت تماس بگیرید.",
+    "postedAt": "2026-09-23T10:15:00.000Z"
+  },
+  {
     "id": "sp-1084",
     "source": "sheypoor",
     "title": "رهن کامل آپارتمان ۱۰۶ متری دوخوابه در قاسم‌آباد",
@@ -288,6 +358,27 @@
     "convertible": false,
     "description": "طبقه ۱ از ۴، ۱۹ سال ساخت. پارکینگ و آسانسور ندارد. دیوارها تازه رنگ‌شده، پنجره دوجداره، کف سرامیک. بازسازی‌شده، نزدیک قطار شهری. مناسب خانواده کم‌جمعیت. مبلغ ثابت، قابل تبدیل نیست. حیوان خانگی ممنوع.",
     "postedAt": "2026-09-22T18:52:55.864Z"
+  },
+  {
+    "id": "sp-0908",
+    "source": "sheypoor",
+    "title": "رهن و اجاره آپارتمان ۹۰ متری دوخوابه در هاشمیه",
+    "neighborhood": "هاشمیه",
+    "street": "هاشمیه ۶۴",
+    "deposit": 1111111,
+    "monthlyRent": 111111,
+    "areaM2": 90,
+    "rooms": 2,
+    "floor": 3,
+    "totalFloors": 4,
+    "buildingAge": 9,
+    "elevator": false,
+    "parking": true,
+    "storage": true,
+    "tags": [],
+    "convertible": true,
+    "description": "واحد ۹۰ متری دو خواب، طبقه سوم. قیمت واقعی نیست، مبلغ پس از بازدید توافق می‌شود.",
+    "postedAt": "2026-09-22T16:40:00.000Z"
   },
   {
     "id": "dv-0904",

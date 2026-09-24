@@ -4,6 +4,7 @@ import type { SearchIntent } from "@/lib/intent/schema";
 import { ADJACENT } from "@/lib/neighborhoods";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { pricePerM2 } from "@/lib/pricing";
+import { isComparable } from "@/lib/quality";
 import type { Listing, Neighborhood } from "@/lib/types";
 
 import type { BudgetFit } from "./budget";
@@ -36,12 +37,17 @@ function median(xs: number[]) {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
-/** Median full-deposit price per m² in each neighborhood. */
+const COMPARABLE = ALL_LISTINGS.filter(isComparable);
+const HOODS = [...new Set(COMPARABLE.map((l) => l.neighborhood))];
+
+/** Median full-deposit price per m² in each neighborhood (placeholder prices and shared rooms excluded). */
 export const HOOD_MEDIAN_PPM: Record<Neighborhood, number> = Object.fromEntries(
-  [...new Set(ALL_LISTINGS.map((l) => l.neighborhood))].map((h) => [
-    h,
-    median(ALL_LISTINGS.filter((l) => l.neighborhood === h).map((l) => pricePerM2(l))),
-  ]),
+  HOODS.map((h) => [h, median(COMPARABLE.filter((l) => l.neighborhood === h).map((l) => pricePerM2(l)))]),
+) as Record<Neighborhood, number>;
+
+/** How many listings each median is based on — shown to the user, like any honest price verdict. */
+export const HOOD_SAMPLE_SIZE: Record<Neighborhood, number> = Object.fromEntries(
+  HOODS.map((h) => [h, COMPARABLE.filter((l) => l.neighborhood === h).length]),
 ) as Record<Neighborhood, number>;
 
 /** "Now" for recency = newest listing, so the demo doesn't age. */
@@ -160,8 +166,9 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
 
   // value vs neighborhood
   const ratio = pricePerM2(l) / HOOD_MEDIAN_PPM[l.neighborhood];
-  if (ratio <= 0.9) add("pro", `حدود ${toFaDigits(Math.round((1 - ratio) * 100))}٪ ارزان‌تر از میانگین ${l.neighborhood}`, 6);
-  else if (ratio >= 1.12) add("con", `حدود ${toFaDigits(Math.round((ratio - 1) * 100))}٪ گران‌تر از میانگین ${l.neighborhood}`, 5);
+  const sample = `میانهٔ ${toFaDigits(HOOD_SAMPLE_SIZE[l.neighborhood])} آگهی ${l.neighborhood}`;
+  if (ratio <= 0.9) add("pro", `حدود ${toFaDigits(Math.round((1 - ratio) * 100))}٪ ارزان‌تر از ${sample}`, 6);
+  else if (ratio >= 1.12) add("con", `حدود ${toFaDigits(Math.round((ratio - 1) * 100))}٪ گران‌تر از ${sample}`, 5);
 
   // notable facts nobody asked about
   if (!intent.mustHave.includes("parking") && !l.parking && l.rooms >= 2) add("con", "پارکینگ ندارد", 4);

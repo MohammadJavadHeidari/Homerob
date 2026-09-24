@@ -27,13 +27,14 @@ export async function POST(request: Request) {
   const { near } = body.data;
   const intent =
     !body.data.intent && near && !parsed.intent.neighborhoods.length ? { ...parsed.intent, nearMe: near } : parsed.intent;
-  const { results, total } = search(intent);
+  const { results, total, excluded } = search(intent);
 
   return Response.json({
     query: body.data.query,
     intent,
     results,
     total,
+    excluded,
     suggestion: total === 0 ? suggest(intent) : null,
     meta: {
       intentSource: parsed.source,

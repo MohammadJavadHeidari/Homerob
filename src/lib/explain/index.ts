@@ -86,6 +86,7 @@ function summarizeIntent(i: SearchIntent) {
     minArea: i.minArea,
     mustHave: i.mustHave,
     niceToHave: i.niceToHave,
+    sharedRoom: i.sharedRoom,
     notes: i.freeTextNotes,
   };
 }

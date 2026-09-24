@@ -1,8 +1,9 @@
 "use client";
 
-import { ListOrdered, LoaderCircle, LocateFixed, MapPin, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert } from "lucide-react";
+import { GitCompareArrows, Info, ListOrdered, LoaderCircle, LocateFixed, MapPin, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { CompareDialog } from "@/components/compare-dialog";
 import { IntentChips } from "@/components/intent-chips";
 import { ListingCard } from "@/components/listing-card";
 import { readStoredPlace, useUserPlace, type PlaceStatus } from "@/components/use-user-place";
@@ -15,6 +16,7 @@ import { toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 
 const EXPLAIN_TOP = 10;
+const COMPARE_MAX = 3;
 const HERO_EXAMPLES = DEMO_QUERIES.slice(0, 6);
 
 type Status = "idle" | "loading" | "done" | "error";
@@ -25,6 +27,8 @@ export function SearchApp() {
   const [data, setData] = useState<SearchApiResponse | null>(null);
   const [explanations, setExplanations] = useState<Record<string, string>>({});
   const [explainState, setExplainState] = useState<"idle" | "loading" | "ai" | "rules">("idle");
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
   const { status: placeStatus, place, request: requestPlace } = useUserPlace();
   const near = useRef<UserPlace["neighborhood"]>(null);
@@ -39,6 +43,7 @@ export function SearchApp() {
     setStatus("loading");
     setExplainState("idle");
     setExplanations({});
+    setCompareIds([]);
     if (!intent) window.history.replaceState(null, "", `?q=${encodeURIComponent(text)}`);
 
     try {
@@ -92,6 +97,7 @@ export function SearchApp() {
     setStatus("idle");
     setData(null);
     setQuery("");
+    setCompareIds([]);
     window.history.replaceState(null, "", "/");
   };
 
@@ -100,7 +106,7 @@ export function SearchApp() {
   const city = place?.supported ? place.city : placeStatus === "idle" || placeStatus === "locating" ? null : SUPPORTED_CITY;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 pb-16 sm:pt-10">
+    <div className={cn("mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 sm:pt-10", compareIds.length ? "pb-28" : "pb-16")}>
       <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
         <button type="button" onClick={reset} className="flex items-baseline gap-2" aria-label="صفحهٔ اول">
           <span className={cn("font-extrabold tracking-tight", compact ? "text-2xl" : "text-5xl sm:text-6xl")}>
@@ -173,6 +179,7 @@ export function SearchApp() {
       {status === "done" && data && (
         <section className="flex flex-col gap-5">
           <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+          <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
           {data.total === 0 ? (
             <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
           ) : (
@@ -199,6 +206,11 @@ export function SearchApp() {
                         explanation={explanations[id] ?? r.explanation}
                         explaining={inTop && explainState === "loading"}
                         aiExplained={explainState === "ai" && inTop}
+                        comparing={compareIds.includes(id)}
+                        compareDisabled={compareIds.length >= COMPARE_MAX}
+                        onToggleCompare={() =>
+                          setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
+                        }
                       />
                     </li>
                   );
@@ -207,6 +219,31 @@ export function SearchApp() {
             </>
           )}
         </section>
+      )}
+
+      {status === "done" && data && compareIds.length > 0 && (
+        <>
+          <div className="bg-popover fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-md items-center gap-2 rounded-2xl border p-2 ps-4 shadow-lg">
+            <span className="flex-1 text-sm font-medium">
+              {toFaDigits(compareIds.length)} آگهی انتخاب شده
+              {compareIds.length < 2 && <span className="text-muted-foreground text-xs"> — یکی دیگه انتخاب کن</span>}
+            </span>
+            <Button size="sm" disabled={compareIds.length < 2} onClick={() => setCompareOpen(true)}>
+              <GitCompareArrows />
+              مقایسه
+            </Button>
+            <Button size="icon-sm" variant="ghost" aria-label="لغو مقایسه" onClick={() => setCompareIds([])}>
+              <X />
+            </Button>
+          </div>
+          <CompareDialog
+            open={compareOpen}
+            onOpenChange={setCompareOpen}
+            items={compareIds
+              .map((id) => data.results.find((r) => r.listing.id === id))
+              .filter((r): r is NonNullable<typeof r> => Boolean(r))}
+          />
+        </>
       )}
 
       <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
@@ -277,6 +314,32 @@ function HowItWorks() {
         </li>
       ))}
     </ol>
+  );
+}
+
+function ExcludedNote({ data, onShowShared }: { data: SearchApiResponse; onShowShared: () => void }) {
+  const { placeholderPrice, sharedRoom } = data.excluded;
+  if (!placeholderPrice && !(sharedRoom && !data.intent.sharedRoom)) return null;
+  return (
+    <div className="text-muted-foreground flex flex-col gap-1 text-xs leading-6">
+      {placeholderPrice > 0 && (
+        <p className="flex items-start gap-1.5">
+          <Info className="mt-1 size-3.5 shrink-0" />
+          {toFaDigits(placeholderPrice)} آگهی قیمت واقعی نداشت (توافقی یا عدد نمایشی مثل «۱٬۰۰۰ تومان») و در رتبه‌بندی و میانهٔ قیمت‌ها حساب نشد.
+        </p>
+      )}
+      {sharedRoom > 0 && !data.intent.sharedRoom && (
+        <p className="flex items-start gap-1.5">
+          <Info className="mt-1 size-3.5 shrink-0" />
+          <span>
+            {toFaDigits(sharedRoom)} آگهی «اجاره اتاق / همخونه» هم هست که جدا نگهشون داشتم (قیمتشون برای یه اتاقه، نه کل واحد).{" "}
+            <button type="button" onClick={onShowShared} className="text-primary font-medium underline-offset-4 hover:underline">
+              نشونم بده
+            </button>
+          </span>
+        </p>
+      )}
+    </div>
   );
 }
 

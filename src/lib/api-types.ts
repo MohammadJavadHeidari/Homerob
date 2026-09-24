@@ -9,6 +9,7 @@ export interface SearchApiResponse {
   intent: SearchIntent;
   results: SearchResult[];
   total: number;
+  excluded: { placeholderPrice: number; sharedRoom: number };
   suggestion: Suggestion | null;
   meta: {
     intentSource: "ai" | "rules" | "edited";

@@ -41,6 +41,10 @@
 - 2026-09-24 — Gemini model order changed after load testing: `gemini-3.5-flash-lite` first
   (~0.8s when healthy), then `gemini-flash-lite-latest`, then `gemini-3.6-flash` (mostly 503).
   Requests are hedged (next model after 1.5s, 5s deadline) and fall back to the rule parser.
+- 2026-09-24 — **divar-mcp: ideas only, no connection.** Borrow product ideas (placeholder-price
+  detection, shared-room flag, sample size in price verdicts, "only differing specs" compare view)
+  and mention a live read-only listings source (e.g. an MCP server) as future work in the video.
+  No calls to the service; the "no live scraping" hard stop stays. Its text/branding are not reused.
 - 2026-09-24 — **Location-aware home (owner request).** Ask for browser location on first visit; title
   becomes «جستجوی هوشمند اجاره در {city}» and results are limited to the user's area (nearest
   neighborhood + adjacent ones) unless the query names a neighborhood. Data is still Mashhad only;
