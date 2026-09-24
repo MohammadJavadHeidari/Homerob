@@ -3,27 +3,23 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 0
-- **Done:** Phase 0 code tasks — Next.js 16 (App Router, TS, Tailwind v4, ESLint), shadcn/ui
+- **Current phase:** Phase 1
+- **Done:** Phase 0 complete (merged in PR #1, Production green) — Next.js 16 (App Router, TS, Tailwind v4, ESLint), shadcn/ui
   (base-ui, base-nova style), RTL + Vazirmatn + `src/lib/persian.ts` digit/Toman helpers,
   `.env.example`, placeholder home page (checked at 390px and 1280px). Build + lint green.
 - **Next:** Phase 1 → `Listing` type + seed data
-- **Blocked:** Production deploy — `main` has no app until the branch is merged (see Open questions).
-  AI provider unblocked: Gemini free tier works (see DECISIONS).
+- **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** —
 - **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
   the `cn` package (shadcn's replacement for clsx + tailwind-merge).
   `AGENTS.md` is managed by `next dev` — leave it; it keeps Next from editing `CLAUDE.md`.
-- **Preview URL:** https://homerob-git-claude-happy-p-92c5b0-9amir9heidari9-8174s-projects.vercel.app
-  (branch preview, behind Vercel login). Production URL (public) → after PR #1 is merged.
-- **PR:** https://github.com/MohammadJavadHeidari/Homerob/pull/1 (Phase 0 → `main`)
+- **Production URL:** https://homerob.vercel.app (public; deploys from `main`)
+- **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- **Vercel:** project is connected (owner). Env vars: `AI_PROVIDER=gemini`, `GEMINI_API_KEY`
-  (Production + Preview). Production build of `main` failed only because `main` has no app yet
-  (code lives on `claude/happy-ptolemy-lm6iub`) → merge the branch into `main` via PR to get a
-  green Production deploy. Owner to confirm the PR.
+- —
+
 ---
 
 ## Day 1
@@ -33,7 +29,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] shadcn/ui with base-ui preset
 - [x] RTL: `<html lang="fa" dir="rtl">`, Persian font (Vazirmatn), Persian digits helper
 - [x] `.env.example` (`AI_PROVIDER=mock|gemini|deepseek|claude|openai`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); `.env.local` gitignored
-- [ ] Placeholder home page, push, confirm Vercel deploy works (owner connects Vercel to repo if not yet)
+- [x] Placeholder home page, push, confirm Vercel deploy works (owner connects Vercel to repo if not yet)
 
 ### Phase 1 — Seed data & normalization (≤ 2h)
 - [ ] `Listing` type: id, source (divar|sheypoor), title, neighborhood, deposit, monthlyRent,
