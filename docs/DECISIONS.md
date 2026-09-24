@@ -25,3 +25,5 @@
 - Goal: speed and demoability, show product thinking — not stack showcasing.
 
 ## Log (append new decisions below with date)
+- 2026-09-24 — **AI provider: Claude.** Owner obtained an Anthropic API key (stored only in
+  `.env.local` / Vercel env vars). Account has no credits yet → mock provider until credits are added.

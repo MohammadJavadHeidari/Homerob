@@ -9,7 +9,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   `.env.example`, placeholder home page (checked at 390px and 1280px). Build + lint green.
 - **Next:** Phase 1 → `Listing` type + seed data
 - **Blocked:** Vercel deploy — owner must import the repo in Vercel (see Open questions).
-  Phase 2/3 real LLM calls need an API key — use mock provider until then.
+  Phase 2/3 real LLM calls need API credits — use mock provider until then.
 - **Cut / deferred:** —
 - **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
@@ -18,9 +18,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URL:** —
 
 ## Open questions
-- [DECISION] **API key:** Claude key not obtained yet. Options: (a) get a Claude key now
-  (recommended — primary choice), (b) start with the OpenAI key, switch later.
-  Until answered: build with a deterministic mock provider.
+- **API credits:** Claude key works but the account has $0 credit ("credit balance is too low").
+  Owner adds ~$5 in Console → Billing. Until then: mock provider.
 - **Vercel:** owner imports `MohammadJavadHeidari/Homerob` in Vercel (framework: Next.js, no env
   vars needed yet — `AI_PROVIDER` defaults to mock) and shares the preview URL.
 
