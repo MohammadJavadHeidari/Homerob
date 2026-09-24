@@ -19,6 +19,7 @@ export function parseIntentWithRules(query: string): SearchIntent {
   intent.neighborhoods = findNeighborhoods(text);
 
   if (/غیر ?قابل تبدیل|فقط رهن کامل|مبلغ ثابت/.test(text)) intent.flexibleConversion = false;
+  if (/همخونه|هم خونه|هماتاقی|هم اتاقی|اجاره اتاق/.test(text)) intent.sharedRoom = true;
 
   const family = text.match(/خانواده(?: ی)? ?(\d+) ?نفر/);
   if (family) {

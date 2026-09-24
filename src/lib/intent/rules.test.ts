@@ -70,6 +70,12 @@ describe("rule-based intent parser", () => {
     expect(i.neighborhoods).toEqual(expect.arrayContaining(["الهیه", "هاشمیه"]));
   });
 
+  it("detects a shared-room request", () => {
+    expect(parse("دنبال همخونه‌ام تو سجاد، ماهی ۵ تومن").sharedRoom).toBe(true);
+    expect(parse("اجاره اتاق برای دانشجو").sharedRoom).toBe(true);
+    expect(parse("سوئیت ارزون ماهی ۵ تومن").sharedRoom).toBe(false);
+  });
+
   it("returns an empty intent for gibberish", () => {
     const i = parse("سلام");
     expect(i.maxDeposit).toBeNull();

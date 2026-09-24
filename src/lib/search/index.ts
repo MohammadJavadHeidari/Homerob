@@ -1,6 +1,7 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { toFullDeposit } from "@/lib/pricing";
+import { isPlaceholderPrice, isSharedHousing } from "@/lib/quality";
 import type { Listing, ListingSource } from "@/lib/types";
 
 import { fitBudget, type BudgetFit } from "./budget";
@@ -26,6 +27,13 @@ export interface SearchResponse {
   results: SearchResult[];
   /** Listings that passed the hard budget filter (before truncation). */
   total: number;
+  /** Relevant listings left out on purpose (in the wanted neighborhoods, or anywhere if none). */
+  excluded: {
+    /** Dummy / negotiable prices ("توافقی", "۱٬۰۰۰ تومان") — can't be ranked honestly. */
+    placeholderPrice: number;
+    /** Rooms in shared flats — hidden unless the user asked for همخونه. */
+    sharedRoom: number;
+  };
 }
 
 const LIMIT = 20;
@@ -33,7 +41,17 @@ const LIMIT = 20;
 /** Hard-filter by budget, then soft-score and rank. */
 export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS): SearchResponse {
   const results: SearchResult[] = [];
+  const excluded = { placeholderPrice: 0, sharedRoom: 0 };
+  const relevant = (l: Listing) => !intent.neighborhoods.length || intent.neighborhoods.includes(l.neighborhood);
   for (const { listing, alsoOn } of dedupe(listings)) {
+    if (isPlaceholderPrice(listing)) {
+      if (relevant(listing)) excluded.placeholderPrice++;
+      continue;
+    }
+    if (isSharedHousing(listing) !== intent.sharedRoom) {
+      if (!intent.sharedRoom && relevant(listing)) excluded.sharedRoom++;
+      continue;
+    }
     const budget = fitBudget(listing, intent);
     if (!budget.fits) continue;
     const { score, breakdown } = scoreListing(listing, intent);
@@ -50,7 +68,7 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS)
     });
   }
   results.sort((a, b) => b.score - a.score || a.fullDeposit - b.fullDeposit);
-  return { results: results.slice(0, LIMIT), total: results.length };
+  return { results: results.slice(0, LIMIT), total: results.length, excluded };
 }
 
 /** Look up already-ranked results by id (used by /api/explain so the client can't forge facts). */

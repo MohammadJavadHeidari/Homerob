@@ -30,7 +30,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     metadata + theme color, `src/app/icon.svg` + `apple-icon.png`, how-it-works strip, about footer.
   - Phase 6 (partial): `docs/DEMO_SCRIPT.md` drafted (3 queries + backup, timings, checklist),
     README rewritten (live link, screenshots, how it works, run locally; fixed stale claims), PR #4 merged.
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Then Stretch.
+  - divar-mcp follow-ups (options 1 + 4): `src/lib/quality.ts` (placeholder prices, shared rooms;
+    4 new seed listings → 100), `sharedRoom` intent field + chip, excluded-count notes in UI with
+    «نشونم بده» for shared rooms, median sample size in price verdict, `compare-dialog.tsx`
+    (only differing rows, best per row), DEMO_SCRIPT/README updated. 47 tests passing.
+- **Next:** owner approves demo queries/script (+ demo cache question) → record video.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -123,6 +127,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [ ] [DECISION] Owner approves the 3 demo queries and the script
 - [x] README updated with live link, screenshot, how it works
 
+## Follow-ups from divar-mcp decision (owner: options 1 + 4)
+- [x] Price verdict states sample size + uses "median" wording
+- [x] Placeholder / negotiable prices detected, excluded from ranking and medians, counted in UI
+- [x] Shared-room («همخونه» / اجاره اتاق) listings flagged; excluded unless the user asks for them
+- [x] Compare view (2–3 listings, only differing specs, best value highlighted)
+- [x] Mention live read-only data source (MCP) as future work in DEMO_SCRIPT + README
+
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
-- [ ] "Compare" view for 2–3 listings
+- [x] "Compare" view for 2–3 listings (done via divar-mcp follow-ups)
