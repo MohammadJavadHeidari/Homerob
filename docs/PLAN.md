@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 4
+- **Current phase:** Phase 5
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -19,8 +19,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     rule explanation), `dedup.ts` (Divar/Sheypoor duplicate → `alsoOn`, pulled forward from Stretch),
     `src/lib/explain/` + `POST /api/explain` (batched AI explanations, number-grounding guard,
     rules fallback). 39 tests passing. PR #2 (Phases 1–2) merged; Production uses Gemini.
-- **Next:** Phase 4 → UI: search box + example chips → call `/api/search`, render cards with the
-  rule explanation, then call `/api/explain` with the top 10 ids and swap in the AI text
+  - Phase 4: `src/components/search-app.tsx` (hero, search, `?q=` URLs, loading/empty/error states),
+    `intent-chips.tsx` (removable chips → re-search with edited intent, no LLM), `listing-card.tsx`
+    (source + "also on", match score, listed vs normalized vs converted price, amenities, AI
+    explanation swapped in from `/api/explain`), `src/lib/search/suggest.ts` (empty-state relaxed
+    budget, one click). Checked at 390px and 1280px; screenshots in `docs/screenshots/`.
+- **Next:** Phase 5 → response time check, OG/meta/favicon/about line, production deploy
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -84,12 +88,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ## Day 2
 
 ### Phase 4 — UI (≤ 4h)
-- [ ] Hero with big natural-language search box + clickable example queries
-- [ ] Intent chips row (what the AI understood); chips removable to refine
-- [ ] Result cards: title, neighborhood, deposit/rent + normalized price, key features,
+- [x] Hero with big natural-language search box + clickable example queries
+- [x] Intent chips row (what the AI understood); chips removable to refine
+- [x] Result cards: title, neighborhood, deposit/rent + normalized price, key features,
       source badge (دیوار/شیپور), AI explanation highlighted, match score
-- [ ] Loading skeletons, empty state ("هیچ آگهی‌ای با این بودجه نیست — …" + suggestion), error state
-- [ ] Mobile-first check at 390px and desktop
+- [x] Loading skeletons, empty state ("هیچ آگهی‌ای با این بودجه نیست — …" + suggestion), error state
+- [x] Mobile-first check at 390px and desktop
 
 ### Phase 5 — Polish & production (≤ 2h)
 - [ ] Response time check (target < 5s); cache repeated queries in memory
