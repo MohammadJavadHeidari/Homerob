@@ -24,6 +24,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     (source + "also on", match score, listed vs normalized vs converted price, amenities, AI
     explanation swapped in from `/api/explain`), `src/lib/search/suggest.ts` (empty-state relaxed
     budget, one click). Checked at 390px and 1280px; screenshots in `docs/screenshots/`.
+    PR #3 merged → Production shows the full UI (search ~1s, AI explanations ~4s, both `ai`).
 - **Next:** Phase 5 → response time check, OG/meta/favicon/about line, production deploy
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -40,6 +41,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   Idea for Phase 5: ship pre-generated AI outputs for the demo queries so the recording is instant.
   Low budgets surface smaller units with a clear con («سوئیت است، نه ۲ خوابه») — good "tricky budget" demo;
   a "what budget would I need" hint would fit the Phase 4 empty/weak state.
+  Sandbox Chromium can't open the public site (proxy CA not trusted) → test UI on localhost,
+  verify Production with curl against `/api/search` and `/api/explain`.
   Demo query «دانشجوام… ماهی ۵ تومن» returns 0 results on purpose → good empty-state demo (Phase 4).
   `AGENTS.md` is managed by `next dev` — leave it; it keeps Next from editing `CLAUDE.md`.
 - **Production URL:** https://homerob.vercel.app (public; deploys from `main`)
