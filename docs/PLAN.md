@@ -15,7 +15,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
   the `cn` package (shadcn's replacement for clsx + tailwind-merge).
   `AGENTS.md` is managed by `next dev` — leave it; it keeps Next from editing `CLAUDE.md`.
-- **Preview URL:** —
+- **Preview URL:** https://homerob-git-claude-happy-p-92c5b0-9amir9heidari9-8174s-projects.vercel.app
+  (branch preview, behind Vercel login). Production URL (public) → after PR #1 is merged.
+- **PR:** https://github.com/MohammadJavadHeidari/Homerob/pull/1 (Phase 0 → `main`)
 
 ## Open questions
 - **Vercel:** project is connected (owner). Env vars: `AI_PROVIDER=gemini`, `GEMINI_API_KEY`
