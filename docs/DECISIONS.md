@@ -27,3 +27,7 @@
 ## Log (append new decisions below with date)
 - 2026-09-24 — **AI provider: Claude.** Owner obtained an Anthropic API key (stored only in
   `.env.local` / Vercel env vars). Account has no credits yet → mock provider until credits are added.
+- 2026-09-24 — **AI provider switched to DeepSeek** (owner's call; supersedes the Claude entry above).
+  OpenAI-compatible API at `https://api.deepseek.com`, models `deepseek-flash` (default, fast/cheap)
+  and `deepseek-v4-pro`. Provider abstraction keeps `claude`/`openai` as options. Account has $0
+  balance yet → mock provider until topped up.

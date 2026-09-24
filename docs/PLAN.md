@@ -18,8 +18,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URL:** —
 
 ## Open questions
-- **API credits:** Claude key works but the account has $0 credit ("credit balance is too low").
-  Owner adds ~$5 in Console → Billing. Until then: mock provider.
+- **API credits:** Provider is DeepSeek (see DECISIONS). Key works but balance is $0
+  ("Insufficient Balance"; the Claude key also has $0). Owner tops up ~$2–5 at platform.deepseek.com.
+  Until then: mock provider.
 - **Vercel:** owner imports `MohammadJavadHeidari/Homerob` in Vercel (framework: Next.js, no env
   vars needed yet — `AI_PROVIDER` defaults to mock) and shares the preview URL.
 
@@ -31,7 +32,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Scaffold Next.js (App Router) + TypeScript + Tailwind + ESLint
 - [x] shadcn/ui with base-ui preset
 - [x] RTL: `<html lang="fa" dir="rtl">`, Persian font (Vazirmatn), Persian digits helper
-- [x] `.env.example` (`AI_PROVIDER=mock|claude|openai`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); `.env.local` gitignored
+- [x] `.env.example` (`AI_PROVIDER=mock|deepseek|claude|openai`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); `.env.local` gitignored
 - [ ] Placeholder home page, push, confirm Vercel deploy works (owner connects Vercel to repo if not yet)
 
 ### Phase 1 — Seed data & normalization (≤ 2h)
@@ -47,7 +48,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ### Phase 2 — Intent parsing (≤ 3h)
 - [ ] `SearchIntent` schema (zod): maxDeposit, maxRent, flexibleConversion, neighborhoods[],
       minRooms, minArea, mustHave[], niceToHave[], freeTextNotes
-- [ ] Provider abstraction `lib/ai/` with `mock`, `claude`, `openai` implementations
+- [ ] Provider abstraction `lib/ai/` with `mock`, `deepseek` (default real provider), `claude`, `openai` implementations
 - [ ] Prompt: Persian query → strict JSON intent (handles "میلیون/میلیارد", Persian digits, colloquial phrasing)
 - [ ] `POST /api/search` → returns `{ intent, results }`
 - [ ] 8–10 sample queries in `lib/demo-queries.ts` used for manual testing and the UI
