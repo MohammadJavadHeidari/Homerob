@@ -28,7 +28,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   - Phase 5: prod latency measured (search p50 ≈ 1.7s, max ≈ 5s by design; repeat ≈ 150ms from
     in-memory cache; explanations 2–7s, async); OG image `public/og.png` (Chromium-rendered),
     metadata + theme color, `src/app/icon.svg` + `apple-icon.png`, how-it-works strip, about footer.
-- **Next:** Phase 6 → `docs/DEMO_SCRIPT.md` (Persian, ≤ 5 min), owner approves queries, README
+  - Phase 6 (partial): `docs/DEMO_SCRIPT.md` drafted (3 queries + backup, timings, checklist),
+    README rewritten (live link, screenshots, how it works, run locally; fixed stale claims), PR #4 merged.
+- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Then Stretch.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -56,6 +58,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
   (b) keep everything live and re-record if Gemini is slow. Until answered: live only.
+  Evidence (2026-09-24 evening): `gemini-3.6-flash` daily quota exhausted (429); lite models took
+  6–13 s per call → most requests fell back to the rule parser/explanations.
+- [DECISION] **Demo script:** approve the 3 queries in `docs/DEMO_SCRIPT.md` — (1) «یه آپارتمان
+  دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن» (simple), (2) «دانشجوام… ماهی ۵ تومن» (tricky budget →
+  empty state + suggestion), (3) «دوخوابه بالکن‌دار سجاد، پارکینگ مهم نیست، رهن ۴۰۰ میلیون»
+  (trade-off + remove a chip) — and the narration.
+
 ---
 
 ## Day 1
@@ -109,10 +118,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Production deploy green, with real AI provider
 
 ### Phase 6 — Demo package (≤ 2h)
-- [ ] `docs/DEMO_SCRIPT.md`: Persian narration, ≤ 5 min: problem → solution → 3 live queries
+- [x] `docs/DEMO_SCRIPT.md`: Persian narration, ≤ 5 min: problem → solution → 3 live queries
       (simple, tricky budget, trade-off) → what's next (live aggregation, dedup across sources, more cities)
 - [ ] [DECISION] Owner approves the 3 demo queries and the script
-- [ ] README updated with live link, screenshot, how it works
+- [x] README updated with live link, screenshot, how it works
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
