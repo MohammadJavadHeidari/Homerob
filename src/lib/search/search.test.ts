@@ -48,3 +48,15 @@ describe("search ranking", () => {
     }
   });
 });
+
+describe("suggest", async () => {
+  const { suggest } = await import("./suggest");
+
+  it("relaxes a too-low rent budget", () => {
+    const s = suggest({ ...EMPTY_INTENT, maxRent: 5 * M, minRooms: 0, maxRooms: 0 });
+    expect(s).not.toBeNull();
+    expect(s!.count).toBeGreaterThan(0);
+    expect(s!.intent.maxRent).toBeGreaterThan(5 * M);
+    expect(s!.text).toContain("آگهی پیدا می‌شه");
+  });
+});
