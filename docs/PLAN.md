@@ -34,6 +34,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     4 new seed listings → 100), `sharedRoom` intent field + chip, excluded-count notes in UI with
     «نشونم بده» for shared rooms, median sample size in price verdict, `compare-dialog.tsx`
     (only differing rows, best per row), DEMO_SCRIPT/README updated. 47 tests passing.
+  - Owner request — live map hero background: `src/components/hero-map/` (Iran provinces draw in
+    gold → visitor located via Vercel IP headers (`GET /api/geo`, `?city=Mashhad` override) → camera
+    flies into Mashhad (van Wijk zoom, SVG viewBox) → OSM main roads reveal, 6 neighborhood pins +
+    side panel with listing count and median full-rahn from the seed data). Data baked by
+    `scripts/build-hero-map.mjs` (geoBoundaries CC BY 4.0, OSM ODbL); roads chunk lazy-loaded.
+    Idle home is now dark; results view unchanged. Intro plays once per load; reduced-motion jumps
+    to the city. Checked at 390, 1280 and 1440 px.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -133,6 +140,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Shared-room («همخونه» / اجاره اتاق) listings flagged; excluded unless the user asks for them
 - [x] Compare view (2–3 listings, only differing specs, best value highlighted)
 - [x] Mention live read-only data source (MCP) as future work in DEMO_SCRIPT + README
+
+## Owner requests
+- [x] Live motion map background on the home page (Iran → user location → Mashhad neighborhoods)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

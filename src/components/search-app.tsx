@@ -4,12 +4,14 @@ import { GitCompareArrows, Info, ListOrdered, LoaderCircle, MessageSquareText, R
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CompareDialog } from "@/components/compare-dialog";
+import { HeroMap } from "@/components/hero-map/hero-map";
 import { IntentChips } from "@/components/intent-chips";
 import { ListingCard } from "@/components/listing-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExplainApiResponse, SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { DEMO_QUERIES } from "@/lib/demo-queries";
+import type { HoodStat } from "@/lib/hood-stats";
 import { toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +21,7 @@ const HERO_EXAMPLES = DEMO_QUERIES.slice(0, 6);
 
 type Status = "idle" | "loading" | "done" | "error";
 
-export function SearchApp() {
+export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: HoodStat[] } }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
@@ -96,140 +98,151 @@ export function SearchApp() {
   const compact = status !== "idle";
 
   return (
-    <div className={cn("mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 sm:pt-10", compareIds.length ? "pb-28" : "pb-16")}>
-      <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
-        <button type="button" onClick={reset} className="flex items-baseline gap-2" aria-label="صفحهٔ اول">
-          <span className={cn("font-extrabold tracking-tight", compact ? "text-2xl" : "text-5xl sm:text-6xl")}>
-            هوم<span className="text-primary">راب</span>
-          </span>
-          {compact && <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در مشهد</span>}
-        </button>
-        {!compact && (
-          <p className="text-muted-foreground max-w-xl text-base sm:text-lg">
-            نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
-          </p>
+    <>
+      {!compact && <HeroMap stats={hoodStats} className="z-0" />}
+      <div
+        className={cn(
+          "relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 sm:pt-10",
+          compareIds.length ? "pb-28" : "pb-16",
+          !compact && "dark text-foreground pt-16 sm:pt-16",
         )}
-      </header>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit(query);
-        }}
-        className={cn("flex w-full flex-col gap-2 sm:flex-row", !compact && "mx-auto max-w-2xl")}
       >
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="مثلاً: یه دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن…"
-          className="border-input focus-visible:border-ring focus-visible:ring-ring/40 bg-background h-12 w-full rounded-xl border px-4 text-base shadow-xs outline-none focus-visible:ring-3 sm:h-14 sm:flex-1 sm:text-lg"
-          aria-label="چی می‌خوای؟"
-          maxLength={300}
-        />
-        <Button type="submit" size="lg" className="h-12 rounded-xl px-6 text-base sm:h-14" disabled={status === "loading"}>
-          {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
-          جستجو
-        </Button>
-      </form>
-
-      {!compact && (
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-3">
-          <p className="text-muted-foreground text-sm">یا یکی از این‌ها رو امتحان کن:</p>
-          <ul className="flex flex-wrap justify-center gap-2">
-            {HERO_EXAMPLES.map((q) => (
-              <li key={q}>
-                <button
-                  type="button"
-                  onClick={() => submit(q)}
-                  className="bg-muted hover:bg-primary/10 hover:text-primary text-muted-foreground rounded-full px-3.5 py-2 text-sm transition-colors"
-                >
-                  {q}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {!compact && <HowItWorks />}
-
-      {status === "loading" && <LoadingState />}
-      {status === "error" && <ErrorState onRetry={() => run(query)} />}
-      {status === "done" && data && (
-        <section className="flex flex-col gap-5">
-          <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
-          <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
-          {data.total === 0 ? (
-            <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
-          ) : (
-            <>
-              <div className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3">
-                <h2 className="text-lg font-bold">
-                  {toFaDigits(data.total)} آگهی با بودجه‌ات جور است
-                  {data.total > data.results.length && (
-                    <span className="text-muted-foreground ms-2 text-sm font-normal">({toFaDigits(data.results.length)} تای برتر)</span>
-                  )}
-                </h2>
-                <p className="text-muted-foreground text-xs">مرتب‌شده بر اساس تطابق با نیازت</p>
-              </div>
-              <ol className="grid gap-4 md:grid-cols-2">
-                {data.results.map((r, i) => {
-                  const id = r.listing.id;
-                  const inTop = i < EXPLAIN_TOP;
-                  return (
-                    <li key={id}>
-                      <ListingCard
-                        result={r}
-                        rank={i + 1}
-                        explanation={explanations[id] ?? r.explanation}
-                        explaining={inTop && explainState === "loading"}
-                        aiExplained={explainState === "ai" && inTop}
-                        comparing={compareIds.includes(id)}
-                        compareDisabled={compareIds.length >= COMPARE_MAX}
-                        onToggleCompare={() =>
-                          setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
-                        }
-                      />
-                    </li>
-                  );
-                })}
-              </ol>
-            </>
-          )}
-        </section>
-      )}
-
-      {status === "done" && data && compareIds.length > 0 && (
-        <>
-          <div className="bg-popover fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-md items-center gap-2 rounded-2xl border p-2 ps-4 shadow-lg">
-            <span className="flex-1 text-sm font-medium">
-              {toFaDigits(compareIds.length)} آگهی انتخاب شده
-              {compareIds.length < 2 && <span className="text-muted-foreground text-xs"> — یکی دیگه انتخاب کن</span>}
+        <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
+          <button type="button" onClick={reset} data-hero-block className="flex items-baseline gap-2" aria-label="صفحهٔ اول">
+            <span className={cn("font-extrabold tracking-tight", compact ? "text-2xl" : "text-5xl sm:text-6xl")}>
+              هوم<span className="text-primary">راب</span>
             </span>
-            <Button size="sm" disabled={compareIds.length < 2} onClick={() => setCompareOpen(true)}>
-              <GitCompareArrows />
-              مقایسه
-            </Button>
-            <Button size="icon-sm" variant="ghost" aria-label="لغو مقایسه" onClick={() => setCompareIds([])}>
-              <X />
-            </Button>
-          </div>
-          <CompareDialog
-            open={compareOpen}
-            onOpenChange={setCompareOpen}
-            items={compareIds
-              .map((id) => data.results.find((r) => r.listing.id === id))
-              .filter((r): r is NonNullable<typeof r> => Boolean(r))}
-          />
-        </>
-      )}
+            {compact && <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در مشهد</span>}
+          </button>
+          {!compact && (
+            <p data-hero-block className="text-muted-foreground max-w-xl text-base sm:text-lg">
+              نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
+            </p>
+          )}
+        </header>
 
-      <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
-        هومراب یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
-        هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
-        تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
-      </footer>
-    </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit(query);
+          }}
+          data-hero-block
+          className={cn("flex w-full flex-col gap-2 sm:flex-row", !compact && "mx-auto max-w-2xl")}
+        >
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="مثلاً: یه دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن…"
+            className="border-input focus-visible:border-ring focus-visible:ring-ring/40 bg-background/80 backdrop-blur-md h-12 w-full rounded-xl border px-4 text-base shadow-xs outline-none focus-visible:ring-3 sm:h-14 sm:flex-1 sm:text-lg"
+            aria-label="چی می‌خوای؟"
+            maxLength={300}
+          />
+          <Button type="submit" size="lg" className="h-12 rounded-xl px-6 text-base sm:h-14" disabled={status === "loading"}>
+            {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
+            جستجو
+          </Button>
+        </form>
+
+        {!compact && (
+          <div data-hero-block className="mx-auto flex max-w-3xl flex-col items-center gap-3">
+            <p className="text-muted-foreground text-sm">یا یکی از این‌ها رو امتحان کن:</p>
+            <ul className="flex flex-wrap justify-center gap-2">
+              {HERO_EXAMPLES.map((q) => (
+                <li key={q}>
+                  <button
+                    type="button"
+                    onClick={() => submit(q)}
+                    className="bg-muted/70 backdrop-blur-md hover:bg-primary/15 hover:text-primary text-muted-foreground rounded-full px-3.5 py-2 text-sm transition-colors"
+                  >
+                    {q}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {!compact && <HowItWorks />}
+
+        {status === "loading" && <LoadingState />}
+        {status === "error" && <ErrorState onRetry={() => run(query)} />}
+        {status === "done" && data && (
+          <section className="flex flex-col gap-5">
+            <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+            <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
+            {data.total === 0 ? (
+              <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
+            ) : (
+              <>
+                <div className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3">
+                  <h2 className="text-lg font-bold">
+                    {toFaDigits(data.total)} آگهی با بودجه‌ات جور است
+                    {data.total > data.results.length && (
+                      <span className="text-muted-foreground ms-2 text-sm font-normal">({toFaDigits(data.results.length)} تای برتر)</span>
+                    )}
+                  </h2>
+                  <p className="text-muted-foreground text-xs">مرتب‌شده بر اساس تطابق با نیازت</p>
+                </div>
+                <ol className="grid gap-4 md:grid-cols-2">
+                  {data.results.map((r, i) => {
+                    const id = r.listing.id;
+                    const inTop = i < EXPLAIN_TOP;
+                    return (
+                      <li key={id}>
+                        <ListingCard
+                          result={r}
+                          rank={i + 1}
+                          explanation={explanations[id] ?? r.explanation}
+                          explaining={inTop && explainState === "loading"}
+                          aiExplained={explainState === "ai" && inTop}
+                          comparing={compareIds.includes(id)}
+                          compareDisabled={compareIds.length >= COMPARE_MAX}
+                          onToggleCompare={() =>
+                            setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
+                          }
+                        />
+                      </li>
+                    );
+                  })}
+                </ol>
+              </>
+            )}
+          </section>
+        )}
+
+        {status === "done" && data && compareIds.length > 0 && (
+          <>
+            <div className="bg-popover fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-md items-center gap-2 rounded-2xl border p-2 ps-4 shadow-lg">
+              <span className="flex-1 text-sm font-medium">
+                {toFaDigits(compareIds.length)} آگهی انتخاب شده
+                {compareIds.length < 2 && <span className="text-muted-foreground text-xs"> — یکی دیگه انتخاب کن</span>}
+              </span>
+              <Button size="sm" disabled={compareIds.length < 2} onClick={() => setCompareOpen(true)}>
+                <GitCompareArrows />
+                مقایسه
+              </Button>
+              <Button size="icon-sm" variant="ghost" aria-label="لغو مقایسه" onClick={() => setCompareIds([])}>
+                <X />
+              </Button>
+            </div>
+            <CompareDialog
+              open={compareOpen}
+              onOpenChange={setCompareOpen}
+              items={compareIds
+                .map((id) => data.results.find((r) => r.listing.id === id))
+                .filter((r): r is NonNullable<typeof r> => Boolean(r))}
+            />
+          </>
+        )}
+
+        <footer data-hero-block className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
+          هومراب یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+          هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
+          تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
+          {!compact && <span className="block opacity-60">نقشه: © مشارکت‌کنندگان OpenStreetMap و geoBoundaries</span>}
+        </footer>
+      </div>
+    </>
   );
 }
 
@@ -240,9 +253,9 @@ function HowItWorks() {
     { icon: ListOrdered, title: "بهترین‌ها با دلیل", text: "رهن و اجاره هم‌تراز می‌شن و هر آگهی می‌گه چرا به دردت می‌خوره" },
   ];
   return (
-    <ol className="mx-auto mt-4 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
+    <ol data-hero-block className="mx-auto mt-4 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
       {steps.map(({ icon: Icon, title, text }, i) => (
-        <li key={title} className="bg-card flex gap-3 rounded-2xl border p-4">
+        <li key={title} className="bg-card/60 flex gap-3 rounded-2xl border p-4 backdrop-blur-md">
           <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl">
             <Icon className="size-4.5" />
           </span>
