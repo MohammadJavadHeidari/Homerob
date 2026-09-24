@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const parsed = body.data.intent
     ? { intent: body.data.intent, source: "edited" as const, model: null, ms: 0 }
     : await parseIntent(body.data.query);
-  const { results, total } = search(parsed.intent);
+  const { results, total } = search(parsed.intent, undefined, Infinity);
 
   return Response.json({
     query: body.data.query,

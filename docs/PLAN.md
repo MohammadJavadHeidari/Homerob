@@ -30,7 +30,16 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     metadata + theme color, `src/app/icon.svg` + `apple-icon.png`, how-it-works strip, about footer.
   - Phase 6 (partial): `docs/DEMO_SCRIPT.md` drafted (3 queries + backup, timings, checklist),
     README rewritten (live link, screenshots, how it works, run locally; fixed stale claims), PR #4 merged.
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Then Stretch.
+  - Stretch (owner request): post-search filter panel, Divar-style but richer. `/api/search` now returns
+    the whole budget-fitting set; `src/lib/search/refine.ts` (pure: hard filters, sort, facet counts,
+    histograms; tested) runs client-side so every change is instant. `filter-panel.tsx`: price (full
+    rahn ↔ full rent toggle) / area / price-per-m² histogram range sliders, neighborhood + amenity chips
+    with live counts, rooms grid, building age, source; "remove budget cap" hands back to the AI intent.
+    `results-view.tsx`: sticky sidebar (desktop), bottom sheet with "show N" (mobile), sort pills,
+    removable active-filter chips, animated list (`motion`), pagination (12), AI explanations fetched
+    for whatever reaches the refined top 10. Screenshots: `docs/screenshots/*-filters.png`.
+- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Map view once
+  the owner answers the map question.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -54,6 +63,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- [DECISION] **Map view (owner offered a Neshan key):** results + map side by side like Divar, price
+  pins, hover/click syncs with cards, "search this area". Listings need approximate lat/lng (seed
+  data, will add). Options: (a) **Neshan Web SDK** with a free *web map* key from the owner, restricted
+  to `homerob.vercel.app` + `localhost`, in `NEXT_PUBLIC_NESHAN_MAP_KEY` — Persian labels, familiar
+  look (recommended); (b) MapLibre + OpenStreetMap tiles, no key — works today, less native look;
+  (c) stylized animated SVG map of the 6 neighborhoods — no key, not a real map.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -126,3 +141,5 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
 - [ ] "Compare" view for 2–3 listings
+- [x] Post-search filter panel (facets, histograms, sort, mobile sheet, motion) — owner request
+- [ ] [DECISION] Map view with price pins (see Open questions)

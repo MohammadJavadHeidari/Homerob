@@ -4,15 +4,15 @@ import { ListOrdered, LoaderCircle, MessageSquareText, RotateCcw, Search, Search
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { IntentChips } from "@/components/intent-chips";
-import { ListingCard } from "@/components/listing-card";
+import { ResultsView } from "@/components/results-view";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ExplainApiResponse, SearchApiResponse, SearchIntent } from "@/lib/api-types";
+import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { DEMO_QUERIES } from "@/lib/demo-queries";
 import { toFaDigits } from "@/lib/persian";
+import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
 
-const EXPLAIN_TOP = 10;
 const HERO_EXAMPLES = DEMO_QUERIES.slice(0, 6);
 
 type Status = "idle" | "loading" | "done" | "error";
@@ -21,8 +21,7 @@ export function SearchApp() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
-  const [explanations, setExplanations] = useState<Record<string, string>>({});
-  const [explainState, setExplainState] = useState<"idle" | "loading" | "ai" | "rules">("idle");
+  const [refine, setRefine] = useState<Refine>(EMPTY_REFINE);
   const requestId = useRef(0);
 
   const run = useCallback(async (q: string, intent?: SearchIntent) => {
@@ -30,8 +29,6 @@ export function SearchApp() {
     if (text.length < 2) return;
     const id = ++requestId.current;
     setStatus("loading");
-    setExplainState("idle");
-    setExplanations({});
     if (!intent) window.history.replaceState(null, "", `?q=${encodeURIComponent(text)}`);
 
     try {
@@ -44,21 +41,9 @@ export function SearchApp() {
       const json: SearchApiResponse = await res.json();
       if (id !== requestId.current) return; // a newer search started
       setData(json);
+      // a new query starts clean; editing the AI intent keeps the hand-set filters that still apply
+      setRefine((prev) => (intent ? clampRanges(prev, domains(json.results)) : EMPTY_REFINE));
       setStatus("done");
-
-      const top = json.results.slice(0, EXPLAIN_TOP);
-      if (!top.length) return;
-      setExplainState("loading");
-      const ex = await fetch("/api/explain", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: text, intent: json.intent, ids: top.map((r) => r.listing.id) }),
-      })
-        .then((r) => (r.ok ? (r.json() as Promise<ExplainApiResponse>) : null))
-        .catch(() => null);
-      if (id !== requestId.current) return;
-      if (ex) setExplanations(ex.byId);
-      setExplainState(ex?.source === "ai" ? "ai" : "rules");
     } catch {
       if (id === requestId.current) setStatus("error");
     }
@@ -90,7 +75,12 @@ export function SearchApp() {
   const compact = status !== "idle";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 pb-16 sm:pt-10">
+    <div
+      className={cn(
+        "mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 pb-16 transition-[max-width] duration-500 sm:pt-10",
+        status === "done" && data?.total ? "max-w-7xl" : "max-w-5xl",
+      )}
+    >
       <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
         <button type="button" onClick={reset} className="flex items-baseline gap-2" aria-label="صفحهٔ اول">
           <span className={cn("font-extrabold tracking-tight", compact ? "text-2xl" : "text-5xl sm:text-6xl")}>
@@ -155,34 +145,13 @@ export function SearchApp() {
           {data.total === 0 ? (
             <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
           ) : (
-            <>
-              <div className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3">
-                <h2 className="text-lg font-bold">
-                  {toFaDigits(data.total)} آگهی با بودجه‌ات جور است
-                  {data.total > data.results.length && (
-                    <span className="text-muted-foreground ms-2 text-sm font-normal">({toFaDigits(data.results.length)} تای برتر)</span>
-                  )}
-                </h2>
-                <p className="text-muted-foreground text-xs">مرتب‌شده بر اساس تطابق با نیازت</p>
-              </div>
-              <ol className="grid gap-4 md:grid-cols-2">
-                {data.results.map((r, i) => {
-                  const id = r.listing.id;
-                  const inTop = i < EXPLAIN_TOP;
-                  return (
-                    <li key={id}>
-                      <ListingCard
-                        result={r}
-                        rank={i + 1}
-                        explanation={explanations[id] ?? r.explanation}
-                        explaining={inTop && explainState === "loading"}
-                        aiExplained={explainState === "ai" && inTop}
-                      />
-                    </li>
-                  );
-                })}
-              </ol>
-            </>
+            <ResultsView
+              key={data.query + JSON.stringify(data.intent)}
+              data={data}
+              refine={refine}
+              onRefine={setRefine}
+              onIntentChange={(next) => run(data.query, next)}
+            />
           )}
         </section>
       )}
