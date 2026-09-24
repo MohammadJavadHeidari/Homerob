@@ -31,3 +31,10 @@
   OpenAI-compatible API at `https://api.deepseek.com`, models `deepseek-flash` (default, fast/cheap)
   and `deepseek-v4-pro`. Provider abstraction keeps `claude`/`openai` as options. Account has $0
   balance yet → mock provider until topped up.
+- 2026-09-24 — **AI provider: Google Gemini free tier** (owner has no budget; supersedes the
+  DeepSeek and Claude entries above). Via the OpenAI-compatible endpoint
+  `https://generativelanguage.googleapis.com/v1beta/openai/`, key in `GEMINI_API_KEY`.
+  Primary model `gemini-3.6-flash` (~2.5s, best quality); fallback `gemini-3.5-flash-lite`
+  (~0.7s) on 429/503 — `gemini-2.5-*` is closed to new users and `gemini-3.8-flash` /
+  `gemini-flash-latest` returned 503 (high demand) when tested. Free-tier daily caps apply,
+  so cache repeated queries. Provider abstraction keeps `mock`/`deepseek`/`claude`/`openai`.

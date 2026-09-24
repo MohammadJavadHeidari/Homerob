@@ -9,7 +9,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   `.env.example`, placeholder home page (checked at 390px and 1280px). Build + lint green.
 - **Next:** Phase 1 → `Listing` type + seed data
 - **Blocked:** Vercel deploy — owner must import the repo in Vercel (see Open questions).
-  Phase 2/3 real LLM calls need API credits — use mock provider until then.
+  AI provider unblocked: Gemini free tier works (see DECISIONS).
 - **Cut / deferred:** —
 - **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
@@ -18,11 +18,6 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URL:** —
 
 ## Open questions
-- [DECISION] **Free AI provider:** owner has no budget for credits (Claude & DeepSeek keys both $0).
-  Options: (a) Google Gemini API free tier via AI Studio (recommended — Flash models free, good Persian,
-  JSON mode, OpenAI-compatible endpoint), (b) Groq free tier (~1,000 req/day, very fast, weaker Persian),
-  (c) OpenRouter `:free` models (~50 req/day, lineup changes). Until answered: mock provider.
-  Implementation note: one OpenAI-compatible provider with configurable base URL covers all of these + DeepSeek.
 - **Vercel:** owner imports `MohammadJavadHeidari/Homerob` in Vercel (framework: Next.js, no env
   vars needed yet — `AI_PROVIDER` defaults to mock) and shares the preview URL.
 
@@ -34,7 +29,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Scaffold Next.js (App Router) + TypeScript + Tailwind + ESLint
 - [x] shadcn/ui with base-ui preset
 - [x] RTL: `<html lang="fa" dir="rtl">`, Persian font (Vazirmatn), Persian digits helper
-- [x] `.env.example` (`AI_PROVIDER=mock|deepseek|claude|openai`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); `.env.local` gitignored
+- [x] `.env.example` (`AI_PROVIDER=mock|gemini|deepseek|claude|openai`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`); `.env.local` gitignored
 - [ ] Placeholder home page, push, confirm Vercel deploy works (owner connects Vercel to repo if not yet)
 
 ### Phase 1 — Seed data & normalization (≤ 2h)
@@ -50,7 +45,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ### Phase 2 — Intent parsing (≤ 3h)
 - [ ] `SearchIntent` schema (zod): maxDeposit, maxRent, flexibleConversion, neighborhoods[],
       minRooms, minArea, mustHave[], niceToHave[], freeTextNotes
-- [ ] Provider abstraction `lib/ai/` with `mock`, `deepseek` (default real provider), `claude`, `openai` implementations
+- [ ] Provider abstraction `lib/ai/` with `mock` and one OpenAI-compatible client (base URL + key + model per provider: `gemini` default,
+      `deepseek`, `openai`) + `claude`; Gemini: `gemini-3.6-flash` with fallback to `gemini-3.5-flash-lite` on 429/503
 - [ ] Prompt: Persian query → strict JSON intent (handles "میلیون/میلیارد", Persian digits, colloquial phrasing)
 - [ ] `POST /api/search` → returns `{ intent, results }`
 - [ ] 8–10 sample queries in `lib/demo-queries.ts` used for manual testing and the UI
