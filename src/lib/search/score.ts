@@ -69,7 +69,11 @@ export function scoreListing(l: Listing, intent: SearchIntent): { score: number;
 }
 
 function neighborhoodScore(l: Listing, intent: SearchIntent) {
-  if (!intent.neighborhoods.length) return 1;
+  if (!intent.neighborhoods.length) {
+    // "near me": own neighborhood first, then the ones next to it
+    if (intent.nearMe) return l.neighborhood === intent.nearMe ? 1 : 0.6;
+    return 1;
+  }
   if (intent.neighborhoods.includes(l.neighborhood)) return 1;
   if (intent.neighborhoods.some((n) => ADJACENT[n]?.includes(l.neighborhood))) return 0.45;
   return 0;
@@ -130,6 +134,9 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
       if (near) add("con", `${l.neighborhood} است، نزدیک ${near}`, 7);
       else add("con", `در ${l.neighborhood}، خارج از محله‌های مدنظرت`, 9);
     }
+  } else if (intent.nearMe) {
+    if (l.neighborhood === intent.nearMe) add("pro", `همین ${l.neighborhood}، نزدیک خودت`, 5);
+    else add("info", `${l.neighborhood}، کنار ${intent.nearMe} و نزدیک خودت`, 4);
   }
 
   // rooms / area

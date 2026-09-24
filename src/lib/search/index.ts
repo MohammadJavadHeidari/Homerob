@@ -1,5 +1,6 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
 import type { SearchIntent } from "@/lib/intent/schema";
+import { areaAround } from "@/lib/geo";
 import { toFullDeposit } from "@/lib/pricing";
 import type { Listing, ListingSource } from "@/lib/types";
 
@@ -33,7 +34,9 @@ const LIMIT = 20;
 /** Hard-filter by budget, then soft-score and rank. */
 export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS): SearchResponse {
   const results: SearchResult[] = [];
+  const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(intent.nearMe) : null;
   for (const { listing, alsoOn } of dedupe(listings)) {
+    if (area && !area.includes(listing.neighborhood)) continue;
     const budget = fitBudget(listing, intent);
     if (!budget.fits) continue;
     const { score, breakdown } = scoreListing(listing, intent);

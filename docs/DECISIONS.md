@@ -41,3 +41,7 @@
 - 2026-09-24 — Gemini model order changed after load testing: `gemini-3.5-flash-lite` first
   (~0.8s when healthy), then `gemini-flash-lite-latest`, then `gemini-3.6-flash` (mostly 503).
   Requests are hedged (next model after 1.5s, 5s deadline) and fall back to the rule parser.
+- 2026-09-24 — **Location-aware home (owner request).** Ask for browser location on first visit; title
+  becomes «جستجوی هوشمند اجاره در {city}» and results are limited to the user's area (nearest
+  neighborhood + adjacent ones) unless the query names a neighborhood. Data is still Mashhad only;
+  users elsewhere see their city named as "not covered yet" and get Mashhad results.
