@@ -11,8 +11,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Blocked:** Vercel deploy — owner must import the repo in Vercel (see Open questions).
   Phase 2/3 real LLM calls need an API key — use mock provider until then.
 - **Cut / deferred:** —
-- **Notes:** `ui.shadcn.com` is blocked by the dev sandbox network policy, so `npx shadcn add`
-  fails; shadcn components are written by hand into `src/components/ui/` (base-ui primitives).
+- **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
+  `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
+  the `cn` package (shadcn's replacement for clsx + tailwind-merge).
   `AGENTS.md` is managed by `next dev` — leave it; it keeps Next from editing `CLAUDE.md`.
 - **Preview URL:** —
 
