@@ -61,6 +61,9 @@ export function intentToChips(intent: SearchIntent): Chip[] {
       remove: (i) => ({ ...i, niceToHave: i.niceToHave.filter((x) => x !== k) }),
     });
   }
+  if (intent.sharedRoom) {
+    chips.push({ id: "shared", label: "اتاق در واحد اشتراکی (همخونه)", tone: "home", remove: (i) => ({ ...i, sharedRoom: false }) });
+  }
   if (intent.freeTextNotes) {
     chips.push({ id: "note", label: intent.freeTextNotes, tone: "note", remove: (i) => ({ ...i, freeTextNotes: null }) });
   }
