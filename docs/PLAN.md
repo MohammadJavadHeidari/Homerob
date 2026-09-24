@@ -8,7 +8,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   (base-ui, base-nova style), RTL + Vazirmatn + `src/lib/persian.ts` digit/Toman helpers,
   `.env.example`, placeholder home page (checked at 390px and 1280px). Build + lint green.
 - **Next:** Phase 1 → `Listing` type + seed data
-- **Blocked:** Vercel deploy — owner must import the repo in Vercel (see Open questions).
+- **Blocked:** Production deploy — `main` has no app until the branch is merged (see Open questions).
   AI provider unblocked: Gemini free tier works (see DECISIONS).
 - **Cut / deferred:** —
 - **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
@@ -18,9 +18,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URL:** —
 
 ## Open questions
-- **Vercel:** owner imports `MohammadJavadHeidari/Homerob` in Vercel (framework: Next.js, no env
-  vars needed yet — `AI_PROVIDER` defaults to mock) and shares the preview URL.
-
+- **Vercel:** project is connected (owner). Env vars: `AI_PROVIDER=gemini`, `GEMINI_API_KEY`
+  (Production + Preview). Production build of `main` failed only because `main` has no app yet
+  (code lives on `claude/happy-ptolemy-lm6iub`) → merge the branch into `main` via PR to get a
+  green Production deploy. Owner to confirm the PR.
 ---
 
 ## Day 1
