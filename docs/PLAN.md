@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 5
+- **Current phase:** Phase 6
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -25,7 +25,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     explanation swapped in from `/api/explain`), `src/lib/search/suggest.ts` (empty-state relaxed
     budget, one click). Checked at 390px and 1280px; screenshots in `docs/screenshots/`.
     PR #3 merged → Production shows the full UI (search ~1s, AI explanations ~4s, both `ai`).
-- **Next:** Phase 5 → response time check, OG/meta/favicon/about line, production deploy
+  - Phase 5: prod latency measured (search p50 ≈ 1.7s, max ≈ 5s by design; repeat ≈ 150ms from
+    in-memory cache; explanations 2–7s, async); OG image `public/og.png` (Chromium-rendered),
+    metadata + theme color, `src/app/icon.svg` + `apple-icon.png`, how-it-works strip, about footer.
+- **Next:** Phase 6 → `docs/DEMO_SCRIPT.md` (Persian, ≤ 5 min), owner approves queries, README
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -49,8 +52,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- —
-
+- **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
+  to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
+  3 demo queries as a static cache so the recording is instant and reliable (recommended),
+  (b) keep everything live and re-record if Gemini is slow. Until answered: live only.
 ---
 
 ## Day 1
@@ -99,9 +104,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Mobile-first check at 390px and desktop
 
 ### Phase 5 — Polish & production (≤ 2h)
-- [ ] Response time check (target < 5s); cache repeated queries in memory
-- [ ] Meta/OG title, favicon, small "about" line explaining the idea
-- [ ] Production deploy green, with real AI provider
+- [x] Response time check (target < 5s); cache repeated queries in memory
+- [x] Meta/OG title, favicon, small "about" line explaining the idea
+- [x] Production deploy green, with real AI provider
 
 ### Phase 6 — Demo package (≤ 2h)
 - [ ] `docs/DEMO_SCRIPT.md`: Persian narration, ≤ 5 min: problem → solution → 3 live queries
