@@ -64,6 +64,14 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن» (simple), (2) «دانشجوام… ماهی ۵ تومن» (tricky budget →
   empty state + suggestion), (3) «دوخوابه بالکن‌دار سجاد، پارکینگ مهم نیست، رهن ۴۰۰ میلیون»
   (trade-off + remove a chip) — and the narration.
+- [DECISION] **divar-mcp** (github.com/mmdju/divar-mcp — hosted read-only MCP over Divar's
+  undocumented public API; docs-only repo, text/branding not reusable). Conflicts with the
+  "no live scraping" hard stop. Options: (1) borrow product ideas only — placeholder-price
+  detection, shared-room flag, negotiable = null, sample size in price verdicts, "only differing
+  specs" compare view (no connection, recommended); (2) one-off offline calibration of seed
+  prices / the 3% rate from real Mashhad medians (needs rule change); (3) live "Divar beta" tab
+  (breaks hard stop, fragile; not recommended); (4) mention as future data source in the video.
+  Until answered: not connected.
 
 ---
 
