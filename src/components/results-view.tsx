@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDown, FilterX, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, FilterX, List, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion, MotionConfig } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { AnimatedNumber, FilterPanel } from "@/components/filter-panel";
 import { ListingCard } from "@/components/listing-card";
@@ -13,6 +14,12 @@ import type { ExplainApiResponse, SearchApiResponse, SearchIntent } from "@/lib/
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { activeCount, applyRefine, domains as domainsOf, EMPTY_REFINE, SORTS, type Refine, type SortKey } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
+
+// mapbox-gl touches `window`; load it only in the browser, and only when the map is shown
+const ListingMap = dynamic(() => import("@/components/listing-map"), {
+  ssr: false,
+  loading: () => <div className="bg-muted size-full animate-pulse" />,
+});
 
 const EXPLAIN_TOP = 10;
 const PAGE = 12;
@@ -39,6 +46,14 @@ export function ResultsView({
 }) {
   const [pages, setPages] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const wide = useMedia("(min-width: 1280px)");
+  // map is open by default where it fits next to the list (xl+); elsewhere it's a toggle
+  const [mapPref, setMapPref] = useState<boolean | null>(null);
+  const showMap = mapPref ?? wide;
+  const split = showMap && wide;
+  const [listHover, setListHover] = useState<string | null>(null);
+  const [mapHover, setMapHover] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const domains = useMemo(() => domainsOf(data.results), [data.results]);
   const refined = useMemo(() => applyRefine(data.results, refine), [data.results, refine]);
   const visible = refined.slice(0, pages * PAGE);
@@ -50,6 +65,39 @@ export function ResultsView({
   };
 
   const explain = useExplanations(data, refined.slice(0, EXPLAIN_TOP).map((r) => r.listing.id));
+  const selected = refined.find((r) => r.listing.id === selectedId) ?? null;
+  const focus = useMemo(
+    () => (refine.neighborhoods.length ? refine.neighborhoods : data.intent.neighborhoods.length ? data.intent.neighborhoods : data.intent.nearMe ? [data.intent.nearMe] : []),
+    [refine.neighborhoods, data.intent],
+  );
+
+  const scrollToCard = (id: string) => {
+    const idx = refined.findIndex((r) => r.listing.id === id);
+    if (idx >= visible.length) setPages(Math.ceil((idx + 1) / PAGE));
+    setTimeout(() => document.getElementById(`card-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 350);
+  };
+
+  const map = showMap && (
+    <ListingMap
+      results={refined}
+      activeId={listHover ?? mapHover}
+      selected={selected}
+      selectedWhy={selected ? (explain.byId[selected.listing.id]?.text ?? selected.explanation) : null}
+      onHover={setMapHover}
+      onSelect={(id) => {
+        setSelectedId(id);
+        if (id && split) scrollToCard(id);
+      }}
+      onShowInList={(id) => {
+        if (!split) setMapPref(false);
+        scrollToCard(id);
+      }}
+      focus={focus}
+      bbox={refine.bbox}
+      onBBox={(bbox) => change({ ...refine, bbox })}
+      className={cn("size-full", !split && "rounded-2xl border")}
+    />
+  );
 
   const panel = (
     <FilterPanel
@@ -64,7 +112,12 @@ export function ResultsView({
 
   return (
     <MotionConfig reducedMotion="user">
-    <div className="grid items-start gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div
+      className={cn(
+        "grid items-start gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]",
+        split && "xl:grid-cols-[18rem_minmax(0,25rem)_minmax(0,1fr)] 2xl:grid-cols-[19rem_minmax(0,30rem)_minmax(0,1fr)]",
+      )}
+    >
       {/* desktop sidebar (start side = right in RTL) */}
       <aside className="bg-card sticky top-4 hidden max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl border shadow-xs lg:flex">
         <PanelHeader count={nActive} onClear={() => change({ ...EMPTY_REFINE, sort: refine.sort })} />
@@ -83,6 +136,15 @@ export function ResultsView({
                   : `${data.intent.nearMe && !data.intent.neighborhoods.length ? "نزدیک خودت " : ""}با بودجه‌ات جور است`}
               </span>
             </h2>
+            <div className="flex items-center gap-2">
+            <Button variant={showMap ? "default" : "outline"} className="h-9 rounded-full" onClick={() => {
+                setMapPref(!showMap);
+                // small screens: the map replaces the list, bring it into view
+                if (!showMap && !wide) requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("results-map")?.scrollIntoView({ block: "start" })));
+              }}>
+              {showMap && !wide ? <List /> : <MapIcon />}
+              {showMap ? (wide ? "بستن نقشه" : "لیست") : "نقشه"}
+            </Button>
             <Button variant="outline" className="relative h-9 rounded-full lg:hidden" onClick={() => setSheetOpen(true)}>
               <SlidersHorizontal />
               فیلترها
@@ -100,13 +162,18 @@ export function ResultsView({
                 )}
               </AnimatePresence>
             </Button>
+            </div>
           </div>
           <SortBar value={refine.sort} onChange={(sort) => change({ ...refine, sort })} />
         </div>
 
         <ActiveFilters refine={refine} onChange={change} />
 
-        {refined.length === 0 ? (
+        {showMap && !wide ? (
+          <div id="results-map" className="h-[calc(100dvh-8.5rem)] scroll-mt-32 overflow-hidden rounded-2xl">
+            {map}
+          </div>
+        ) : refined.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -120,7 +187,7 @@ export function ResultsView({
             </Button>
           </motion.div>
         ) : (
-          <motion.ol layout className="grid gap-4 md:grid-cols-2">
+          <motion.ol layout className={cn("grid gap-4", !split && "md:grid-cols-2")}>
             <AnimatePresence mode="popLayout" initial={false}>
               {visible.map((r, i) => {
                 const id = r.listing.id;
@@ -128,7 +195,14 @@ export function ResultsView({
                 return (
                   <motion.li
                     key={id}
+                    id={`card-${id}`}
                     layout
+                    onMouseEnter={() => setListHover(id)}
+                    onMouseLeave={() => setListHover(null)}
+                    className={cn(
+                      "rounded-2xl ring-offset-4 ring-offset-background transition-shadow duration-300",
+                      (mapHover === id || selectedId === id) && "ring-primary ring-2",
+                    )}
                     initial={{ opacity: 0, scale: 0.96, y: 12 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.18 } }}
@@ -151,13 +225,24 @@ export function ResultsView({
           </motion.ol>
         )}
 
-        {refined.length > visible.length && (
+        {!(showMap && !wide) && refined.length > visible.length && (
           <Button variant="outline" className="mx-auto h-10 rounded-full px-6" onClick={() => setPages((p) => p + 1)}>
             <ChevronDown />
             {toFaDigits(Math.min(PAGE, refined.length - visible.length))} آگهی دیگر
           </Button>
         )}
       </div>
+
+      {split && (
+        <motion.div
+          initial={{ opacity: 0, x: -24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={SPRING}
+          className="sticky top-4 hidden h-[calc(100dvh-2rem)] overflow-hidden rounded-2xl border shadow-xs xl:block"
+        >
+          {map}
+        </motion.div>
+      )}
 
       {/* mobile bottom sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -262,6 +347,7 @@ function ActiveFilters({ refine, onChange }: { refine: Refine; onChange: (r: Ref
     chips.push({ id: `a-${a}`, label: AMENITIES[a].label, next: { ...refine, amenities: refine.amenities.filter((x) => x !== a) } });
   if (refine.maxAge !== null)
     chips.push({ id: "age", label: refine.maxAge === 0 ? "کلیدنخورده" : `تا ${toFaDigits(refine.maxAge)} سال ساخت`, next: { ...refine, maxAge: null } });
+  if (refine.bbox) chips.push({ id: "bbox", label: "محدودهٔ نقشه", next: { ...refine, bbox: null } });
   for (const s of refine.sources)
     chips.push({ id: `s-${s}`, label: s === "divar" ? "فقط دیوار" : "فقط شیپور", next: { ...refine, sources: refine.sources.filter((x) => x !== s) } });
 
@@ -338,4 +424,16 @@ function useExplanations(data: SearchApiResponse, topIds: string[]) {
   }, [key, byId, data.query, data.intent]);
 
   return { byId, pending };
+}
+
+function useMedia(query: string): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const m = window.matchMedia(query);
+      m.addEventListener("change", onChange);
+      return () => m.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
 }

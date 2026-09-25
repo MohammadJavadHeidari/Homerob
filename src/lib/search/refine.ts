@@ -1,4 +1,5 @@
 import { AMENITIES, type AmenityKey } from "@/lib/amenities";
+import { inBBox, listingLatLng, type BBox } from "@/lib/geo";
 import { MONTHLY_RATE } from "@/lib/pricing";
 import { NEIGHBORHOODS, type ListingSource, type Neighborhood } from "@/lib/types";
 
@@ -53,6 +54,8 @@ export interface Refine {
   amenities: AmenityKey[];
   maxAge: MaxAge;
   sources: ListingSource[];
+  /** Visible map area ("search as I move the map"). */
+  bbox: BBox | null;
 }
 
 export const EMPTY_REFINE: Refine = {
@@ -65,6 +68,7 @@ export const EMPTY_REFINE: Refine = {
   amenities: [],
   maxAge: null,
   sources: [],
+  bbox: null,
 };
 
 export type FilterKey = Exclude<keyof Refine, "sort">;
@@ -88,6 +92,7 @@ function matches(r: SearchResult, f: Refine, skip?: FilterKey): boolean {
   if (skip !== "neighborhoods" && f.neighborhoods.length && !f.neighborhoods.includes(l.neighborhood)) return false;
   if (skip !== "amenities" && !f.amenities.every((k) => AMENITIES[k].has(l))) return false;
   if (skip !== "maxAge" && f.maxAge !== null && l.buildingAge > f.maxAge) return false;
+  if (skip !== "bbox" && f.bbox && !inBBox(listingLatLng(l), f.bbox)) return false;
   if (skip !== "sources" && f.sources.length && ![l.source, ...r.alsoOn].some((s) => f.sources.includes(s))) return false;
   return true;
 }
@@ -170,7 +175,8 @@ export function activeCount(f: Refine): number {
     f.neighborhoods.length +
     f.amenities.length +
     (f.maxAge !== null ? 1 : 0) +
-    f.sources.length
+    f.sources.length +
+    (f.bbox ? 1 : 0)
   );
 }
 

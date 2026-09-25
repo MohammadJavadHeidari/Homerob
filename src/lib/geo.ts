@@ -52,7 +52,7 @@ const CITIES: [name: string, lat: number, lng: number][] = [
 const CITY_RADIUS_KM = 60;
 
 /** Rough centers of the neighborhoods in the dataset. */
-const HOOD_CENTERS: Record<Neighborhood, LatLng> = {
+export const HOOD_CENTERS: Record<Neighborhood, LatLng> = {
   "قاسم‌آباد": { lat: 36.352, lng: 59.505 },
   "وکیل‌آباد": { lat: 36.334, lng: 59.49 },
   "هاشمیه": { lat: 36.325, lng: 59.515 },
@@ -99,3 +99,26 @@ export function locate(p: LatLng): UserPlace {
 export function areaAround(n: Neighborhood): Neighborhood[] {
   return [n, ...ADJACENT[n]];
 }
+
+/** [west, south, east, north] */
+export type BBox = [number, number, number, number];
+
+/** How far (degrees of latitude, ~1.1 km) a listing may sit from its neighborhood center. */
+const SPREAD = 0.01;
+
+/**
+ * Approximate map position of a seeded listing: a stable point inside its neighborhood, derived
+ * from the id (the sample data has no real addresses). Same id → same point, on server and client.
+ */
+export function listingLatLng(l: { id: string; neighborhood: Neighborhood }): LatLng {
+  let h = 2166136261;
+  for (let i = 0; i < l.id.length; i++) h = Math.imul(h ^ l.id.charCodeAt(i), 16777619);
+  const u = ((h >>> 0) % 10_000) / 10_000;
+  const v = ((Math.imul(h, 2654435761) >>> 0) % 10_000) / 10_000;
+  const r = SPREAD * Math.sqrt(0.08 + 0.92 * u); // uniform over a disc, never exactly the center
+  const a = 2 * Math.PI * v;
+  const c = HOOD_CENTERS[l.neighborhood];
+  return { lat: c.lat + r * Math.sin(a), lng: c.lng + (r * Math.cos(a)) / Math.cos((c.lat * Math.PI) / 180) };
+}
+
+export const inBBox = (p: LatLng, [w, s, e, n]: BBox) => p.lng >= w && p.lng <= e && p.lat >= s && p.lat <= n;
