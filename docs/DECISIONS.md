@@ -65,3 +65,6 @@
   logo SVG, colors (`--brand #d73948`, slate neutrals, `#15202b` dark), 8px radius and home layout from
   torob.com, captured by the owner with Claude in Chrome (`docs/research/torob-identity.md`). Font stays
   Vazirmatn (IRANYekan is commercial). Spec: `docs/BRAND.md`.
+- 2026-09-25 — **Torob branding everywhere user-facing** (results header, tab icon, og image, title, copy).
+  Home page shows no "demo" line (owner's call); the results footer keeps the demo/sample-data note.
+  Repo, code identifiers and the Vercel URL stay "homerob".

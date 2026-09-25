@@ -113,7 +113,7 @@ export function IntentChips({
     <div className="flex flex-col gap-2">
       <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
         <Sparkles className="text-primary size-4" />
-        {source === "edited" ? "فیلترها رو خودت تغییر دادی:" : "هومراب این‌طور فهمید:"}
+        {source === "edited" ? "فیلترها رو خودت تغییر دادی:" : "ترب این‌طور فهمید:"}
       </p>
       {chips.length === 0 ? (
         <p className="text-muted-foreground text-sm">چیز خاصی مشخص نکردی — همهٔ آگهی‌ها رو نشون می‌دم.</p>

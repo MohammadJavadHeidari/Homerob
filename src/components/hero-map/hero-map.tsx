@@ -233,8 +233,8 @@ export function HeroMap({
               ? `موقعیت شما: مشهد، نزدیک ${myHood}`
               : "موقعیت شما: مشهد"
             : place.kind === "other"
-              ? `موقعیت شما: ${place.fa} · هومراب فعلاً در مشهد است`
-              : "هومراب در مشهد"
+              ? `موقعیت شما: ${place.fa} · فعلاً فقط مشهد`
+              : "مشهد"
         : phase === "fly"
           ? "در حال رفتن به مشهد…"
           : `مشهد · ${toFaDigits(HOOD_POINTS.length)} محله · ${toFaDigits(stats.total)} آگهی`;

@@ -143,7 +143,7 @@ export function ListingCard({
       >
         <p className="text-primary mb-1 flex items-center gap-1.5 text-xs font-bold">
           <Sparkles className="size-3.5" />
-          {explaining ? "هومراب داره توضیح می‌نویسه…" : "چرا این آگهی؟"}
+          {explaining ? "ترب داره توضیح می‌نویسه…" : "چرا این آگهی؟"}
           {aiExplained && !explaining && (
             <span className="bg-primary/15 ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>
           )}

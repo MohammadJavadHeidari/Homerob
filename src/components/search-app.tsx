@@ -108,12 +108,14 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
             type="button"
             onClick={reset}
             data-hero-block
-            className={cn("flex", compact ? "items-baseline gap-2" : "flex-col items-center")}
+            className={cn("flex", compact ? "items-center gap-3" : "flex-col items-center")}
             aria-label="صفحهٔ اول"
           >
             {compact ? (
-              <span className="text-2xl font-extrabold tracking-tight">
-                هوم<span className="text-primary">راب</span>
+              // torob.com's header: the mark with a 24px/700 «ترب» in the logo red
+              <span className="flex items-center gap-1.5">
+                <TorobLogo className="size-9" />
+                <span className="text-2xl font-bold text-(--logo-color-1)">ترب</span>
               </span>
             ) : (
               // torob.com's home: the 88px mark sits right on top of a 40px bold «ترب» (monochrome in dark).
@@ -239,16 +241,13 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
         <footer data-hero-block className={cn("text-muted-foreground mt-auto text-center text-xs leading-6", compact ? "border-t pt-6" : "pt-4")}>
           {compact ? (
             <>
-              هومراب یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+              این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
               هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
               تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
             </>
           ) : (
-            <span className="opacity-70">
-              <span className="inline-block">نسخهٔ نمایشی با آگهی‌های نمونه</span>
-              {" · "}
-              <span className="inline-block">نقشه: © OpenStreetMap و geoBoundaries</span>
-            </span>
+            // map credit only: OSM's license (ODbL) requires it wherever the map is shown
+            <span className="opacity-60">نقشه: © OpenStreetMap و geoBoundaries</span>
           )}
         </footer>
       </div>

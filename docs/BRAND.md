@@ -9,7 +9,10 @@ Earlier research and alternatives: `docs/research/landing-ux.md`, https://claude
 `src/components/torob-logo.tsx` — torob.com's inline SVG (88×88) with its four `--logo-color-*` tokens:
 light = red ring `#e91e33` / `#bf0f22` + leaves `#6fbc23` / `#519a23`; dark (`.dark`) = monochrome
 `#f1f5f9` / `#cbd5e1`, exactly like torob.com. Home: mark directly above a 40px/700 «ترب».
-Still Homerob: results-page header, browser-tab icon (`src/app/icon.svg`), `public/og.png` (pending owner).
+Also Torob: results-page header (mark + 24px «ترب» in `--logo-color-1`), tab icon `src/app/icon.svg` (the same SVG,
+fixed colors), `apple-icon.png`, `public/og.png`, page title and in-app copy («ترب این‌طور فهمید»).
+The home page has no demo disclaimer (owner's call); only the OSM/geoBoundaries map credit, which ODbL requires.
+The results-page footer still says it's a demo with sample listings.
 
 ## Tokens (`src/app/globals.css`, on `html:root` because Neshan's CSS sets `:root { --primary }`)
 | Role | Light | Dark (`.dark`, home page) | Torob source |

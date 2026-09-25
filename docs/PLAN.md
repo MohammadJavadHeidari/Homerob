@@ -187,7 +187,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Torob identity from the owner's torob.com capture: exact logo SVG (themed via `--logo-color-*`), Torob
       tokens (slate + `#d73948`, `#15202b` dark), 8px radius, torob.com home layout (mark over 40px «ترب»,
       icon-in-input search, tagline under it); map background on Torob's dark navy
-- [ ] [DECISION] Results header / tab icon / og.png: switch from Homerob to Torob too? (asked 2026-09-25)
+- [x] Torob everywhere the user sees it (owner: yes): results header, tab icon, apple icon, og.png, title, copy;
+      home-page demo line removed (map credit kept, ODbL)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
