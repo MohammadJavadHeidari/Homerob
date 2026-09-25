@@ -1,6 +1,6 @@
 "use client";
 
-import { GitCompareArrows, Info, LoaderCircle, LocateFixed, MapPin, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
+import { GitCompareArrows, Info, LoaderCircle, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CompareDialog } from "@/components/compare-dialog";
@@ -8,12 +8,11 @@ import { HeroMap } from "@/components/hero-map/hero-map";
 import { IntentChips } from "@/components/intent-chips";
 import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
-import { readStoredPlace, useUserPlace, type PlaceStatus } from "@/components/use-user-place";
+import { readStoredPlace, useUserPlace } from "@/components/use-user-place";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
-import { HERO_EXAMPLES } from "@/lib/demo-queries";
-import { SUPPORTED_CITY, type UserPlace } from "@/lib/geo";
+import type { UserPlace } from "@/lib/geo";
 import type { HoodStat } from "@/lib/hood-stats";
 import { toFaDigits } from "@/lib/persian";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
@@ -31,7 +30,7 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
-  const { status: placeStatus, place, request: requestPlace } = useUserPlace();
+  const { status: placeStatus, place } = useUserPlace();
   const near = useRef<UserPlace["neighborhood"]>(null);
   useEffect(() => {
     near.current = place?.neighborhood ?? null;
@@ -90,7 +89,6 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
 
   const compact = status !== "idle";
   // Listings exist only for Mashhad; elsewhere the title stays on Mashhad and the pill says so.
-  const city = place?.supported ? place.city : placeStatus === "idle" || placeStatus === "locating" ? null : SUPPORTED_CITY;
 
   return (
     <>
@@ -217,43 +215,6 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
         </footer>
       </div>
     </>
-  );
-}
-
-function PlacePill({ status, place, onRetry }: { status: PlaceStatus; place: UserPlace | null; onRetry: () => void }) {
-  const base = "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm";
-  if (status === "idle") return <span className={cn(base, "invisible")}>…</span>;
-  if (status === "locating") {
-    return (
-      <span className={cn(base, "bg-muted text-muted-foreground")}>
-        <LoaderCircle className="size-4 animate-spin" />
-        دارم موقعیتت رو پیدا می‌کنم…
-      </span>
-    );
-  }
-  if (place?.supported && place.neighborhood) {
-    return (
-      <span className={cn(base, "bg-brand-soft text-brand-ink")}>
-        <MapPin className="size-4" />
-        <span>
-          نتایج برای اطراف <b className="font-bold">{place.neighborhood}</b>، نزدیک خودت
-        </span>
-      </span>
-    );
-  }
-  if (place && !place.supported) {
-    return (
-      <span className={cn(base, "bg-muted text-muted-foreground max-w-xl text-center")}>
-        <MapPin className="size-4 shrink-0" />
-        {place.city ? `${place.city} هنوز پوشش داده نمی‌شه` : "شهرت هنوز پوشش داده نمی‌شه"}؛ فعلاً آگهی‌های {SUPPORTED_CITY} رو ببین
-      </span>
-    );
-  }
-  return (
-    <button type="button" onClick={onRetry} className={cn(base, "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors")}>
-      <LocateFixed className="size-4" />
-      نتایج نزدیک من
-    </button>
   );
 }
 
