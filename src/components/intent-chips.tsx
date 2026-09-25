@@ -88,10 +88,11 @@ function roomsLabel({ minRooms: min, maxRooms: max }: SearchIntent) {
 }
 
 const TONES: Record<Chip["tone"], string> = {
-  budget: "bg-primary/10 text-primary border-primary/20",
-  place: "bg-sky-500/10 text-sky-700 border-sky-500/30 dark:text-sky-300",
-  home: "bg-violet-500/10 text-violet-700 border-violet-500/30 dark:text-violet-300",
-  must: "bg-amber-500/10 text-amber-800 border-amber-500/25 dark:text-amber-300",
+  // One brand style for everything the AI understood (docs/BRAND.md: no chip rainbow).
+  budget: "bg-brand-soft text-brand-ink border-primary/20",
+  place: "bg-brand-soft text-brand-ink border-primary/20",
+  home: "bg-brand-soft text-brand-ink border-primary/20",
+  must: "bg-brand-soft text-brand-ink border-primary/20",
   nice: "bg-muted text-muted-foreground border-border",
   note: "bg-muted text-muted-foreground border-border",
 };
@@ -112,7 +113,7 @@ export function IntentChips({
     <div className="flex flex-col gap-2">
       <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
         <Sparkles className="text-primary size-4" />
-        {source === "edited" ? "فیلترها رو خودت تغییر دادی:" : "هومراب این‌طور فهمید:"}
+        {source === "edited" ? "فیلترها رو خودت تغییر دادی:" : "ترب این‌طور فهمید:"}
       </p>
       {chips.length === 0 ? (
         <p className="text-muted-foreground text-sm">چیز خاصی مشخص نکردی — همهٔ آگهی‌ها رو نشون می‌دم.</p>

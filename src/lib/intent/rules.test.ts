@@ -34,6 +34,10 @@ describe("rule-based intent parser", () => {
     const bare = parse("رهن ۳۰۰ اجاره ۱۰ هاشمیه");
     expect(bare.maxDeposit).toBe(300 * M);
     expect(bare.maxRent).toBe(10 * M);
+    const before = parse("دوخوابه وکیل‌آباد ۵۰۰ رهن");
+    expect(before.maxDeposit).toBe(500 * M);
+    expect(before.minRooms).toBe(2);
+    expect(parse("۳۰۰ رهن ۱۰ اجاره").maxRent).toBe(10 * M);
     expect(parse("رهن ۱.۵").maxDeposit).toBe(1_500 * M);
   });
 

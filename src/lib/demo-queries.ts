@@ -11,3 +11,9 @@ export const DEMO_QUERIES = [
   "دانشجوام، یه سوئیت ارزون هر جای مشهد، ماهی ۵ تومن",
   "دوخوابه بالکن‌دار سجاد، پارکینگ مهم نیست، رهن ۴۰۰ میلیون",
 ] as const;
+
+/**
+ * Home-page chips: short, the way people really type (docs/research/landing-ux.md) — three is
+ * enough. Each must parse with the rule fallback too and return results.
+ */
+export const HERO_EXAMPLES = ["دوخوابه وکیل‌آباد ۵۰۰ رهن", "سوئیت سجاد ماهی ۸ تومن", "رهن کامل تا یک و نیم میلیارد هاشمیه"] as const;

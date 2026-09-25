@@ -27,7 +27,7 @@ Live: https://homerob.vercel.app
 | Time | On screen | Beat |
 |---|---|---|
 | 0:00–0:35 | Divar/Sheypoor-style listing text (or the Homerob home page) | Problem |
-| 0:35–1:05 | Homerob home page, "how it works" strip | Idea: Torob for home |
+| 0:35–1:05 | Homerob home page (map intro plays) | Idea: Torob for home |
 | 1:05–2:10 | Q1 — simple query | Understanding + normalization + explanation |
 | 2:10–3:00 | Q2 — tricky budget | Empty state that helps |
 | 3:00–4:00 | Q3 — trade-off + remove a chip | Honest trade-offs, user in control |
@@ -47,7 +47,7 @@ Live: https://homerob.vercel.app
 
 ### 0:35 — ایده (≈ ۳۰ ثانیه)
 
-*On screen: home page, point at the search box and the 3 steps.*
+*On screen: home page — let the map fly-in finish, then point at the search box and the 3 example chips.*
 
 > هومراب یعنی «ترب، ولی برای خونه». همون کاری که ترب برای قیمت کالا کرده — جمع کردن، ساختار دادن،
 > مقایسه کردن — این‌بار برای اجاره‌ی خونه تو مشهد. اینجا فیلتر و فرم نداریم؛ فقط می‌نویسی چی

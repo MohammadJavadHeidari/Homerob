@@ -52,3 +52,19 @@
 - 2026-09-25 — **Map view: Neshan** (owner chose option 1 of 3; OSM and a stylized SVG map were the
   alternatives). Free Neshan *web map* key, domain-restricted, in Vercel env `NEXT_PUBLIC_NESHAN_MAP_KEY`
   (never committed). Listings get approximate seeded lat/lng inside their neighborhood.
+- 2026-09-25 — **Visual identity: Torob-family red** (owner chose option C of 3; turquoise+saffron and a
+  dark night+gold palette were the alternatives). Primary `#C8372D` light / `#F0675D` dark, warm sand
+  neutrals. Spec in `docs/BRAND.md`.
+- 2026-09-25 — **Home page declutter, map stays.** Owner: keep the animated map background (video wow,
+  gamified feel); no "how it works" section. Home = title, location pill, one-line subtitle, search,
+  3 short examples, one-line footer. Research in `docs/research/landing-ux.md`.
+- 2026-09-25 — **Home page shows Torob's name** «ترب» (and Torob's logo once the owner supplies the file)
+  instead of «هومراب», stacked like torob.com's own home. Owner request for the hiring pitch; supersedes
+  the home-page wordmark only (repo, results header and product name stay Homerob for now).
+- 2026-09-25 — **Adopt Torob's own identity** (supersedes the "Torob-family red" palette entry above):
+  logo SVG, colors (`--brand #d73948`, slate neutrals, `#15202b` dark), 8px radius and home layout from
+  torob.com, captured by the owner with Claude in Chrome (`docs/research/torob-identity.md`). Font stays
+  Vazirmatn (IRANYekan is commercial). Spec: `docs/BRAND.md`.
+- 2026-09-25 — **Torob branding everywhere user-facing** (results header, tab icon, og image, title, copy).
+  Home page shows no "demo" line (owner's call); the results footer keeps the demo/sample-data note.
+  Repo, code identifiers and the Vercel URL stay "homerob".

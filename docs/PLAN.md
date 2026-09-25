@@ -69,8 +69,14 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Listing coordinates are derived from the id inside the neighborhood (`listingLatLng` in `geo.ts`).
     Layout: xl+ = filters | list | sticky map (toggle «بستن نقشه»); smaller = list/map toggle.
     Screenshots: `docs/screenshots/*-map.png` (fallback tiles).
+  - Owner request — UX research + visual identity: `docs/research/landing-ux.md` (first-visit priorities,
+    audit, sources), `docs/BRAND.md`. Owner chose **Torob-family red** and **keep the map background**.
+    Home page decluttered (11 blocks → title, pill, subtitle, search, 3 short examples, 1-line footer; fits
+    one screen at 390 and 1440 px), one brand chip style, neutral source badges, new icon + `og.png`.
+    Fixed: Neshan CSS `:root { --primary }` turned the brand color blue on desktop results (tokens now
+    on `html:root`). Rule parser reads "۵۰۰ رهن" (number before keyword). 59 tests.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
-- **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
+- **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
 - **Notes:** Demo recording: location permission is on → queries without a neighborhood are limited to
@@ -174,6 +180,15 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 
 ## Owner requests
 - [x] Live motion map background on the home page (Iran → user location → Mashhad neighborhoods)
+- [x] UX research on the landing page + visual identity proposal (`docs/research/landing-ux.md`, `docs/BRAND.md`)
+- [x] Landing declutter (owner: keep the animated map, drop "how it works") — subtitle, 3 short examples, 1-line footer
+- [x] Palette: Torob-family red (owner's choice) — tokens, one chip style, neutral source badges, icon/OG image
+- [x] Home wordmark «ترب» instead of «هومراب» (owner request), stacked like torob.com; results header keeps هومراب
+- [x] Torob identity from the owner's torob.com capture: exact logo SVG (themed via `--logo-color-*`), Torob
+      tokens (slate + `#d73948`, `#15202b` dark), 8px radius, torob.com home layout (mark over 40px «ترب»,
+      icon-in-input search, tagline under it); map background on Torob's dark navy
+- [x] Torob everywhere the user sees it (owner: yes): results header, tab icon, apple icon, og.png, title, copy;
+      home-page demo line removed (map credit kept, ODbL)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

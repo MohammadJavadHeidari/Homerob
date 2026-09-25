@@ -56,7 +56,7 @@ export function ListingCard({
             <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
             <SourceBadge source={l.source} />
             {isSharedHousing(l) && (
-              <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 font-bold text-amber-800 dark:text-amber-300">همخونه</span>
+              <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
             {alsoOn.map((s) => (
               <span key={s} className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
@@ -143,7 +143,7 @@ export function ListingCard({
       >
         <p className="text-primary mb-1 flex items-center gap-1.5 text-xs font-bold">
           <Sparkles className="size-3.5" />
-          {explaining ? "هومراب داره توضیح می‌نویسه…" : "چرا این آگهی؟"}
+          {explaining ? "ترب داره توضیح می‌نویسه…" : "چرا این آگهی؟"}
           {aiExplained && !explaining && (
             <span className="bg-primary/15 ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>
           )}
@@ -170,12 +170,8 @@ export function ListingCard({
 
 function SourceBadge({ source }: { source: SearchResult["listing"]["source"] }) {
   return (
-    <span
-      className={cn(
-        "rounded-md px-1.5 py-0.5 font-bold",
-        source === "divar" ? "bg-rose-500/10 text-rose-700 dark:text-rose-300" : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
-      )}
-    >
+    <span className="bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold">
+      <span className={cn("size-1.5 rounded-full", source === "divar" ? "bg-rose-500" : "bg-indigo-500")} />
       {SOURCE_LABEL[source]}
     </span>
   );

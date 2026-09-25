@@ -27,6 +27,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -50,29 +51,37 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  --radius: 0.75rem;
-  --success: oklch(0.55 0.13 150);
-  --warning: oklch(0.62 0.14 65);
-  --brand-soft: oklch(0.96 0.025 184);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.52 0.105 184);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.7 0.09 184);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+/* html:root, not :root: the Neshan map CSS ships its own `:root { --primary }` and would win on load order. */
+html:root {
+  /* Torob's identity (docs/BRAND.md, from torob.com's own tokens). WCAG AA checked. */
+  --radius: 0.5rem;
+  --success: #15803d;
+  --warning: #854d0f;
+  --brand-soft: #fff0f2;
+  --brand-ink: #9f1239;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --primary: #d73948;
+  --primary-foreground: #ffffff;
+  --secondary: #f8fafc;
+  --secondary-foreground: #1e293b;
+  --muted: #f8fafc;
+  --muted-foreground: #5b6b82;
+  --accent: #f1f5f9;
+  --accent-foreground: #1e293b;
+  --destructive: #9f1239;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #e57a85;
+  --background: #f1f5f9;
+  --foreground: #1e293b;
+  /* Torob logo (src/components/torob-logo.tsx): colored in light, monochrome in dark, like torob.com */
+  --logo-color-1: #e91e33;
+  --logo-color-2: #bf0f22;
+  --logo-color-3: #6fbc23;
+  --logo-color-4: #519a23;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -89,24 +98,30 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.11 184);
-  --primary-foreground: oklch(0.2 0.03 184);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: #15202b;
+  --foreground: #f1f5f9;
+  --card: #212b36;
+  --card-foreground: #f1f5f9;
+  --popover: #212b36;
+  --popover-foreground: #f1f5f9;
+  /* torob.com keeps a white-on-red button in dark mode; only the home page is dark here, where
+     text-primary is large (the city in the title), so #d73948 passes (4.6:1 white, 3.4:1 large text). */
+  --primary: #d73948;
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f1f5f9;
+  --destructive: #fb7185;
+  --border: #334155;
+  --input: #475569;
+  --ring: #f87171;
+  --logo-color-1: #f1f5f9;
+  --logo-color-2: #f1f5f9;
+  --logo-color-3: #f1f5f9;
+  --logo-color-4: #cbd5e1;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -120,9 +135,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --success: oklch(0.7 0.14 150);
-  --warning: oklch(0.75 0.14 70);
-  --brand-soft: oklch(0.28 0.04 184);
+  --success: #4ade80;
+  --warning: #ffca32;
+  --brand-soft: #3b1d27;
+  --brand-ink: #fecdd3;
 }
 
 @layer base {
@@ -246,7 +262,7 @@
 .hero-map {
   --hm-gold: #e8bc6a;
   --hm-gold-soft: rgb(232 188 106 / 0.55);
-  --hm-ink: #05070c;
+  --hm-ink: #0f172b;
   background:
     radial-gradient(120% 90% at 70% 20%, rgb(40 52 84 / 0.35), transparent 60%),
     radial-gradient(80% 60% at 20% 90%, rgb(92 64 20 / 0.18), transparent 70%),
@@ -413,8 +429,8 @@
   height: 10px;
   margin: -5px 0 0 -5px;
   border-radius: 999px;
-  background: #7dd3c8;
-  box-shadow: 0 0 0 4px rgb(125 211 200 / 0.25), 0 0 14px 2px rgb(125 211 200 / 0.6);
+  background: #f87171;
+  box-shadow: 0 0 0 4px rgb(248 113 113 / 0.25), 0 0 14px 2px rgb(248 113 113 / 0.6);
 }
 
 .hm-tag {
@@ -428,7 +444,7 @@
   padding: 5px 8px;
   border-radius: 999px;
   color: rgb(255 255 255 / 0.85);
-  background: rgb(10 12 18 / 0.6);
+  background: rgb(21 32 43 / 0.6);
   border: 1px solid rgb(255 255 255 / 0.1);
   backdrop-filter: blur(6px);
 }
@@ -488,7 +504,7 @@
   border-radius: 12px;
   font-size: 12px;
   color: rgb(255 255 255 / 0.9);
-  background: rgb(10 12 18 / 0.55);
+  background: rgb(21 32 43 / 0.55);
   border: 1px solid rgb(255 255 255 / 0.1);
   backdrop-filter: blur(8px);
   transition:
@@ -502,13 +518,13 @@
 }
 .hm-near {
   font-size: 11px;
-  color: #7dd3c8;
+  color: #f87171;
 }
 .hm-mine .hm-pin {
   box-shadow:
-    0 0 0 3px rgb(10 12 18 / 0.9),
-    0 0 0 5px #7dd3c8,
-    0 0 18px 4px rgb(125 211 200 / 0.6);
+    0 0 0 3px rgb(21 32 43 / 0.9),
+    0 0 0 5px #f87171,
+    0 0 18px 4px rgb(248 113 113 / 0.6);
 }
 .hm-count {
   font-size: 11px;
@@ -525,7 +541,7 @@
 .hm-on .hm-card {
   transform: translate(-50%, 0) scale(1.06);
   border-color: rgb(232 188 106 / 0.55);
-  background: rgb(18 16 10 / 0.75);
+  background: rgb(21 32 43 / 0.8);
 }
 .hm-on .hm-median {
   display: block;
@@ -544,8 +560,8 @@
 
 .hm-scrim {
   background:
-    radial-gradient(ellipse 55% 45% at 50% 32%, rgb(5 7 12 / 0.72), transparent 75%),
-    linear-gradient(to bottom, rgb(5 7 12 / 0.35), transparent 25%, transparent 70%, rgb(5 7 12 / 0.85));
+    radial-gradient(ellipse 55% 45% at 50% 32%, rgb(15 23 43 / 0.72), transparent 75%),
+    linear-gradient(to bottom, rgb(15 23 43 / 0.35), transparent 25%, transparent 70%, rgb(15 23 43 / 0.85));
 }
 
 .hm-panel {
@@ -559,7 +575,7 @@
   border-radius: 16px;
   font-size: 12px;
   color: rgb(255 255 255 / 0.85);
-  background: rgb(10 12 18 / 0.6);
+  background: rgb(21 32 43 / 0.6);
   border: 1px solid rgb(255 255 255 / 0.08);
   backdrop-filter: blur(10px);
   transition:
@@ -636,7 +652,7 @@
   border-radius: 999px;
   font-size: 12px;
   color: rgb(255 255 255 / 0.8);
-  background: rgb(10 12 18 / 0.55);
+  background: rgb(21 32 43 / 0.55);
   border: 1px solid rgb(255 255 255 / 0.08);
   backdrop-filter: blur(8px);
   white-space: nowrap;
