@@ -52,3 +52,13 @@
 - 2026-09-25 — **Map view: Neshan** (owner chose option 1 of 3; OSM and a stylized SVG map were the
   alternatives). Free Neshan *web map* key, domain-restricted, in Vercel env `NEXT_PUBLIC_NESHAN_MAP_KEY`
   (never committed). Listings get approximate seeded lat/lng inside their neighborhood.
+- 2026-09-25 — **Switch to real data (owner request; supersedes "seeded sample dataset").** Source:
+  public Hugging Face datasets of Divar ads — `divarofficial/real_estate_ads` (primary, 1M ads, 2024,
+  ODbL) plus `RadeAI/Divar-apartmentsRent`, `laleh22/Divar-apartmentsRent`, `mehr32/divar`. Owner:
+  licenses are not a blocker (demo, not a product); keep a one-line source credit in the footer/README.
+  Step 1 is offline only: collect → filter Mashhad rentals → profile → normalize to `Listing`. Wiring
+  into the app is a separate, owner-approved step. Not live scraping: static published datasets.
+- 2026-09-25 — **Sheypoor: Divar only** (option A). No Sheypoor data exists on Hugging Face; Sheypoor
+  is presented as the next source in the video. Synthetic Sheypoor listings go away with the seed data.
+- 2026-09-25 — **2024 prices are adjusted to today** (option B). Method (inflation factor, how it is
+  derived) is chosen in the normalization step and documented in its report.

@@ -175,6 +175,15 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ## Owner requests
 - [x] Live motion map background on the home page (Iran → user location → Mashhad neighborhoods)
 
+## Real data (owner request, 2026-09-25)
+- [ ] Collect: download Hugging Face Divar datasets (`divarofficial/real_estate_ads` + 3 community
+      sets), filter to Mashhad residential rent — offline, in a scratch dir, not in the app
+- [ ] Profile report: row counts per source, neighborhoods, price units (Rial/Toman), distributions,
+      missing fields, dates, overlap between sets
+- [ ] Normalize → `Listing` JSON (+ report): units, 2024 → today price adjustment, neighborhood
+      names, placeholder/outlier cleanup, dedup across sets, strip phone numbers
+- [ ] [DECISION] owner reviews the report → wire into the app (neighborhoods list, map, tests, demo)
+
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
 - [x] "Compare" view for 2–3 listings (done via divar-mcp follow-ups)
