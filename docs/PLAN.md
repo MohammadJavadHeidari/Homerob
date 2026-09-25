@@ -69,7 +69,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Listing coordinates are derived from the id inside the neighborhood (`listingLatLng` in `geo.ts`).
     Layout: xl+ = filters | list | sticky map (toggle «بستن نقشه»); smaller = list/map toggle.
     Screenshots: `docs/screenshots/*-map.png` (fallback tiles).
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
+- **Next:** owner picks landing option + palette (research in `docs/research/landing-ux.md`, `docs/BRAND.md`); owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -96,6 +96,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **Landing declutter (owner feedback "too messy"):** research + mockups in `docs/research/landing-ux.md`
+  and https://claude.ai/artifact/69s9NtyUdorKYH6kWUo2C5. Options: (1) light & calm — search + 3 short
+  examples + neighborhood price row, map as faint texture (recommended); (2) same, keep the dark animated
+  map below the search; (3) Google-minimal, no map. Nothing changed in the app until answered.
+- **Visual identity / palette:** `docs/BRAND.md`. (A) Firouzeh & Saffron on ivory (recommended, same
+  primary as today); (B) Mashhad Night dark + gold; (C) Torob-family coral red.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -174,6 +180,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 
 ## Owner requests
 - [x] Live motion map background on the home page (Iran → user location → Mashhad neighborhoods)
+- [x] UX research on the landing page + visual identity proposal (`docs/research/landing-ux.md`, `docs/BRAND.md`)
+- [ ] [DECISION] Landing declutter option (1/2/3) → implement (≤ 1.5h); also fixes the mobile white-area bug
+- [ ] [DECISION] Palette A/B/C → apply tokens in `globals.css`, unify intent chips and source badges (≤ 1h)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
