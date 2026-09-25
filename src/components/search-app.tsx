@@ -124,21 +124,7 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
                 <span className="text-[40px] leading-[1.6] font-bold">ترب</span>
               </>
             )}
-            {compact && (
-              <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در {city ?? SUPPORTED_CITY}</span>
-            )}
           </button>
-          {!compact && (
-            <>
-              <h1 data-hero-block className="text-xl font-bold sm:text-2xl">
-                جستجوی هوشمند اجاره
-                <span className={cn("transition-opacity duration-500", city ? "opacity-100" : "opacity-0")}>
-                  {" "}در <span className="text-primary">{city ?? SUPPORTED_CITY}</span>
-                </span>
-              </h1>
-              <PlacePill status={placeStatus} place={place} onRetry={requestPlace} />
-            </>
-          )}
         </header>
 
         <form
@@ -166,27 +152,6 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
             جستجو
           </Button>
         </form>
-
-        {!compact && (
-          <div data-hero-block className="mx-auto -mt-2 flex max-w-3xl flex-col items-center gap-3 [text-shadow:0_0_10px_#0f172b,0_0_3px_#0f172b]">
-            {/* torob.com puts its one-line tagline right under the search box */}
-            <p className="text-muted-foreground text-sm">آگهی‌های رهن و اجارهٔ دیوار و شیپور، یه‌جا و مرتب‌شده</p>
-            <p className="text-muted-foreground mt-3 text-sm">یا یکی رو بزن:</p>
-            <ul className="flex flex-wrap justify-center gap-2">
-              {HERO_EXAMPLES.map((q) => (
-                <li key={q}>
-                  <button
-                    type="button"
-                    onClick={() => submit(q)}
-                    className="bg-muted/80 hover:bg-primary/15 hover:text-primary text-foreground/85 rounded-full border px-3.5 py-2 text-sm backdrop-blur-md transition-colors"
-                  >
-                    {q}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
