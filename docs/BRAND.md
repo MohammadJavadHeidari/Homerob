@@ -28,7 +28,7 @@ The results-page footer still says it's a demo with sample listings.
 | warning (trade-offs) | `#854D0F` (6.9:1) | `#FFCA32` | `--yellow-800` / `--yellow-500` |
 | radius | 8px | | cards, inputs, buttons |
 | theme-color | `#FFFFFF` | `#15202B` | torob.com meta |
-| hero map | gold roads on `#0F172B` | | `--sky-50` dark |
+| hero map | gold lines on `#0F172B`, blurred (2.5px phone / 3px desktop); dots and pins stay sharp so the search box is the focus | | `--sky-50` dark |
 
 Known gap: `#D73948` as small text on the `#F1F5F9` page background is 4.2:1 (Torob does the same);
 on white cards it is 4.6:1.

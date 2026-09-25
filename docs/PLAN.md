@@ -189,6 +189,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
       icon-in-input search, tagline under it); map background on Torob's dark navy
 - [x] Torob everywhere the user sees it (owner: yes): results header, tab icon, apple icon, og.png, title, copy;
       home-page demo line removed (map credit kept, ODbL)
+- [x] Home map: gold lines (Iran, arc, roads) blurred, dots/pins sharp — focus on the search box (owner request)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
