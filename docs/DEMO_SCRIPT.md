@@ -9,9 +9,10 @@ Live: https://homerob.vercel.app
 ## Before recording (checklist)
 
 - Browser window ~1280×800, zoom 110%, hide bookmarks bar, one clean tab.
-- Home-page map intro (~8s: Iran → "موقعیت شما: مشهد" → fly into Mashhad) uses IP location. With a
-  VPN it can't tell you're in Mashhad, so open **`/?city=Mashhad`** for the recording. Let the intro
-  finish before typing — it's a good opening shot.
+- Home-page map intro (~8s: Iran → "موقعیت شما: مشهد، نزدیک …" → fly into Mashhad) uses the browser
+  location (allow it), falling back to IP location. With a VPN and location blocked it can't tell
+  you're in Mashhad — then open **`/?city=Mashhad`**. Let the intro finish before typing — it's a good
+  opening shot.
 - **Warm up**: run the 3 queries once 1–2 minutes before recording (fills the in-memory cache,
   avoids Gemini free-tier slowness). Wait ~1 min after warm-up so the rate limit resets.
 - Check the explanation box shows the small **AI** badge. If it doesn't (Gemini busy), wait a minute

@@ -21,6 +21,11 @@ export const SearchIntentSchema = z.object({
   sharedRoom: z.boolean(),
   /** Anything else worth keeping, in Persian (e.g. "خانواده سه نفره"). */
   freeTextNotes: z.string().nullable(),
+  /**
+   * The user's own neighborhood (from browser location, never from the LLM). When set, results are
+   * limited to it and the neighborhoods next to it. Only used when no neighborhood was named.
+   */
+  nearMe: z.enum(NEIGHBORHOODS).nullable().default(null),
 });
 
 export type SearchIntent = z.infer<typeof SearchIntentSchema>;
@@ -37,4 +42,5 @@ export const EMPTY_INTENT: SearchIntent = {
   niceToHave: [],
   sharedRoom: false,
   freeTextNotes: null,
+  nearMe: null,
 };

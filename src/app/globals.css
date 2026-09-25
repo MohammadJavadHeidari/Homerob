@@ -394,6 +394,16 @@
 .hm-card b {
   font-weight: 700;
 }
+.hm-near {
+  font-size: 11px;
+  color: #7dd3c8;
+}
+.hm-mine .hm-pin {
+  box-shadow:
+    0 0 0 3px rgb(10 12 18 / 0.9),
+    0 0 0 5px #7dd3c8,
+    0 0 18px 4px rgb(125 211 200 / 0.6);
+}
 .hm-count {
   font-size: 11px;
   color: var(--hm-gold);

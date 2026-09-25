@@ -45,3 +45,7 @@
   detection, shared-room flag, sample size in price verdicts, "only differing specs" compare view)
   and mention a live read-only listings source (e.g. an MCP server) as future work in the video.
   No calls to the service; the "no live scraping" hard stop stays. Its text/branding are not reused.
+- 2026-09-24 — **Location-aware home (owner request).** Ask for browser location on first visit; title
+  becomes «جستجوی هوشمند اجاره در {city}» and results are limited to the user's area (nearest
+  neighborhood + adjacent ones) unless the query names a neighborhood. Data is still Mashhad only;
+  users elsewhere see their city named as "not covered yet" and get Mashhad results.

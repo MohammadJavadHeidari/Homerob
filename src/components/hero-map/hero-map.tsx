@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import type { PlaceStatus } from "@/components/use-user-place";
+import type { UserPlace } from "@/lib/geo";
 import type { HoodStat } from "@/lib/hood-stats";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import type { Neighborhood } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { clamp01, easeInOutCubic, easeOutCubic, fitBox, interpolateZoom, type Camera } from "./camera";
@@ -24,8 +27,8 @@ type Phase = "iran" | "locate" | "fly" | "city";
 type Place =
   | { kind: "pending" }
   | { kind: "unknown" }
-  | { kind: "mashhad" }
-  | { kind: "other"; fa: string; x: number; y: number };
+  | { kind: "mashhad"; hood?: Neighborhood | null }
+  | { kind: "other"; fa: string; x?: number; y?: number };
 
 interface Roads {
   major: string;
@@ -41,8 +44,19 @@ const project = (lat: number, lon: number) => ({
 /** The intro plays once per page load; coming back from results jumps straight to the city. */
 let played = false;
 
-async function locate(): Promise<Place> {
-  const override = new URLSearchParams(window.location.search).get("city");
+/** Browser location (from useUserPlace) → map place. */
+function fromUserPlace(p: UserPlace): Place {
+  if (p.supported) return { kind: "mashhad", hood: p.neighborhood };
+  if (!p.city) return { kind: "unknown" };
+  const city = CITIES.find((c) => c.fa === p.city);
+  return { kind: "other", fa: p.city, x: city?.x, y: city?.y };
+}
+
+/**
+ * Fallback when the browser location is denied or still pending: `?city=` (for recording behind a
+ * VPN, wins over everything) or Vercel's IP geolocation.
+ */
+async function locateFallback(override: string | null): Promise<Place> {
   let geo: { country?: string | null; city?: string | null; lat?: number | null; lon?: number | null } = {};
   if (override) geo = { country: "IR", city: override };
   else {
@@ -67,19 +81,31 @@ async function locate(): Promise<Place> {
  * the visitor, then the camera flies into Mashhad where the seeded neighborhoods light up with
  * their listing counts. Pure SVG + a rAF camera (viewBox), no map library or tiles.
  */
-export function HeroMap({ stats, className }: { stats: { total: number; hoods: HoodStat[] }; className?: string }) {
+export function HeroMap({
+  stats,
+  placeStatus,
+  place: userPlace,
+  className,
+}: {
+  stats: { total: number; hoods: HoodStat[] };
+  placeStatus: PlaceStatus;
+  place: UserPlace | null;
+  className?: string;
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const maskRef = useRef<SVGCircleElement>(null);
   const [phase, setPhase] = useState<Phase>("iran");
-  const [place, setPlace] = useState<Place>({ kind: "pending" });
+  const [fallback, setFallback] = useState<{ place: Place; override: boolean }>({ place: { kind: "pending" }, override: false });
+  const mine = useRef(-1);
   const [roads, setRoads] = useState<Roads | null>(null);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
     let alive = true;
     void import("./mashhad-data").then((m) => alive && setRoads(m.MASHHAD_ROADS));
-    void locate().then((p) => alive && setPlace(p));
+    const override = new URLSearchParams(window.location.search).get("city");
+    void locateFallback(override).then((p) => alive && setFallback({ place: p, override: Boolean(override) }));
     return () => {
       alive = false;
     };
@@ -155,7 +181,10 @@ export function HeroMap({ stats, className }: { stats: { total: number; hoods: H
       const next: Phase = t < LOCATE_AT ? "iran" : t < FLY_AT ? "locate" : t < CITY_AT ? "fly" : "city";
       if (next !== current) {
         current = next;
-        if (next === "city") played = true;
+        if (next === "city") {
+          played = true;
+          if (mine.current >= 0) setActive(mine.current);
+        }
         setPhase(next);
       }
       raf = requestAnimationFrame(frame);
@@ -173,9 +202,22 @@ export function HeroMap({ stats, className }: { stats: { total: number; hoods: H
     return () => window.clearInterval(id);
   }, [phase]);
 
-  const statFor = (hood: string) => stats.hoods.find((s) => s.hood === hood);
   const after = (p: Phase) => ["iran", "locate", "fly", "city"].indexOf(phase) >= ["iran", "locate", "fly", "city"].indexOf(p);
-  const other = place.kind === "other" ? place : null;
+  // Browser location wins; the IP fallback covers "denied" and a permission prompt left unanswered.
+  const waiting = placeStatus === "idle" || placeStatus === "locating";
+  const place: Place = fallback.override
+    ? fallback.place
+    : placeStatus === "found" && userPlace
+      ? fromUserPlace(userPlace)
+      : waiting && !after("fly")
+        ? { kind: "pending" }
+        : fallback.place;
+  const myHood = place.kind === "mashhad" ? (place.hood ?? null) : null;
+  const statFor = (hood: string) => stats.hoods.find((s) => s.hood === hood);
+  useEffect(() => {
+    mine.current = myHood ? HOOD_POINTS.findIndex((h) => h.fa === myHood) : -1;
+  }, [myHood]);
+  const other = place.kind === "other" && place.x != null && place.y != null ? { fa: place.fa, x: place.x, y: place.y } : null;
   const arc = other
     ? `M${other.x} ${other.y}Q${(other.x + MASHHAD.x) / 2} ${Math.min(other.y, MASHHAD.y) - 160} ${MASHHAD.x} ${MASHHAD.y}`
     : null;
@@ -187,9 +229,11 @@ export function HeroMap({ stats, className }: { stats: { total: number; hoods: H
         ? place.kind === "pending"
           ? "در حال پیدا کردن موقعیت شما…"
           : place.kind === "mashhad"
-            ? "موقعیت شما: مشهد"
-            : other
-              ? `موقعیت شما: ${other.fa} · هومراب فعلاً در مشهد است`
+            ? myHood
+              ? `موقعیت شما: مشهد، نزدیک ${myHood}`
+              : "موقعیت شما: مشهد"
+            : place.kind === "other"
+              ? `موقعیت شما: ${place.fa} · هومراب فعلاً در مشهد است`
               : "هومراب در مشهد"
         : phase === "fly"
           ? "در حال رفتن به مشهد…"
@@ -269,10 +313,11 @@ export function HeroMap({ stats, className }: { stats: { total: number; hoods: H
           const s = statFor(h.fa);
           const on = phase === "city" && i === active;
           return (
-            <span key={h.fa} data-x={h.x} data-y={h.y} className={cn("hm-anchor hm-hood", on && "hm-on")} style={{ transitionDelay: `${i * 90}ms` }}>
+            <span key={h.fa} data-x={h.x} data-y={h.y} className={cn("hm-anchor hm-hood", on && "hm-on", h.fa === myHood && "hm-mine")} style={{ transitionDelay: `${i * 90}ms` }}>
               <span className="hm-pin" />
               <span className="hm-card">
                 <b>{h.fa}</b>
+                {h.fa === myHood && <span className="hm-near">نزدیک شما</span>}
                 {s && <span className="hm-count">{toFaDigits(s.count)} آگهی</span>}
                 {s && s.medianFullDeposit > 0 && (
                   <span className="hm-median">

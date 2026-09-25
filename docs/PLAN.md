@@ -34,18 +34,32 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     4 new seed listings → 100), `sharedRoom` intent field + chip, excluded-count notes in UI with
     «نشونم بده» for shared rooms, median sample size in price verdict, `compare-dialog.tsx`
     (only differing rows, best per row), DEMO_SCRIPT/README updated. 47 tests passing.
+  - Owner request — **location-aware home:** on first visit the browser asks for location
+    (`src/components/use-user-place.ts`, last place kept in localStorage). `src/lib/geo.ts` maps it
+    offline to a city (~35 Iranian cities, no API) and, in Mashhad, the nearest dataset neighborhood.
+    Hero title «جستجوی هوشمند اجاره در {city}» + pill («نتایج برای اطراف X»). Searches that name no
+    neighborhood get `intent.nearMe` (server-side, from `near` in the request) → hard-limited to X + its
+    `ADJACENT` neighborhoods, own neighborhood ranked first, shown as a removable «📍 نزدیک خودت» chip;
+    empty state offers «در کل شهر». Other city → title stays Mashhad, pill says the city isn't covered
+    yet. Denied → «نتایج نزدیک من» retry button. 52 tests passing after merging PR #6.
   - Owner request — live map hero background: `src/components/hero-map/` (Iran provinces draw in
-    gold → visitor located via Vercel IP headers (`GET /api/geo`, `?city=Mashhad` override) → camera
+    gold → visitor located (browser location from `useUserPlace` first; Vercel IP headers via
+    `GET /api/geo` when denied/unanswered; `?city=Mashhad` overrides both) → camera
     flies into Mashhad (van Wijk zoom, SVG viewBox) → OSM main roads reveal, 6 neighborhood pins +
     side panel with listing count and median full-rahn from the seed data). Data baked by
     `scripts/build-hero-map.mjs` (geoBoundaries CC BY 4.0, OSM ODbL); roads chunk lazy-loaded.
     Idle home is now dark; results view unchanged. Intro plays once per load; reduced-motion jumps
     to the city. Checked at 390, 1280 and 1440 px.
+    Merged with PR #7: the user's nearest neighborhood gets a «نزدیک شما» pin; `geo.ts` neighborhood
+    centers now use the same OSM points as the map pins (الهیه was placed near سجاد before).
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
-- **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
+- **Notes:** Demo recording: location permission is on → queries without a neighborhood are limited to
+  the recorder's area (remove the «نزدیک خودت» chip for the whole city). Queries naming a neighborhood
+  (demo queries 1 and 3) are unaffected. Chromium on the recording machine may need location allowed.
+  shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
   the `cn` package (shadcn's replacement for clsx + tailwind-merge).
   Demo anchor listings `dv-0901…dv-0906` (2-bed وکیل‌آباد around a 500M budget). `sp-0905` is a
