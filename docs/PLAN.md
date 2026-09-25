@@ -76,7 +76,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Fixed: Neshan CSS `:root { --primary }` turned the brand color blue on desktop results (tokens now
     on `html:root`). Rule parser reads "۵۰۰ رهن" (number before keyword). 59 tests.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
-- **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
+- **Blocked:** Torob logo file (owner provides; torob.com blocks the sandbox). AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
 - **Notes:** Demo recording: location permission is on → queries without a neighborhood are limited to
@@ -183,6 +183,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] UX research on the landing page + visual identity proposal (`docs/research/landing-ux.md`, `docs/BRAND.md`)
 - [x] Landing declutter (owner: keep the animated map, drop "how it works") — subtitle, 3 short examples, 1-line footer
 - [x] Palette: Torob-family red (owner's choice) — tokens, one chip style, neutral source badges, icon/OG image
+- [x] Home wordmark «ترب» instead of «هومراب» (owner request), stacked like torob.com; results header keeps هومراب
+- [ ] Torob logo: torob.com and logo mirrors are unreachable from the sandbox → owner saves the official file to
+      `public/brand/torob-logo.svg` (or .png/.webp); `page.tsx` picks it up automatically, no code change
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

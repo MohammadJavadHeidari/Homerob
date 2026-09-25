@@ -58,3 +58,6 @@
 - 2026-09-25 — **Home page declutter, map stays.** Owner: keep the animated map background (video wow,
   gamified feel); no "how it works" section. Home = title, location pill, one-line subtitle, search,
   3 short examples, one-line footer. Research in `docs/research/landing-ux.md`.
+- 2026-09-25 — **Home page shows Torob's name** «ترب» (and Torob's logo once the owner supplies the file)
+  instead of «هومراب», stacked like torob.com's own home. Owner request for the hiring pitch; supersedes
+  the home-page wordmark only (repo, results header and product name stay Homerob for now).

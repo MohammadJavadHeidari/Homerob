@@ -1,6 +1,7 @@
 "use client";
 
 import { GitCompareArrows, Info, LoaderCircle, LocateFixed, MapPin, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CompareDialog } from "@/components/compare-dialog";
@@ -22,7 +23,7 @@ const COMPARE_MAX = 3;
 
 type Status = "idle" | "loading" | "done" | "error";
 
-export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: HoodStat[] } }) {
+export function SearchApp({ hoodStats, brandLogo }: { hoodStats: { total: number; hoods: HoodStat[] }; brandLogo?: string }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
@@ -103,10 +104,24 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
         )}
       >
         <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
-          <button type="button" onClick={reset} data-hero-block className="flex items-baseline gap-2" aria-label="صفحهٔ اول">
-            <span className={cn("font-extrabold tracking-tight", compact ? "text-2xl" : "text-5xl sm:text-6xl")}>
-              هوم<span className="text-primary">راب</span>
-            </span>
+          <button
+            type="button"
+            onClick={reset}
+            data-hero-block
+            className={cn("flex gap-2", compact ? "items-baseline" : "flex-col items-center")}
+            aria-label="صفحهٔ اول"
+          >
+            {compact ? (
+              <span className="text-2xl font-extrabold tracking-tight">
+                هوم<span className="text-primary">راب</span>
+              </span>
+            ) : (
+              // Torob's own home: logo stacked over the «ترب» wordmark, white on dark.
+              <>
+                {brandLogo && <Image src={brandLogo} alt="" width={96} height={96} priority className="size-16 object-contain sm:size-20" />}
+                <span className="text-5xl font-extrabold tracking-tight sm:text-6xl">ترب</span>
+              </>
+            )}
             {compact && (
               <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در {city ?? SUPPORTED_CITY}</span>
             )}
