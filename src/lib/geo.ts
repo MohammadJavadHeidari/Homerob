@@ -51,14 +51,14 @@ const CITIES: [name: string, lat: number, lng: number][] = [
 ];
 const CITY_RADIUS_KM = 60;
 
-/** Rough centers of the neighborhoods in the dataset. */
+/** Neighborhood centers (from OpenStreetMap; same points as the home-page map pins). */
 export const HOOD_CENTERS: Record<Neighborhood, LatLng> = {
-  "قاسم‌آباد": { lat: 36.352, lng: 59.505 },
-  "وکیل‌آباد": { lat: 36.334, lng: 59.49 },
-  "هاشمیه": { lat: 36.325, lng: 59.515 },
-  "الهیه": { lat: 36.322, lng: 59.548 },
-  "سجاد": { lat: 36.317, lng: 59.572 },
-  "احمدآباد": { lat: 36.302, lng: 59.585 },
+  "الهیه": { lat: 36.3705, lng: 59.4835 },
+  "قاسم‌آباد": { lat: 36.3505, lng: 59.5055 },
+  "وکیل‌آباد": { lat: 36.3345, lng: 59.4875 },
+  "هاشمیه": { lat: 36.3105, lng: 59.5045 },
+  "سجاد": { lat: 36.3185, lng: 59.5525 },
+  "احمدآباد": { lat: 36.2965, lng: 59.5755 },
 };
 
 export function distanceKm(a: LatLng, b: LatLng): number {

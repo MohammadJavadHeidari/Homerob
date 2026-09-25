@@ -113,3 +113,6 @@ Built as part of Torob's AI Product Engineer challenge.
 ## License
 
 [MIT](LICENSE)
+
+Map data on the home page: Iran provinces from [geoBoundaries](https://www.geoboundaries.org/) (CC BY 4.0);
+Mashhad roads © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).
