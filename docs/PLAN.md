@@ -69,7 +69,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Listing coordinates are derived from the id inside the neighborhood (`listingLatLng` in `geo.ts`).
     Layout: xl+ = filters | list | sticky map (toggle «بستن نقشه»); smaller = list/map toggle.
     Screenshots: `docs/screenshots/*-map.png` (fallback tiles).
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Check the map on the Vercel preview (Neshan tiles can't be reached from the sandbox).
+- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
