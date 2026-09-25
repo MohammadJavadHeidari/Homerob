@@ -25,12 +25,22 @@ Keep: logo, title (reword), location pill (merge with city), search box.
 Cut: status badge (third "Mashhad"), description paragraph, "how it works" cards.
 Move/shrink: 6 long examples → 3 short; neighborhood price panel → row under search (tappable);
 map → faint texture, never behind text; 3-line disclaimer → 1 line + about sheet.
-Bug: on mobile the dark map ends at viewport height; the dark "how it works" cards and footer render on white below it.
+Correction: an earlier note reported a white area below the map on mobile. That came from Playwright's
+full-page screenshot (fixed elements keep the viewport size); in a real browser the map is `position: fixed`
+and stays behind the content while scrolling.
 
 ## Proposed landing (recommended)
 Top bar: logo + «مشهد · نزدیک X» pill → H1 «دنبال چه خونه‌ای هستی؟» → subtitle «آگهی‌های رهن و اجارهٔ دیوار و شیپور، یه‌جا و مرتب‌شده»
 → input (placeholder «مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن») + «پیدا کن» → 3 chips → «قیمت محله‌ها» row → one-line footer.
-~5 blocks, ~45 words. Pending owner choice (see PLAN.md Open questions).
+~5 blocks, ~45 words.
+
+## Owner decision (2026-09-25)
+- Palette: **Torob-family red** (option C) — see `docs/BRAND.md`.
+- Keep the animated map background ("the video's wow, a fun gamified touch"), including its HUD and
+  desktop neighborhood panel. "How it works" removed.
+- Shipped: paragraph → one-line subtitle, 3 short examples, shorter placeholder, one-line footer on
+  the home page (full disclaimer stays on the results page). The rule parser now also reads the short
+  form "۵۰۰ رهن" (number before the keyword).
 
 ## Sources
 - https://www.nngroup.com/articles/how-long-do-users-stay-on-web-pages/

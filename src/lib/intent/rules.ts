@@ -83,11 +83,17 @@ function parseMoney(text: string, intent: SearchIntent) {
     if (kind === "deposit") intent.maxDeposit = value;
     else intent.maxRent = value;
   }
-  // bare amounts right after the keyword: "رهن ۳۰۰ اجاره ۱۰", "رهن ۱.۵"
-  const bare = /(رهن|ودیعه|پول پیش|اجاره|ماهی|کرایه)\s*(?:حداکثر |تا |زیر )?(\d+(?:\.\d+)?)(?!\d|\.\d|\s*(?:میلیارد|میلیون|تومن|تومان|هزار|متر|خواب|م(?![\u0600-\u06FF])))/g;
-  for (const m of text.matchAll(bare)) {
-    const n = Number(m[2]);
-    if (/رهن|ودیعه|پول پیش/.test(m[1])) {
+  // Bare amounts (no unit) next to a keyword: "رهن ۳۰۰ اجاره ۱۰" or the reversed short form people
+  // type, "دوخوابه ۵۰۰ رهن" / "۳۰۰ رهن ۱۰ اجاره". Whichever order the text starts with wins, so a
+  // number between two keywords is read only once.
+  const unitNext = /(?!\d|\.\d|\s*(?:میلیارد|میلیون|تومن|تومان|هزار|متر|خواب|م(?![\u0600-\u06FF])))/.source;
+  const after = [...text.matchAll(new RegExp(`(رهن|ودیعه|پول پیش|اجاره|ماهی|کرایه)\\s*(?:حداکثر |تا |زیر )?(\\d+(?:\\.\\d+)?)${unitNext}`, "g"))];
+  const before = [...text.matchAll(/(?<![\d.])(\d+(?:\.\d+)?)\s*(رهن|ودیعه|پول پیش|اجاره|کرایه)/g)];
+  const numberFirst = before.length > 0 && (after.length === 0 || before[0].index! < after[0].index!);
+  const pairs = numberFirst ? before.map((m) => [m[2], m[1]]) : after.map((m) => [m[1], m[2]]);
+  for (const [kw, amount] of pairs) {
+    const n = Number(amount);
+    if (/رهن|ودیعه|پول پیش/.test(kw)) {
       if (intent.maxDeposit === null) intent.maxDeposit = n < 10 ? n * 1e9 : n * 1e6;
     } else if (intent.maxRent === null && n < 1000) {
       intent.maxRent = n * 1e6;

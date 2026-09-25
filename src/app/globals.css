@@ -27,6 +27,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -50,29 +51,32 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
+/* html:root, not :root: the Neshan map CSS ships its own `:root { --primary }` and would win on load order. */
+html:root {
+  /* Homerob identity: "Torob family" red on warm sand (docs/BRAND.md). WCAG AA checked. */
   --radius: 0.75rem;
-  --success: oklch(0.55 0.13 150);
-  --warning: oklch(0.62 0.14 65);
-  --brand-soft: oklch(0.96 0.025 184);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.52 0.105 184);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.7 0.09 184);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --success: #1e7a4c;
+  --warning: #9a5b00;
+  --brand-soft: #fbeae7;
+  --brand-ink: #8e2a24;
+  --card: #ffffff;
+  --card-foreground: #231f1c;
+  --popover: #ffffff;
+  --popover-foreground: #231f1c;
+  --primary: #c8372d;
+  --primary-foreground: #ffffff;
+  --secondary: #f1ece5;
+  --secondary-foreground: #231f1c;
+  --muted: #f1ece5;
+  --muted-foreground: #6b625a;
+  --accent: #f1ece5;
+  --accent-foreground: #231f1c;
+  --destructive: #a1201a;
+  --border: #e7e0d8;
+  --input: #e2dad0;
+  --ring: #e0766e;
+  --background: #f7f4ef;
+  --foreground: #231f1c;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -89,24 +93,24 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.11 184);
-  --primary-foreground: oklch(0.2 0.03 184);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: #161311;
+  --foreground: #efe9e2;
+  --card: #1f1b18;
+  --card-foreground: #efe9e2;
+  --popover: #1f1b18;
+  --popover-foreground: #efe9e2;
+  --primary: #f0675d;
+  --primary-foreground: #1a0b09;
+  --secondary: #2a2522;
+  --secondary-foreground: #efe9e2;
+  --muted: #2a2522;
+  --muted-foreground: #a89f96;
+  --accent: #2a2522;
+  --accent-foreground: #efe9e2;
+  --destructive: #f2877b;
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: #f0675d;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -120,9 +124,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --success: oklch(0.7 0.14 150);
-  --warning: oklch(0.75 0.14 70);
-  --brand-soft: oklch(0.28 0.04 184);
+  --success: #5fc48e;
+  --warning: #f2b85b;
+  --brand-soft: #3a1f1c;
+  --brand-ink: #f4a69e;
 }
 
 @layer base {
@@ -413,8 +418,8 @@
   height: 10px;
   margin: -5px 0 0 -5px;
   border-radius: 999px;
-  background: #7dd3c8;
-  box-shadow: 0 0 0 4px rgb(125 211 200 / 0.25), 0 0 14px 2px rgb(125 211 200 / 0.6);
+  background: #f0675d;
+  box-shadow: 0 0 0 4px rgb(240 103 93 / 0.25), 0 0 14px 2px rgb(240 103 93 / 0.6);
 }
 
 .hm-tag {
@@ -502,13 +507,13 @@
 }
 .hm-near {
   font-size: 11px;
-  color: #7dd3c8;
+  color: #f0675d;
 }
 .hm-mine .hm-pin {
   box-shadow:
     0 0 0 3px rgb(10 12 18 / 0.9),
-    0 0 0 5px #7dd3c8,
-    0 0 18px 4px rgb(125 211 200 / 0.6);
+    0 0 0 5px #f0675d,
+    0 0 18px 4px rgb(240 103 93 / 0.6);
 }
 .hm-count {
   font-size: 11px;

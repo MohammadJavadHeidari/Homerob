@@ -1,6 +1,6 @@
 "use client";
 
-import { GitCompareArrows, Info, ListOrdered, LoaderCircle, LocateFixed, MapPin, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert, X } from "lucide-react";
+import { GitCompareArrows, Info, LoaderCircle, LocateFixed, MapPin, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CompareDialog } from "@/components/compare-dialog";
@@ -11,7 +11,7 @@ import { readStoredPlace, useUserPlace, type PlaceStatus } from "@/components/us
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
-import { DEMO_QUERIES } from "@/lib/demo-queries";
+import { HERO_EXAMPLES } from "@/lib/demo-queries";
 import { SUPPORTED_CITY, type UserPlace } from "@/lib/geo";
 import type { HoodStat } from "@/lib/hood-stats";
 import { toFaDigits } from "@/lib/persian";
@@ -19,7 +19,6 @@ import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/re
 import { cn } from "@/lib/utils";
 
 const COMPARE_MAX = 3;
-const HERO_EXAMPLES = DEMO_QUERIES.slice(0, 6);
 
 type Status = "idle" | "loading" | "done" | "error";
 
@@ -121,8 +120,8 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
                 </span>
               </h1>
               <PlacePill status={placeStatus} place={place} onRetry={requestPlace} />
-              <p data-hero-block className="text-muted-foreground max-w-xl text-base sm:text-lg">
-                نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
+              <p data-hero-block className="text-muted-foreground text-base sm:text-lg">
+                آگهی‌های رهن و اجارهٔ دیوار و شیپور، یه‌جا و مرتب‌شده
               </p>
             </>
           )}
@@ -139,7 +138,7 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="مثلاً: یه دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن…"
+            placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
             className="border-input focus-visible:border-ring focus-visible:ring-ring/40 bg-background/80 backdrop-blur-md h-12 w-full rounded-xl border px-4 text-base shadow-xs outline-none focus-visible:ring-3 sm:h-14 sm:flex-1 sm:text-lg"
             aria-label="چی می‌خوای؟"
             maxLength={300}
@@ -152,14 +151,14 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
 
         {!compact && (
           <div data-hero-block className="mx-auto flex max-w-3xl flex-col items-center gap-3">
-            <p className="text-muted-foreground text-sm">یا یکی از این‌ها رو امتحان کن:</p>
+            <p className="text-muted-foreground text-sm">یا یکی رو بزن:</p>
             <ul className="flex flex-wrap justify-center gap-2">
               {HERO_EXAMPLES.map((q) => (
                 <li key={q}>
                   <button
                     type="button"
                     onClick={() => submit(q)}
-                    className="bg-muted/70 backdrop-blur-md hover:bg-primary/15 hover:text-primary text-muted-foreground rounded-full px-3.5 py-2 text-sm transition-colors"
+                    className="bg-muted/80 hover:bg-primary/15 hover:text-primary text-foreground/85 rounded-full border px-3.5 py-2 text-sm backdrop-blur-md transition-colors"
                   >
                     {q}
                   </button>
@@ -168,8 +167,6 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
             </ul>
           </div>
         )}
-
-        {!compact && <HowItWorks />}
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
@@ -221,11 +218,20 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
           </>
         )}
 
-        <footer data-hero-block className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
-          هومراب یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
-          هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
-          تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
-          {!compact && <span className="block opacity-60">نقشه: © مشارکت‌کنندگان OpenStreetMap و geoBoundaries</span>}
+        <footer data-hero-block className={cn("text-muted-foreground mt-auto text-center text-xs leading-6", compact ? "border-t pt-6" : "pt-4")}>
+          {compact ? (
+            <>
+              هومراب یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+              هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
+              تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
+            </>
+          ) : (
+            <span className="opacity-70">
+              <span className="inline-block">نسخهٔ نمایشی با آگهی‌های نمونه</span>
+              {" · "}
+              <span className="inline-block">نقشه: © OpenStreetMap و geoBoundaries</span>
+            </span>
+          )}
         </footer>
       </div>
     </>
@@ -245,7 +251,7 @@ function PlacePill({ status, place, onRetry }: { status: PlaceStatus; place: Use
   }
   if (place?.supported && place.neighborhood) {
     return (
-      <span className={cn(base, "bg-sky-500/10 text-sky-700 dark:text-sky-300")}>
+      <span className={cn(base, "bg-brand-soft text-brand-ink")}>
         <MapPin className="size-4" />
         <span>
           نتایج برای اطراف <b className="font-bold">{place.neighborhood}</b>، نزدیک خودت
@@ -266,31 +272,6 @@ function PlacePill({ status, place, onRetry }: { status: PlaceStatus; place: Use
       <LocateFixed className="size-4" />
       نتایج نزدیک من
     </button>
-  );
-}
-
-function HowItWorks() {
-  const steps = [
-    { icon: MessageSquareText, title: "بنویس چی می‌خوای", text: "بودجه، محله، تعداد خواب — هر جور راحتی" },
-    { icon: Sparkles, title: "هوش مصنوعی می‌فهمه", text: "و به فیلتر تبدیلش می‌کنه؛ هر کدوم رو خواستی حذف کن" },
-    { icon: ListOrdered, title: "بهترین‌ها با دلیل", text: "رهن و اجاره هم‌تراز می‌شن و هر آگهی می‌گه چرا به دردت می‌خوره" },
-  ];
-  return (
-    <ol data-hero-block className="mx-auto mt-4 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
-      {steps.map(({ icon: Icon, title, text }, i) => (
-        <li key={title} className="bg-card/60 flex gap-3 rounded-2xl border p-4 backdrop-blur-md">
-          <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl">
-            <Icon className="size-4.5" />
-          </span>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-bold">
-              {toFaDigits(i + 1)}. {title}
-            </span>
-            <span className="text-muted-foreground text-xs leading-5">{text}</span>
-          </div>
-        </li>
-      ))}
-    </ol>
   );
 }
 

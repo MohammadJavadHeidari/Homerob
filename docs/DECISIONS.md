@@ -52,3 +52,9 @@
 - 2026-09-25 — **Map view: Neshan** (owner chose option 1 of 3; OSM and a stylized SVG map were the
   alternatives). Free Neshan *web map* key, domain-restricted, in Vercel env `NEXT_PUBLIC_NESHAN_MAP_KEY`
   (never committed). Listings get approximate seeded lat/lng inside their neighborhood.
+- 2026-09-25 — **Visual identity: Torob-family red** (owner chose option C of 3; turquoise+saffron and a
+  dark night+gold palette were the alternatives). Primary `#C8372D` light / `#F0675D` dark, warm sand
+  neutrals. Spec in `docs/BRAND.md`.
+- 2026-09-25 — **Home page declutter, map stays.** Owner: keep the animated map background (video wow,
+  gamified feel); no "how it works" section. Home = title, location pill, one-line subtitle, search,
+  3 short examples, one-line footer. Research in `docs/research/landing-ux.md`.

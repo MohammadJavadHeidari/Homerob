@@ -1,38 +1,39 @@
-# Homerob visual identity — "Firouzeh & Saffron" (proposal, pending owner choice)
+# Homerob visual identity — "Torob family" red (owner's choice, 2026-09-25)
 
-Concept: two colors of Mashhad/Khorasan on a warm clay-ivory ground.
-- **Firouzeh (turquoise)** — Neyshabur turquoise, shrine tilework; calm, trust, action. Already our primary.
-- **Saffron** — Khorasan saffron, the golden dome; used sparingly for "best match / good deal". Never body text.
-- **Kahgel ivory** — warm off-white background instead of pure white; less glare on phones.
+Homerob = "Torob for home", so the brand borrows Torob's family color: a warm red on a warm sand
+ground. The home page keeps its dark animated map (gold roads) as the background; the red is the
+one action color on top of it. Research and the alternatives considered: `docs/research/landing-ux.md`
+and https://claude.ai/artifact/69s9NtyUdorKYH6kWUo2C5.
 
-## Tokens (light / dark) — WCAG contrast checked
-| Role | Light | Dark | Notes |
+## Tokens (`src/app/globals.css`) — WCAG AA checked
+| Role | Light | Dark (`.dark`, home page) | Notes |
 |---|---|---|---|
-| background | `#FAF7F2` | `#121A19` | ink on bg 14:1 / 14.6:1 |
-| surface (card) | `#FFFFFF` | `#1A2423` | |
-| ink (text) | `#1B2A28` | `#EDE9E1` | not pure black |
-| muted text | `#5E6B68` | `#A3ADAA` | 5.2:1 on ivory / 6.9:1 on dark card |
-| line | `#E8E2D8` | `#2A3533` | |
-| primary (firouzeh) | `#0B7A71` | `#4FC3B5` | white text 5.2:1 / dark text `#0B1F1C` 8:1 |
-| primary deep | `#075E57` | `#7AD6CA` | text on mist |
-| primary mist | `#E4F3F0` | `#16302C` | all intent chips, AI "why" box (6.7:1) |
-| saffron | `#E9A23B` | `#F2B85B` | fills/highlights; ink on saffron 6.9:1 |
-| saffron cream / ink | `#FDF0DC` / `#8A4B00` | `#3A2C14` / `#F2B85B` | trade-offs, neighborhood prices (6.1:1) |
-| good | `#1E7A4C` | `#5FC48E` | pros (5.3:1) |
-| error | `#B42318` | `#F2877B` | real errors only |
+| background | `#F7F4EF` sand | `#161311` | ink on bg 14.9:1 / 15.4:1 |
+| card | `#FFFFFF` | `#1F1B18` | |
+| foreground (ink) | `#231F1C` | `#EFE9E2` | not pure black |
+| muted-foreground | `#6B625A` | `#A89F96` | 5.4:1 on sand / 7.1:1 on dark |
+| border | `#E7E0D8` | white 10% | |
+| **primary** | `#C8372D` | `#F0675D` | white on light 5.2:1; dark text `#1A0B09` on coral 6.2:1 |
+| brand-soft / brand-ink | `#FBEAE7` / `#8E2A24` | `#3A1F1C` / `#F4A69E` | intent chips, AI "why" box (7.2:1 / 7.8:1) |
+| success | `#1E7A4C` | `#5FC48E` | pros, match score ≥ 85 |
+| warning | `#9A5B00` | `#F2B85B` | trade-offs / cons (amber, never red) |
+| destructive | `#A1201A` | `#F2877B` | real errors only, always with an icon |
+| hero map | gold `#E8BC6A` on `#05070C` | | "you are here" marker = coral `#F0675D` |
 
-Proportions: ~60% ivory/white, ~30% ink, ~10% firouzeh, a touch of saffron.
+`globals.css` declares the light tokens on `html:root`: the Neshan map CSS ships its own
+`:root { --primary: #03a9f4 }`, which used to turn the brand color blue on desktop once the map loaded.
 
 ## Type
-Vazirmatn everywhere. Hero 28/800, price 20/700 tabular, body 16/400 (line-height 1.9).
-Minimum 16 px for anything that must be read on a phone; 13 px for labels only.
+Vazirmatn everywhere. Minimum 16 px for anything that must be read on a phone; 13 px for labels only.
+Persian digits in text; tabular numbers for prices.
 
 ## Rules
-- One turquoise action per screen (the search button on the landing).
-- Trade-offs in amber, not red; red only for real errors. Never red for "expensive".
-- One chip style (mist) for every intent chip — no sky/violet/yellow rainbow.
+- One red action per screen (the search button on the home page).
+- Red is the brand, so it is **not** used for "bad": trade-offs are amber, pros are green.
+- One chip style (brand-soft) for every "what the AI understood" chip — no sky/violet/amber rainbow.
 - Divar/Sheypoor badges: neutral chip + small brand-colored dot.
-- No text over map lines or photos without a solid backdrop.
+- No text over map lines without a scrim.
 
-Alternatives considered: B "Mashhad Night" (`#0E1116` + gold `#D9A84E`, dark everywhere);
-C "Torob family" coral (`#B8352E`; `#D6453D` fails white text at 4.4:1).
+## Assets
+`src/app/icon.svg` (red tile, white house), `src/app/apple-icon.png` (rendered from the SVG),
+`public/og.png` (1200×630, Chromium-rendered with the app's Vazirmatn).
