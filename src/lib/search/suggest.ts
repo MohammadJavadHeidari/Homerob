@@ -35,6 +35,12 @@ export function suggest(intent: SearchIntent): Suggestion | null {
     }
   }
 
+  if (intent.nearMe && !intent.neighborhoods.length) {
+    const relaxed = { ...intent, nearMe: null };
+    const { total } = search(relaxed);
+    if (total > 0) return { text: `در کل شهر ${toFaDigits(total)} آگهی هست`, intent: relaxed, count: total };
+  }
+
   if (intent.neighborhoods.length) {
     const relaxed = { ...intent, neighborhoods: [] };
     const { total } = search(relaxed);

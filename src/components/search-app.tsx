@@ -1,15 +1,17 @@
 "use client";
 
-import { GitCompareArrows, Info, ListOrdered, LoaderCircle, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert, X } from "lucide-react";
+import { GitCompareArrows, Info, ListOrdered, LoaderCircle, LocateFixed, MapPin, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CompareDialog } from "@/components/compare-dialog";
 import { IntentChips } from "@/components/intent-chips";
 import { ListingCard } from "@/components/listing-card";
+import { readStoredPlace, useUserPlace, type PlaceStatus } from "@/components/use-user-place";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ExplainApiResponse, SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { DEMO_QUERIES } from "@/lib/demo-queries";
+import { SUPPORTED_CITY, type UserPlace } from "@/lib/geo";
 import { toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +30,11 @@ export function SearchApp() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
+  const { status: placeStatus, place, request: requestPlace } = useUserPlace();
+  const near = useRef<UserPlace["neighborhood"]>(null);
+  useEffect(() => {
+    near.current = place?.neighborhood ?? null;
+  }, [place]);
 
   const run = useCallback(async (q: string, intent?: SearchIntent) => {
     const text = q.trim();
@@ -43,7 +50,7 @@ export function SearchApp() {
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: text, intent }),
+        body: JSON.stringify({ query: text, intent, near: near.current ?? undefined }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
@@ -73,6 +80,7 @@ export function SearchApp() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q) {
+      near.current = readStoredPlace()?.neighborhood ?? null;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the input with the URL once on mount
       setQuery(q);
       void run(q);
@@ -94,6 +102,8 @@ export function SearchApp() {
   };
 
   const compact = status !== "idle";
+  // Listings exist only for Mashhad; elsewhere the title stays on Mashhad and the pill says so.
+  const city = place?.supported ? place.city : placeStatus === "idle" || placeStatus === "locating" ? null : SUPPORTED_CITY;
 
   return (
     <div className={cn("mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 pt-6 sm:pt-10", compareIds.length ? "pb-28" : "pb-16")}>
@@ -102,12 +112,23 @@ export function SearchApp() {
           <span className={cn("font-extrabold tracking-tight", compact ? "text-2xl" : "text-5xl sm:text-6xl")}>
             هوم<span className="text-primary">راب</span>
           </span>
-          {compact && <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در مشهد</span>}
+          {compact && (
+            <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در {city ?? SUPPORTED_CITY}</span>
+          )}
         </button>
         {!compact && (
-          <p className="text-muted-foreground max-w-xl text-base sm:text-lg">
-            نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
-          </p>
+          <>
+            <h1 className="text-xl font-bold sm:text-2xl">
+              جستجوی هوشمند اجاره
+              <span className={cn("transition-opacity duration-500", city ? "opacity-100" : "opacity-0")}>
+                {" "}در <span className="text-primary">{city ?? SUPPORTED_CITY}</span>
+              </span>
+            </h1>
+            <PlacePill status={placeStatus} place={place} onRetry={requestPlace} />
+            <p className="text-muted-foreground max-w-xl text-base sm:text-lg">
+              نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
+            </p>
+          </>
         )}
       </header>
 
@@ -165,7 +186,8 @@ export function SearchApp() {
             <>
               <div className="flex flex-wrap items-baseline justify-between gap-2 border-b pb-3">
                 <h2 className="text-lg font-bold">
-                  {toFaDigits(data.total)} آگهی با بودجه‌ات جور است
+                  {toFaDigits(data.total)} آگهی {data.intent.nearMe && !data.intent.neighborhoods.length ? "نزدیک خودت " : ""}
+                  با بودجه‌ات جور است
                   {data.total > data.results.length && (
                     <span className="text-muted-foreground ms-2 text-sm font-normal">({toFaDigits(data.results.length)} تای برتر)</span>
                   )}
@@ -230,6 +252,43 @@ export function SearchApp() {
         تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
       </footer>
     </div>
+  );
+}
+
+function PlacePill({ status, place, onRetry }: { status: PlaceStatus; place: UserPlace | null; onRetry: () => void }) {
+  const base = "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm";
+  if (status === "idle") return <span className={cn(base, "invisible")}>…</span>;
+  if (status === "locating") {
+    return (
+      <span className={cn(base, "bg-muted text-muted-foreground")}>
+        <LoaderCircle className="size-4 animate-spin" />
+        دارم موقعیتت رو پیدا می‌کنم…
+      </span>
+    );
+  }
+  if (place?.supported && place.neighborhood) {
+    return (
+      <span className={cn(base, "bg-sky-500/10 text-sky-700 dark:text-sky-300")}>
+        <MapPin className="size-4" />
+        <span>
+          نتایج برای اطراف <b className="font-bold">{place.neighborhood}</b>، نزدیک خودت
+        </span>
+      </span>
+    );
+  }
+  if (place && !place.supported) {
+    return (
+      <span className={cn(base, "bg-muted text-muted-foreground max-w-xl text-center")}>
+        <MapPin className="size-4 shrink-0" />
+        {place.city ? `${place.city} هنوز پوشش داده نمی‌شه` : "شهرت هنوز پوشش داده نمی‌شه"}؛ فعلاً آگهی‌های {SUPPORTED_CITY} رو ببین
+      </span>
+    );
+  }
+  return (
+    <button type="button" onClick={onRetry} className={cn(base, "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors")}>
+      <LocateFixed className="size-4" />
+      نتایج نزدیک من
+    </button>
   );
 }
 

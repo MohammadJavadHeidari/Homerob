@@ -34,11 +34,22 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     4 new seed listings → 100), `sharedRoom` intent field + chip, excluded-count notes in UI with
     «نشونم بده» for shared rooms, median sample size in price verdict, `compare-dialog.tsx`
     (only differing rows, best per row), DEMO_SCRIPT/README updated. 47 tests passing.
+  - Owner request — **location-aware home:** on first visit the browser asks for location
+    (`src/components/use-user-place.ts`, last place kept in localStorage). `src/lib/geo.ts` maps it
+    offline to a city (~35 Iranian cities, no API) and, in Mashhad, the nearest dataset neighborhood.
+    Hero title «جستجوی هوشمند اجاره در {city}» + pill («نتایج برای اطراف X»). Searches that name no
+    neighborhood get `intent.nearMe` (server-side, from `near` in the request) → hard-limited to X + its
+    `ADJACENT` neighborhoods, own neighborhood ranked first, shown as a removable «📍 نزدیک خودت» chip;
+    empty state offers «در کل شهر». Other city → title stays Mashhad, pill says the city isn't covered
+    yet. Denied → «نتایج نزدیک من» retry button. 52 tests passing after merging PR #6.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
-- **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
+- **Notes:** Demo recording: location permission is on → queries without a neighborhood are limited to
+  the recorder's area (remove the «نزدیک خودت» chip for the whole city). Queries naming a neighborhood
+  (demo queries 1 and 3) are unaffected. Chromium on the recording machine may need location allowed.
+  shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
   the `cn` package (shadcn's replacement for clsx + tailwind-merge).
   Demo anchor listings `dv-0901…dv-0906` (2-bed وکیل‌آباد around a 500M budget). `sp-0905` is a
