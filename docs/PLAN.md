@@ -52,7 +52,24 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     to the city. Checked at 390, 1280 and 1440 px.
     Merged with PR #7: the user's nearest neighborhood gets a «نزدیک شما» pin; `geo.ts` neighborhood
     centers now use the same OSM points as the map pins (الهیه was placed near سجاد before).
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video.
+  - Stretch (owner request): post-search filter panel, Divar-style but richer. `/api/search` now returns
+    the whole budget-fitting set; `src/lib/search/refine.ts` (pure: hard filters, sort, facet counts,
+    histograms; tested) runs client-side so every change is instant. `filter-panel.tsx`: price (full
+    rahn ↔ full rent toggle) / area / price-per-m² histogram range sliders, neighborhood + amenity chips
+    with live counts, rooms grid, building age, source; "remove budget cap" hands back to the AI intent.
+    `results-view.tsx`: sticky sidebar (desktop), bottom sheet with "show N" (mobile), sort pills,
+    removable active-filter chips, animated list (`motion`), pagination (12), AI explanations fetched
+    for whatever reaches the refined top 10. Screenshots: `docs/screenshots/*-filters.png`.
+  - Map view (Neshan, owner's choice): `src/components/listing-map.tsx` (Neshan mapbox-gl SDK, loaded
+    only in the browser via `next/dynamic`; key `NEXT_PUBLIC_NESHAN_MAP_KEY`; falls back to OSM raster
+    tiles when the key is missing or the Neshan style fails within 8s). Pins = HTML markers colored by
+    match score, price label on the top 6 + hovered, pop-in/out animation; list ↔ map hover and
+    selection sync (ring on the card, floating mini card with the AI "why"); dashed circle on the
+    neighborhoods in focus; Divar-style «جستجو در این محدوده» / «حذف محدوده» (`bbox` in `Refine`).
+    Listing coordinates are derived from the id inside the neighborhood (`listingLatLng` in `geo.ts`).
+    Layout: xl+ = filters | list | sticky map (toggle «بستن نقشه»); smaller = list/map toggle.
+    Screenshots: `docs/screenshots/*-map.png` (fallback tiles).
+- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Check the map on the Vercel preview (Neshan tiles can't be reached from the sandbox).
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -161,3 +178,5 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
 - [x] "Compare" view for 2–3 listings (done via divar-mcp follow-ups)
+- [x] Post-search filter panel (facets, histograms, sort, mobile sheet, motion) — owner request
+- [x] Map view with price pins (Neshan, owner chose option 1)

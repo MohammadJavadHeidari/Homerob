@@ -49,3 +49,6 @@
   becomes «جستجوی هوشمند اجاره در {city}» and results are limited to the user's area (nearest
   neighborhood + adjacent ones) unless the query names a neighborhood. Data is still Mashhad only;
   users elsewhere see their city named as "not covered yet" and get Mashhad results.
+- 2026-09-25 — **Map view: Neshan** (owner chose option 1 of 3; OSM and a stylized SVG map were the
+  alternatives). Free Neshan *web map* key, domain-restricted, in Vercel env `NEXT_PUBLIC_NESHAN_MAP_KEY`
+  (never committed). Listings get approximate seeded lat/lng inside their neighborhood.

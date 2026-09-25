@@ -12,10 +12,12 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
+    "@neshan-maps-platform/mapbox-gl": "^1.1.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
     "lucide-react": "^1.47.0",
+    "motion": "^13.4.3",
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",

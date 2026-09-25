@@ -39,8 +39,11 @@ export interface SearchResponse {
 
 const LIMIT = 20;
 
-/** Hard-filter by budget, then soft-score and rank. */
-export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS): SearchResponse {
+/**
+ * Hard-filter by budget, then soft-score and rank. `limit` defaults to the top 20; the API asks
+ * for everything so the client can refine (filter / re-sort) instantly without a round trip.
+ */
+export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS, limit = LIMIT): SearchResponse {
   const results: SearchResult[] = [];
   const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(intent.nearMe) : null;
   const excluded = { placeholderPrice: 0, sharedRoom: 0 };
@@ -72,12 +75,12 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS)
     });
   }
   results.sort((a, b) => b.score - a.score || a.fullDeposit - b.fullDeposit);
-  return { results: results.slice(0, LIMIT), total: results.length, excluded };
+  return { results: results.slice(0, limit), total: results.length, excluded };
 }
 
 /** Look up already-ranked results by id (used by /api/explain so the client can't forge facts). */
 export function resultsByIds(intent: SearchIntent, ids: string[]): SearchResult[] {
-  const all = search(intent, ALL_LISTINGS);
+  const all = search(intent, ALL_LISTINGS, Infinity);
   const byId = new Map(all.results.map((r) => [r.listing.id, r]));
   return ids.map((id) => byId.get(id)).filter((r): r is SearchResult => Boolean(r));
 }

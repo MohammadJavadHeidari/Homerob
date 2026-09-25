@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const { near } = body.data;
   const intent =
     !body.data.intent && near && !parsed.intent.neighborhoods.length ? { ...parsed.intent, nearMe: near } : parsed.intent;
-  const { results, total, excluded } = search(intent);
+  const { results, total, excluded } = search(intent, undefined, Infinity);
 
   return Response.json({
     query: body.data.query,
