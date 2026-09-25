@@ -145,6 +145,22 @@ Extremes: deposit up to ~1.1e14; 29 rows > 50 bn deposit; 153 rows > 500M rent.
 RadeAI `description` is an HTML meta string wrapper → strip. RadeAI has 8,275 same-token re-scrapes.
 
 ## 9. Price adjustment 2024 → Sept 2026
+**Result (2026-09-25):** divar-mcp calibration done (18 calls, aggregates only, owner-approved one-off).
+Like-for-like slice (2-bed, 70–130 m², median full-deposit equivalent):
+
+| area | 2024 n | 2024 | 2026 n | 2026 | ratio |
+|---|--:|--:|--:|--:|--:|
+| city (newest 30) | 37,326 | 450M | 27 | 1,100M | 2.44 |
+| الهیه | 5,733 | 467M | 23 | 1,000M | 2.14 |
+| قاسم‌آباد | 4,415 | 400M | 20 | 775M | 1.94 |
+| سجاد | 210 | 933M | 25 | 2,500M | 2.68 |
+| احمدآباد | 356 | 650M | 21 | 1,500M | 2.31 |
+| وکیل‌آباد / هاشمیه | | | 2 / 0 | | too few |
+
+Chosen factor **×2.2** (median of the four usable ratios). Details: `data/real/calibration.json`.
+Divar's 2026 labels differ: «سجاد شهر» (was «بلوار سجاد»), قاسم‌آباد is split into «… (شهرک غرب)» districts.
+
+Earlier analysis:
 No empirical factor from these datasets (no 2025–26 Mashhad rentals). Within 2024 the trend is flat
 (official ppm2 May 5.00 → Dec 4.85; RadeAI Apr 4.12 → Jul 4.83, summer season).
 Options: (1) divar-mcp calibration (owner chose this, pending the CLAUDE.md exception),

@@ -1,0 +1,49 @@
+{
+ "input": 85606,
+ "apartments": 82034,
+ "after_price_area_daily_filters": 79440,
+ "after_ppm2_outliers": 77853,
+ "after_dedup": 56093,
+ "by_dataset": {
+  "RadeAI": 39925,
+  "divarofficial": 16168
+ },
+ "phones_scrubbed": 56,
+ "street_source": {
+  "neighborhood": 42987,
+  "numbered": 6614,
+  "text": 6492
+ },
+ "clean_rows": 56093,
+ "neighborhoods": 149,
+ "with_coordinates": 11742,
+ "sample_rows": 1000,
+ "sample_neighborhoods": [
+  "الهیه",
+  "قاسم‌آباد (شهرک غرب)",
+  "آزادشهر",
+  "هاشمیه",
+  "بلوار توس",
+  "صیاد شیرازی",
+  "هفت تیر",
+  "طبرسی شمالی",
+  "رضاشهر",
+  "محله سرافرازان",
+  "دانشجو",
+  "بلوار سجاد",
+  "فرامرز عباسی",
+  "فرهنگ",
+  "وکیل‌آباد",
+  "امیریه",
+  "محله هنرستان",
+  "احمدآباد",
+  "سیدی",
+  "محله طلاب",
+  "اقبال",
+  "محله کوثر",
+  "عبدالمطلب",
+  "شهید مطهری شمالی",
+  "ابوطالب"
+ ],
+ "price_factor": 2.2
+}

@@ -1,0 +1,68 @@
+{
+ "what": "2024 (Hugging Face) vs live Sept 2026 (divar-mcp) asking prices, like-for-like slice",
+ "slice": "Mashhad apartment-rent, 2 bedrooms, 70-130 m2; median full-deposit equivalent = deposit + rent/0.03 (Toman)",
+ "fetched_at": "2026-09-25T11:06:31Z",
+ "calls": 18,
+ "method_2026": "divar-mcp search_ads (limit 30, pages 3) with query=<neighborhood>, cards kept only if their district matches; shared rooms and placeholder prices dropped. Only these aggregates were kept.",
+ "comparison": [
+  {
+   "area": "کل شهر",
+   "n_2024": 37326,
+   "median_full_2024": 450000000.0,
+   "n_2026": 27,
+   "median_full_2026": 1100000000,
+   "ratio": 2.4444444444444446
+  },
+  {
+   "area": "الهیه",
+   "n_2024": 5733,
+   "median_full_2024": 466666666.6666667,
+   "n_2026": 23,
+   "median_full_2026": 1000000000,
+   "ratio": 2.142857142857143
+  },
+  {
+   "area": "قاسم‌آباد",
+   "n_2024": 4415,
+   "median_full_2024": 400000000.0,
+   "n_2026": 20,
+   "median_full_2026": 775000000,
+   "ratio": 1.9375
+  },
+  {
+   "area": "سجاد",
+   "n_2024": 210,
+   "median_full_2024": 933333333.3333334,
+   "n_2026": 25,
+   "median_full_2026": 2500000000,
+   "ratio": 2.6785714285714284
+  },
+  {
+   "area": "احمدآباد",
+   "n_2024": 356,
+   "median_full_2024": 650000000.0,
+   "n_2026": 21,
+   "median_full_2026": 1500000000,
+   "ratio": 2.3076923076923075
+  },
+  {
+   "area": "وکیل‌آباد",
+   "n_2024": 519,
+   "median_full_2024": 500000000.0,
+   "n_2026": 2,
+   "median_full_2026": 1560000000,
+   "ratio": null
+  },
+  {
+   "area": "هاشمیه",
+   "n_2024": 1343,
+   "median_full_2024": 633333333.3333334,
+   "n_2026": 0,
+   "median_full_2026": null,
+   "ratio": null
+  }
+ ],
+ "chosen_factor": 2.2,
+ "why": "median of the neighborhood ratios with n_2026 >= 20 (1.94, 2.14, 2.31, 2.68 -> 2.22); city-wide 2.44 is 27 newest ads only. National SCI rent inflation (~32-35%/yr, unverified) compounds to ~1.8-1.9 over 2.2 years.",
+ "caveats": "2026 samples are small (20-25 ads per neighborhood); vakilabad (2 ads) and hashemieh (0) had too few matches; one global factor keeps the 2024 relative prices between neighborhoods."
+}

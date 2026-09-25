@@ -69,6 +69,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Listing coordinates are derived from the id inside the neighborhood (`listingLatLng` in `geo.ts`).
     Layout: xl+ = filters | list | sticky map (toggle «بستن نقشه»); smaller = list/map toggle.
     Screenshots: `docs/screenshots/*-map.png` (fallback tiles).
+- **Real data (2026-09-25):** switched source to Hugging Face Divar datasets (official + RadeAI, 2024);
+    profile in `docs/REAL_DATA_REPORT.md`; `data/real/` holds Mashhad raw subsets, the cleanup pipeline
+    (`scripts/realdata/`), 56,093 clean apartments (build/, gitignored) and a 1,000-row `Listing` sample;
+    prices ×2.2 from a one-off divar-mcp calibration (18 calls, owner OK). Not wired into the app yet.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -180,7 +184,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
       sets), filter to Mashhad residential rent — offline, in a scratch dir, not in the app
 - [x] Profile report (`docs/REAL_DATA_REPORT.md`): row counts per source, neighborhoods, price units (Rial/Toman), distributions,
       missing fields, dates, overlap between sets
-- [ ] Normalize → `Listing` JSON (+ report): units, 2024 → today price adjustment, neighborhood
+- [x] Normalize → `Listing` JSON (+ report) — `data/real/` (pipeline in `scripts/realdata/`), 56,093 clean ads, price ×2.2 from divar-mcp calibration: units, 2024 → today price adjustment, neighborhood
       names, placeholder/outlier cleanup, dedup across sets, strip phone numbers
 - [ ] [DECISION] owner reviews the report → wire into the app (neighborhoods list, map, tests, demo)
 
