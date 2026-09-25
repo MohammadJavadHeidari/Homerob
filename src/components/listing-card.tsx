@@ -8,6 +8,7 @@ import {
   Car,
   Check,
   Clock,
+  GitCompareArrows,
   MapPin,
   Package,
   Ruler,
@@ -18,6 +19,7 @@ import {
 import type { SearchResult } from "@/lib/api-types";
 import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import { isSharedHousing } from "@/lib/quality";
 import { cn } from "@/lib/utils";
 
 const SOURCE_LABEL = { divar: "دیوار", sheypoor: "شیپور" } as const;
@@ -28,12 +30,18 @@ export function ListingCard({
   explaining,
   aiExplained,
   rank,
+  comparing,
+  compareDisabled,
+  onToggleCompare,
 }: {
   result: SearchResult;
   explanation: string;
   explaining: boolean;
   aiExplained: boolean;
   rank: number;
+  comparing: boolean;
+  compareDisabled: boolean;
+  onToggleCompare: () => void;
 }) {
   const { listing: l, budget, fullDeposit, score, alsoOn, highlights } = result;
   const cons = highlights.filter((h) => h.kind === "con").slice(0, 2);
@@ -47,6 +55,9 @@ export function ListingCard({
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
             <SourceBadge source={l.source} />
+            {isSharedHousing(l) && (
+              <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 font-bold text-amber-800 dark:text-amber-300">همخونه</span>
+            )}
             {alsoOn.map((s) => (
               <span key={s} className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
                 در {SOURCE_LABEL[s]} هم هست
@@ -63,7 +74,22 @@ export function ListingCard({
             {l.neighborhood}، {l.street}
           </p>
         </div>
-        <ScoreBadge score={score} />
+        <div className="flex shrink-0 flex-col items-center gap-2">
+          <ScoreBadge score={score} />
+          <button
+            type="button"
+            onClick={onToggleCompare}
+            disabled={compareDisabled && !comparing}
+            aria-pressed={comparing}
+            className={cn(
+              "flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-40",
+              comparing ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-primary",
+            )}
+          >
+            {comparing ? <Check className="size-3" /> : <GitCompareArrows className="size-3" />}
+            مقایسه
+          </button>
+        </div>
       </div>
 
       {/* price */}

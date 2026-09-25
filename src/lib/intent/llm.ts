@@ -22,6 +22,7 @@ Output ONLY a JSON object with exactly these keys:
   "minArea": number | null,           // square meters; for "حدود X متر" use ~0.85·X
   "mustHave": string[],               // required amenities, keys from the list below
   "niceToHave": string[],             // preferred amenities ("ترجیحاً", "اگه… بهتره")
+  "sharedRoom": boolean,              // true only if they want a room in a shared flat (همخونه / اجاره اتاق)
   "freeTextNotes": string | null      // short Persian note for anything else useful (household, lifestyle); else null
 }
 Amenity keys: ${AMENITY_LIST}.
@@ -43,9 +44,9 @@ Other rules:
 
 Examples:
 Q: یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن
-A: {"maxDeposit":500000000,"maxRent":null,"flexibleConversion":true,"neighborhoods":["وکیل‌آباد"],"minRooms":2,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"freeTextNotes":null}
+A: {"maxDeposit":500000000,"maxRent":null,"flexibleConversion":true,"neighborhoods":["وکیل‌آباد"],"minRooms":2,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}
 Q: سوئیت یا یک خوابه مبله تو سجاد، ماهی حداکثر ۱۰ تومن، پول پیش زیاد ندارم
-A: {"maxDeposit":null,"maxRent":10000000,"flexibleConversion":true,"neighborhoods":["سجاد"],"minRooms":0,"maxRooms":1,"minArea":null,"mustHave":["furnished"],"niceToHave":[],"freeTextNotes":"پول پیش کم"}`;
+A: {"maxDeposit":null,"maxRent":10000000,"flexibleConversion":true,"neighborhoods":["سجاد"],"minRooms":0,"maxRooms":1,"minArea":null,"mustHave":["furnished"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":"پول پیش کم"}`;
 
 /** Parse a query with the LLM. Throws if the provider fails or returns an unusable object. */
 export async function parseIntentWithLLM(query: string): Promise<{ intent: SearchIntent; model: string }> {
@@ -86,6 +87,7 @@ function clean(raw: unknown): unknown {
     minArea: num(r.minArea) || null,
     mustHave,
     niceToHave: amenities(r.niceToHave).filter((k) => !mustHave.includes(k)),
+    sharedRoom: r.sharedRoom === true,
     freeTextNotes: typeof r.freeTextNotes === "string" && r.freeTextNotes.trim() ? r.freeTextNotes.trim() : null,
   };
 }

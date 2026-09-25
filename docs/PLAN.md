@@ -30,6 +30,18 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     metadata + theme color, `src/app/icon.svg` + `apple-icon.png`, how-it-works strip, about footer.
   - Phase 6 (partial): `docs/DEMO_SCRIPT.md` drafted (3 queries + backup, timings, checklist),
     README rewritten (live link, screenshots, how it works, run locally; fixed stale claims), PR #4 merged.
+  - divar-mcp follow-ups (options 1 + 4): `src/lib/quality.ts` (placeholder prices, shared rooms;
+    4 new seed listings → 100), `sharedRoom` intent field + chip, excluded-count notes in UI with
+    «نشونم بده» for shared rooms, median sample size in price verdict, `compare-dialog.tsx`
+    (only differing rows, best per row), DEMO_SCRIPT/README updated. 47 tests passing.
+  - Owner request — **location-aware home:** on first visit the browser asks for location
+    (`src/components/use-user-place.ts`, last place kept in localStorage). `src/lib/geo.ts` maps it
+    offline to a city (~35 Iranian cities, no API) and, in Mashhad, the nearest dataset neighborhood.
+    Hero title «جستجوی هوشمند اجاره در {city}» + pill («نتایج برای اطراف X»). Searches that name no
+    neighborhood get `intent.nearMe` (server-side, from `near` in the request) → hard-limited to X + its
+    `ADJACENT` neighborhoods, own neighborhood ranked first, shown as a removable «📍 نزدیک خودت» chip;
+    empty state offers «در کل شهر». Other city → title stays Mashhad, pill says the city isn't covered
+    yet. Denied → «نتایج نزدیک من» retry button. 52 tests passing after merging PR #6.
   - Stretch (owner request): post-search filter panel, Divar-style but richer. `/api/search` now returns
     the whole budget-fitting set; `src/lib/search/refine.ts` (pure: hard filters, sort, facet counts,
     histograms; tested) runs client-side so every change is instant. `filter-panel.tsx`: price (full
@@ -38,12 +50,14 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     `results-view.tsx`: sticky sidebar (desktop), bottom sheet with "show N" (mobile), sort pills,
     removable active-filter chips, animated list (`motion`), pagination (12), AI explanations fetched
     for whatever reaches the refined top 10. Screenshots: `docs/screenshots/*-filters.png`.
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Map view once
-  the owner answers the map question.
+- **Next:** owner approves demo queries/script (+ demo cache question) → record video. In progress: Neshan map view.
 - **Blocked:** nothing. AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
-- **Notes:** shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
+- **Notes:** Demo recording: location permission is on → queries without a neighborhood are limited to
+  the recorder's area (remove the «نزدیک خودت» chip for the whole city). Queries naming a neighborhood
+  (demo queries 1 and 3) are unaffected. Chromium on the recording machine may need location allowed.
+  shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
   the `cn` package (shadcn's replacement for clsx + tailwind-merge).
   Demo anchor listings `dv-0901…dv-0906` (2-bed وکیل‌آباد around a 500M budget). `sp-0905` is a
@@ -63,12 +77,6 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- [DECISION] **Map view (owner offered a Neshan key):** results + map side by side like Divar, price
-  pins, hover/click syncs with cards, "search this area". Listings need approximate lat/lng (seed
-  data, will add). Options: (a) **Neshan Web SDK** with a free *web map* key from the owner, restricted
-  to `homerob.vercel.app` + `localhost`, in `NEXT_PUBLIC_NESHAN_MAP_KEY` — Persian labels, familiar
-  look (recommended); (b) MapLibre + OpenStreetMap tiles, no key — works today, less native look;
-  (c) stylized animated SVG map of the 6 neighborhoods — no key, not a real map.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -138,8 +146,15 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [ ] [DECISION] Owner approves the 3 demo queries and the script
 - [x] README updated with live link, screenshot, how it works
 
+## Follow-ups from divar-mcp decision (owner: options 1 + 4)
+- [x] Price verdict states sample size + uses "median" wording
+- [x] Placeholder / negotiable prices detected, excluded from ranking and medians, counted in UI
+- [x] Shared-room («همخونه» / اجاره اتاق) listings flagged; excluded unless the user asks for them
+- [x] Compare view (2–3 listings, only differing specs, best value highlighted)
+- [x] Mention live read-only data source (MCP) as future work in DEMO_SCRIPT + README
+
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
-- [ ] "Compare" view for 2–3 listings
+- [x] "Compare" view for 2–3 listings (done via divar-mcp follow-ups)
 - [x] Post-search filter panel (facets, histograms, sort, mobile sheet, motion) — owner request
-- [ ] [DECISION] Map view with price pins (see Open questions)
+- [ ] Map view with price pins (Neshan, owner chose option 1)

@@ -1,18 +1,22 @@
 "use client";
 
-import { ListOrdered, LoaderCircle, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert } from "lucide-react";
+import { GitCompareArrows, Info, ListOrdered, LoaderCircle, LocateFixed, MapPin, MessageSquareText, RotateCcw, Search, SearchX, Sparkles, TriangleAlert, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { CompareDialog } from "@/components/compare-dialog";
 import { IntentChips } from "@/components/intent-chips";
 import { ResultsView } from "@/components/results-view";
+import { readStoredPlace, useUserPlace, type PlaceStatus } from "@/components/use-user-place";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { DEMO_QUERIES } from "@/lib/demo-queries";
+import { SUPPORTED_CITY, type UserPlace } from "@/lib/geo";
 import { toFaDigits } from "@/lib/persian";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
 
+const COMPARE_MAX = 3;
 const HERO_EXAMPLES = DEMO_QUERIES.slice(0, 6);
 
 type Status = "idle" | "loading" | "done" | "error";
@@ -22,20 +26,28 @@ export function SearchApp() {
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
   const [refine, setRefine] = useState<Refine>(EMPTY_REFINE);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
+  const { status: placeStatus, place, request: requestPlace } = useUserPlace();
+  const near = useRef<UserPlace["neighborhood"]>(null);
+  useEffect(() => {
+    near.current = place?.neighborhood ?? null;
+  }, [place]);
 
   const run = useCallback(async (q: string, intent?: SearchIntent) => {
     const text = q.trim();
     if (text.length < 2) return;
     const id = ++requestId.current;
     setStatus("loading");
+    setCompareIds([]);
     if (!intent) window.history.replaceState(null, "", `?q=${encodeURIComponent(text)}`);
 
     try {
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: text, intent }),
+        body: JSON.stringify({ query: text, intent, near: near.current ?? undefined }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
@@ -53,6 +65,7 @@ export function SearchApp() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q) {
+      near.current = readStoredPlace()?.neighborhood ?? null;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the input with the URL once on mount
       setQuery(q);
       void run(q);
@@ -69,16 +82,20 @@ export function SearchApp() {
     setStatus("idle");
     setData(null);
     setQuery("");
+    setCompareIds([]);
     window.history.replaceState(null, "", "/");
   };
 
   const compact = status !== "idle";
+  // Listings exist only for Mashhad; elsewhere the title stays on Mashhad and the pill says so.
+  const city = place?.supported ? place.city : placeStatus === "idle" || placeStatus === "locating" ? null : SUPPORTED_CITY;
 
   return (
     <div
       className={cn(
-        "mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 pb-16 transition-[max-width] duration-500 sm:pt-10",
+        "mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
         status === "done" && data?.total ? "max-w-7xl" : "max-w-5xl",
+        compareIds.length ? "pb-28" : "pb-16",
       )}
     >
       <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
@@ -86,12 +103,23 @@ export function SearchApp() {
           <span className={cn("font-extrabold tracking-tight", compact ? "text-2xl" : "text-5xl sm:text-6xl")}>
             هوم<span className="text-primary">راب</span>
           </span>
-          {compact && <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در مشهد</span>}
+          {compact && (
+            <span className="text-muted-foreground hidden text-sm sm:inline">جستجوی هوشمند اجاره در {city ?? SUPPORTED_CITY}</span>
+          )}
         </button>
         {!compact && (
-          <p className="text-muted-foreground max-w-xl text-base sm:text-lg">
-            نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
-          </p>
+          <>
+            <h1 className="text-xl font-bold sm:text-2xl">
+              جستجوی هوشمند اجاره
+              <span className={cn("transition-opacity duration-500", city ? "opacity-100" : "opacity-0")}>
+                {" "}در <span className="text-primary">{city ?? SUPPORTED_CITY}</span>
+              </span>
+            </h1>
+            <PlacePill status={placeStatus} place={place} onRetry={requestPlace} />
+            <p className="text-muted-foreground max-w-xl text-base sm:text-lg">
+              نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
+            </p>
+          </>
         )}
       </header>
 
@@ -142,6 +170,7 @@ export function SearchApp() {
       {status === "done" && data && (
         <section className="flex flex-col gap-5">
           <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+          <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
           {data.total === 0 ? (
             <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
           ) : (
@@ -151,9 +180,39 @@ export function SearchApp() {
               refine={refine}
               onRefine={setRefine}
               onIntentChange={(next) => run(data.query, next)}
+              compareIds={compareIds}
+              compareMax={COMPARE_MAX}
+              onToggleCompare={(id) =>
+                setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
+              }
             />
           )}
         </section>
+      )}
+
+      {status === "done" && data && compareIds.length > 0 && (
+        <>
+          <div className="bg-popover fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-md items-center gap-2 rounded-2xl border p-2 ps-4 shadow-lg">
+            <span className="flex-1 text-sm font-medium">
+              {toFaDigits(compareIds.length)} آگهی انتخاب شده
+              {compareIds.length < 2 && <span className="text-muted-foreground text-xs"> — یکی دیگه انتخاب کن</span>}
+            </span>
+            <Button size="sm" disabled={compareIds.length < 2} onClick={() => setCompareOpen(true)}>
+              <GitCompareArrows />
+              مقایسه
+            </Button>
+            <Button size="icon-sm" variant="ghost" aria-label="لغو مقایسه" onClick={() => setCompareIds([])}>
+              <X />
+            </Button>
+          </div>
+          <CompareDialog
+            open={compareOpen}
+            onOpenChange={setCompareOpen}
+            items={compareIds
+              .map((id) => data.results.find((r) => r.listing.id === id))
+              .filter((r): r is NonNullable<typeof r> => Boolean(r))}
+          />
+        </>
       )}
 
       <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
@@ -162,6 +221,43 @@ export function SearchApp() {
         تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
       </footer>
     </div>
+  );
+}
+
+function PlacePill({ status, place, onRetry }: { status: PlaceStatus; place: UserPlace | null; onRetry: () => void }) {
+  const base = "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm";
+  if (status === "idle") return <span className={cn(base, "invisible")}>…</span>;
+  if (status === "locating") {
+    return (
+      <span className={cn(base, "bg-muted text-muted-foreground")}>
+        <LoaderCircle className="size-4 animate-spin" />
+        دارم موقعیتت رو پیدا می‌کنم…
+      </span>
+    );
+  }
+  if (place?.supported && place.neighborhood) {
+    return (
+      <span className={cn(base, "bg-sky-500/10 text-sky-700 dark:text-sky-300")}>
+        <MapPin className="size-4" />
+        <span>
+          نتایج برای اطراف <b className="font-bold">{place.neighborhood}</b>، نزدیک خودت
+        </span>
+      </span>
+    );
+  }
+  if (place && !place.supported) {
+    return (
+      <span className={cn(base, "bg-muted text-muted-foreground max-w-xl text-center")}>
+        <MapPin className="size-4 shrink-0" />
+        {place.city ? `${place.city} هنوز پوشش داده نمی‌شه` : "شهرت هنوز پوشش داده نمی‌شه"}؛ فعلاً آگهی‌های {SUPPORTED_CITY} رو ببین
+      </span>
+    );
+  }
+  return (
+    <button type="button" onClick={onRetry} className={cn(base, "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors")}>
+      <LocateFixed className="size-4" />
+      نتایج نزدیک من
+    </button>
   );
 }
 
@@ -187,6 +283,32 @@ function HowItWorks() {
         </li>
       ))}
     </ol>
+  );
+}
+
+function ExcludedNote({ data, onShowShared }: { data: SearchApiResponse; onShowShared: () => void }) {
+  const { placeholderPrice, sharedRoom } = data.excluded;
+  if (!placeholderPrice && !(sharedRoom && !data.intent.sharedRoom)) return null;
+  return (
+    <div className="text-muted-foreground flex flex-col gap-1 text-xs leading-6">
+      {placeholderPrice > 0 && (
+        <p className="flex items-start gap-1.5">
+          <Info className="mt-1 size-3.5 shrink-0" />
+          {toFaDigits(placeholderPrice)} آگهی قیمت واقعی نداشت (توافقی یا عدد نمایشی مثل «۱٬۰۰۰ تومان») و در رتبه‌بندی و میانهٔ قیمت‌ها حساب نشد.
+        </p>
+      )}
+      {sharedRoom > 0 && !data.intent.sharedRoom && (
+        <p className="flex items-start gap-1.5">
+          <Info className="mt-1 size-3.5 shrink-0" />
+          <span>
+            {toFaDigits(sharedRoom)} آگهی «اجاره اتاق / همخونه» هم هست که جدا نگهشون داشتم (قیمتشون برای یه اتاقه، نه کل واحد).{" "}
+            <button type="button" onClick={onShowShared} className="text-primary font-medium underline-offset-4 hover:underline">
+              نشونم بده
+            </button>
+          </span>
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -60,6 +60,8 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 - 📊 **Fair-price signal** — cheaper/pricier than the neighborhood median per m²
 - 🤖 **AI explanations with honest trade-offs** — grounded in the listing's real facts
 - 🔁 **Cross-source dedup** — one card per apartment, even if it's on both Divar and Sheypoor
+- ⚖️ **Compare 2–3 listings** — only the specs that actually differ, best value per row highlighted
+- 🧹 **Honest data handling** — placeholder prices («توافقی», «۱٬۰۰۰ تومان») never count as bargains or skew medians; shared rooms («همخونه») are kept apart unless you ask; price verdicts state their sample size
 - 📱 **RTL, mobile-first UI** — Vazirmatn, shareable `?q=` links
 
 | Mobile card | Empty state with suggestion |
@@ -94,7 +96,7 @@ Key files: `src/lib/intent/` (schema, rule parser, LLM parser) · `src/lib/prici
 
 Not built for this MVP — kept here as stated direction, not a claim:
 
-- **Live aggregation** over Divar / Sheypoor (or ingestion via Divar's public dataset / Kenar platform), replacing the sample dataset
+- **Live aggregation** — plug the same AI layer into a live, read-only listings source (e.g. an MCP server over public listings, or official platform data such as Divar's Kenar), replacing the sample dataset. The data source is already isolated behind `src/data/`
 - Smarter cross-source duplicate detection (fuzzy matching on text, photos, location) — today's is exact-match
 - Real transaction-price data to improve the fair-price signal beyond a neighborhood median
 - More cities, map view, saved searches / alerts

@@ -25,11 +25,17 @@ export function ResultsView({
   refine,
   onRefine,
   onIntentChange,
+  compareIds,
+  compareMax,
+  onToggleCompare,
 }: {
   data: SearchApiResponse;
   refine: Refine;
   onRefine: (next: Refine) => void;
   onIntentChange: (next: SearchIntent) => void;
+  compareIds: string[];
+  compareMax: number;
+  onToggleCompare: (id: string) => void;
 }) {
   const [pages, setPages] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -72,7 +78,9 @@ export function ResultsView({
             <h2 className="text-lg font-bold">
               <AnimatedNumber value={refined.length} /> آگهی
               <span className="text-muted-foreground ms-1.5 text-sm font-normal">
-                {nActive > 0 ? `از ${toFaDigits(data.total)} آگهیِ داخل بودجه` : "با بودجه‌ات جور است"}
+                {nActive > 0
+                  ? `از ${toFaDigits(data.total)} آگهیِ داخل بودجه`
+                  : `${data.intent.nearMe && !data.intent.neighborhoods.length ? "نزدیک خودت " : ""}با بودجه‌ات جور است`}
               </span>
             </h2>
             <Button variant="outline" className="relative h-9 rounded-full lg:hidden" onClick={() => setSheetOpen(true)}>
@@ -132,6 +140,9 @@ export function ResultsView({
                       explanation={ex?.text ?? r.explanation}
                       explaining={explain.pending.has(id)}
                       aiExplained={!!ex?.ai}
+                      comparing={compareIds.includes(id)}
+                      compareDisabled={compareIds.length >= compareMax}
+                      onToggleCompare={() => onToggleCompare(id)}
                     />
                   </motion.li>
                 );

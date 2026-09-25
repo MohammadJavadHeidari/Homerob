@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, X } from "lucide-react";
+import { MapPin, Sparkles, X, type LucideIcon } from "lucide-react";
 
 import { AMENITIES } from "@/lib/amenities";
 import type { SearchIntent } from "@/lib/api-types";
@@ -11,6 +11,7 @@ interface Chip {
   id: string;
   label: string;
   tone: "budget" | "place" | "home" | "must" | "nice" | "note";
+  icon?: LucideIcon;
   remove: (i: SearchIntent) => SearchIntent;
 }
 
@@ -39,6 +40,15 @@ export function intentToChips(intent: SearchIntent): Chip[] {
       remove: (i) => ({ ...i, neighborhoods: i.neighborhoods.filter((x) => x !== n) }),
     });
   }
+  if (intent.nearMe && !intent.neighborhoods.length) {
+    chips.push({
+      id: "near-me",
+      label: `نزدیک خودت: ${intent.nearMe} و اطراف`,
+      tone: "place",
+      icon: MapPin,
+      remove: (i) => ({ ...i, nearMe: null }),
+    });
+  }
   if (intent.minRooms !== null || intent.maxRooms !== null) {
     chips.push({ id: "rooms", label: roomsLabel(intent), tone: "home", remove: (i) => ({ ...i, minRooms: null, maxRooms: null }) });
   }
@@ -60,6 +70,9 @@ export function intentToChips(intent: SearchIntent): Chip[] {
       tone: "nice",
       remove: (i) => ({ ...i, niceToHave: i.niceToHave.filter((x) => x !== k) }),
     });
+  }
+  if (intent.sharedRoom) {
+    chips.push({ id: "shared", label: "اتاق در واحد اشتراکی (همخونه)", tone: "home", remove: (i) => ({ ...i, sharedRoom: false }) });
   }
   if (intent.freeTextNotes) {
     chips.push({ id: "note", label: intent.freeTextNotes, tone: "note", remove: (i) => ({ ...i, freeTextNotes: null }) });
@@ -113,6 +126,7 @@ export function IntentChips({
                   TONES[chip.tone],
                 )}
               >
+                {chip.icon && <chip.icon className="size-3.5" />}
                 {chip.label}
                 <button
                   type="button"

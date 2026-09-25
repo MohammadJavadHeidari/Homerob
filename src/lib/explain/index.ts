@@ -47,7 +47,7 @@ export async function explainResults(
   });
   if (!results.length || activeProvider() === "mock") return fallback();
 
-  const key = `${query}::${results.map((r) => r.listing.id).join(",")}`;
+  const key = `${query}::${intent.nearMe ?? ""}::${results.map((r) => r.listing.id).join(",")}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
@@ -81,10 +81,12 @@ function summarizeIntent(i: SearchIntent) {
     maxDeposit: i.maxDeposit === null ? null : formatToman(i.maxDeposit),
     maxRent: i.maxRent === null ? null : formatToman(i.maxRent),
     neighborhoods: i.neighborhoods,
+    userLivesNear: i.neighborhoods.length ? null : i.nearMe,
     rooms: i.minRooms === null ? null : i.maxRooms !== null && i.maxRooms !== i.minRooms ? `${i.minRooms}–${i.maxRooms}` : `${i.minRooms}+`,
     minArea: i.minArea,
     mustHave: i.mustHave,
     niceToHave: i.niceToHave,
+    sharedRoom: i.sharedRoom,
     notes: i.freeTextNotes,
   };
 }
