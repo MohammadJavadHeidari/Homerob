@@ -1,48 +1,43 @@
-# Homerob visual identity — "Torob family" red (owner's choice, 2026-09-25)
+# Homerob visual identity — Torob's own (owner's choice, 2026-09-25)
 
-Homerob = "Torob for home", so the brand borrows Torob's family color: a warm red on a warm sand
-ground. The home page keeps its dark animated map (gold roads) as the background; the red is the
-one action color on top of it. Research and the alternatives considered: `docs/research/landing-ux.md`
-and https://claude.ai/artifact/69s9NtyUdorKYH6kWUo2C5.
-
-## Tokens (`src/app/globals.css`) — WCAG AA checked
-| Role | Light | Dark (`.dark`, home page) | Notes |
-|---|---|---|---|
-| background | `#F7F4EF` sand | `#161311` | ink on bg 14.9:1 / 15.4:1 |
-| card | `#FFFFFF` | `#1F1B18` | |
-| foreground (ink) | `#231F1C` | `#EFE9E2` | not pure black |
-| muted-foreground | `#6B625A` | `#A89F96` | 5.4:1 on sand / 7.1:1 on dark |
-| border | `#E7E0D8` | white 10% | |
-| **primary** | `#D41A2E` | `#F2566A` | white on light 5.3:1; dark text `#1A0B09` on coral 5.8:1 |
-| brand-soft / brand-ink | `#FDE8EA` / `#9E1426` | `#3A1A1E` / `#F4A3AC` | intent chips, AI "why" box (6.9:1 / 7.9:1) |
-| success | `#1E7A4C` | `#5FC48E` | pros, match score ≥ 85 |
-| warning | `#9A5B00` | `#F2B85B` | trade-offs / cons (amber, never red) |
-| destructive | `#A1201A` | `#F2877B` | real errors only, always with an icon |
-| hero map | gold `#E8BC6A` on `#05070C` | | "you are here" marker = coral `#F2566A` |
-
-`globals.css` declares the light tokens on `html:root`: the Neshan map CSS ships its own
-`:root { --primary: #03a9f4 }`, which used to turn the brand color blue on desktop once the map loaded.
-
-Hue taken from Torob's own icon (`#E91E33`, shadow `#BF0F22`); `#E91E33` itself gives white text only
-4.47:1, so buttons use the slightly deeper `#D41A2E`.
+Homerob is pitched as "Torob for home", so it uses Torob's identity: logo, «ترب» wordmark, colors and
+home-page layout, taken from torob.com (owner's Claude-in-Chrome capture: `docs/research/torob-identity.md`).
+The home page keeps its animated map background, drawn on Torob's dark navy.
+Earlier research and alternatives: `docs/research/landing-ux.md`, https://claude.ai/artifact/69s9NtyUdorKYH6kWUo2C5.
 
 ## Logo
-- `public/brand/torob-icon.png` — Torob's official app icon (256 px, from torob.com/static/icons/icon-512x512.png).
-- `public/brand/torob-logo.png` — white one-color version derived from it, as torob.com shows on its dark home.
-  `src/app/page.tsx` picks it up and the home page stacks it over the «ترب» wordmark.
-- The browser-tab icon is still Homerob's house tile (`src/app/icon.svg`); switching it is pending the owner.
+`src/components/torob-logo.tsx` — torob.com's inline SVG (88×88) with its four `--logo-color-*` tokens:
+light = red ring `#e91e33` / `#bf0f22` + leaves `#6fbc23` / `#519a23`; dark (`.dark`) = monochrome
+`#f1f5f9` / `#cbd5e1`, exactly like torob.com. Home: mark directly above a 40px/700 «ترب».
+Still Homerob: results-page header, browser-tab icon (`src/app/icon.svg`), `public/og.png` (pending owner).
+
+## Tokens (`src/app/globals.css`, on `html:root` because Neshan's CSS sets `:root { --primary }`)
+| Role | Light | Dark (`.dark`, home page) | Torob source |
+|---|---|---|---|
+| background | `#F1F5F9` | `#15202B` | `--bg-bright` |
+| card / popover | `#FFFFFF` | `#212B36` | `--bg-fog` |
+| foreground | `#1E293B` | `#F1F5F9` | `--sky-800` |
+| muted-foreground | `#5B6B82` | `#94A3B8` | `--sky-500` (`#64748B` is 4.34:1 on the page bg → one step darker, 4.95:1) |
+| border / input | `#E2E8F0` / `#CBD5E1` | `#334155` / `#475569` | `--sky-300` |
+| **primary** | `#D73948` (white 4.6:1) | `#D73948` | `--brand` |
+| brand-soft / brand-ink | `#FFF0F2` / `#9F1239` (7.3:1) | `#3B1D27` / `#FECDD3` | `--red-50` / `--red-800` |
+| success | `#15803D` | `#4ADE80` | green ramp |
+| warning (trade-offs) | `#854D0F` (6.9:1) | `#FFCA32` | `--yellow-800` / `--yellow-500` |
+| radius | 8px | | cards, inputs, buttons |
+| theme-color | `#FFFFFF` | `#15202B` | torob.com meta |
+| hero map | gold roads on `#0F172B` | | `--sky-50` dark |
+
+Known gap: `#D73948` as small text on the `#F1F5F9` page background is 4.2:1 (Torob does the same);
+on white cards it is 4.6:1.
 
 ## Type
-Vazirmatn everywhere. Minimum 16 px for anything that must be read on a phone; 13 px for labels only.
-Persian digits in text; tabular numbers for prices.
+torob.com uses IRANYekan (a commercial Fontiran font, not ours to ship) → we keep **Vazirmatn**, which is
+close in feel. Torob sizes: base 14px, search 16px, wordmark 40/700, card title 14/700, price 14–16/700 in
+ink (prices are never red), store count 12px muted.
 
-## Rules
-- One red action per screen (the search button on the home page).
-- Red is the brand, so it is **not** used for "bad": trade-offs are amber, pros are green.
-- One chip style (brand-soft) for every "what the AI understood" chip — no sky/violet/amber rainbow.
-- Divar/Sheypoor badges: neutral chip + small brand-colored dot.
-- No text over map lines without a scrim.
-
-## Assets
-`src/app/icon.svg` (red tile, white house), `src/app/apple-icon.png` (rendered from the SVG),
-`public/og.png` (1200×630, Chromium-rendered with the app's Vazirmatn).
+## Rules (from Torob's patterns)
+- Search box: 48px, 8px radius, 1px `--input` border, search icon inside at the start, tagline right under it.
+- Prices in bold ink, not brand red; red is for actions (buttons, active sort pill) and the logo.
+- Trade-offs in amber (`--warning`), pros in green, one chip style for parsed intent.
+- Divar/Sheypoor badges: neutral chip + small colored dot (like Torob's store chips).
+- Microcopy: colloquial, second person, short (see `docs/research/torob-identity.md` §6).

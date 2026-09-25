@@ -1,12 +1,12 @@
 "use client";
 
 import { GitCompareArrows, Info, LoaderCircle, LocateFixed, MapPin, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
 import { IntentChips } from "@/components/intent-chips";
+import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
 import { readStoredPlace, useUserPlace, type PlaceStatus } from "@/components/use-user-place";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ const COMPARE_MAX = 3;
 
 type Status = "idle" | "loading" | "done" | "error";
 
-export function SearchApp({ hoodStats, brandLogo }: { hoodStats: { total: number; hoods: HoodStat[] }; brandLogo?: string }) {
+export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: HoodStat[] } }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
@@ -108,7 +108,7 @@ export function SearchApp({ hoodStats, brandLogo }: { hoodStats: { total: number
             type="button"
             onClick={reset}
             data-hero-block
-            className={cn("flex gap-2", compact ? "items-baseline" : "flex-col items-center")}
+            className={cn("flex", compact ? "items-baseline gap-2" : "flex-col items-center")}
             aria-label="صفحهٔ اول"
           >
             {compact ? (
@@ -116,10 +116,10 @@ export function SearchApp({ hoodStats, brandLogo }: { hoodStats: { total: number
                 هوم<span className="text-primary">راب</span>
               </span>
             ) : (
-              // Torob's own home: logo stacked over the «ترب» wordmark, white on dark.
+              // torob.com's home: the 88px mark sits right on top of a 40px bold «ترب» (monochrome in dark).
               <>
-                {brandLogo && <Image src={brandLogo} alt="" width={96} height={96} priority className="size-16 object-contain sm:size-20" />}
-                <span className="text-5xl font-extrabold tracking-tight sm:text-6xl">ترب</span>
+                <TorobLogo className="size-18 sm:size-22" />
+                <span className="text-[40px] leading-[1.6] font-bold">ترب</span>
               </>
             )}
             {compact && (
@@ -135,9 +135,6 @@ export function SearchApp({ hoodStats, brandLogo }: { hoodStats: { total: number
                 </span>
               </h1>
               <PlacePill status={placeStatus} place={place} onRetry={requestPlace} />
-              <p data-hero-block className="text-muted-foreground text-base sm:text-lg">
-                آگهی‌های رهن و اجارهٔ دیوار و شیپور، یه‌جا و مرتب‌شده
-              </p>
             </>
           )}
         </header>
@@ -150,23 +147,29 @@ export function SearchApp({ hoodStats, brandLogo }: { hoodStats: { total: number
           data-hero-block
           className={cn("flex w-full flex-col gap-2 sm:flex-row", !compact && "mx-auto max-w-2xl")}
         >
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
-            className="border-input focus-visible:border-ring focus-visible:ring-ring/40 bg-background/80 backdrop-blur-md h-12 w-full rounded-xl border px-4 text-base shadow-xs outline-none focus-visible:ring-3 sm:h-14 sm:flex-1 sm:text-lg"
-            aria-label="چی می‌خوای؟"
-            maxLength={300}
-          />
-          <Button type="submit" size="lg" className="h-12 rounded-xl px-6 text-base sm:h-14" disabled={status === "loading"}>
+          {/* torob.com's search box: 48px, 8px radius, 1px border, search icon inside at the start */}
+          <div className="relative sm:flex-1">
+            <Search className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
+              className="border-input focus-visible:border-ring focus-visible:ring-ring/40 bg-card h-12 w-full rounded-lg border ps-12 pe-4 text-base outline-none focus-visible:ring-3"
+              aria-label="چی می‌خوای؟"
+              maxLength={300}
+            />
+          </div>
+          <Button type="submit" size="lg" className="h-12 rounded-lg px-6 text-base font-bold" disabled={status === "loading"}>
             {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
             جستجو
           </Button>
         </form>
 
         {!compact && (
-          <div data-hero-block className="mx-auto flex max-w-3xl flex-col items-center gap-3">
-            <p className="text-muted-foreground text-sm">یا یکی رو بزن:</p>
+          <div data-hero-block className="mx-auto -mt-2 flex max-w-3xl flex-col items-center gap-3 [text-shadow:0_0_10px_#0f172b,0_0_3px_#0f172b]">
+            {/* torob.com puts its one-line tagline right under the search box */}
+            <p className="text-muted-foreground text-sm">آگهی‌های رهن و اجارهٔ دیوار و شیپور، یه‌جا و مرتب‌شده</p>
+            <p className="text-muted-foreground mt-3 text-sm">یا یکی رو بزن:</p>
             <ul className="flex flex-wrap justify-center gap-2">
               {HERO_EXAMPLES.map((q) => (
                 <li key={q}>

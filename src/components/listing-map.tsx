@@ -103,12 +103,12 @@ export default function ListingMap(props: ListingMapProps) {
       clearTimeout(timer);
       if (map.getSource("focus")) return;
       map.addSource("focus", { type: "geojson", data: circles(live.current.focus) });
-      map.addLayer({ id: "focus-fill", type: "fill", source: "focus", paint: { "fill-color": "#d41a2e", "fill-opacity": 0.09 } });
+      map.addLayer({ id: "focus-fill", type: "fill", source: "focus", paint: { "fill-color": "#d73948", "fill-opacity": 0.09 } });
       map.addLayer({
         id: "focus-line",
         type: "line",
         source: "focus",
-        paint: { "line-color": "#d41a2e", "line-width": 2, "line-dasharray": [2, 1.5], "line-opacity": 0.7 },
+        paint: { "line-color": "#d73948", "line-width": 2, "line-dasharray": [2, 1.5], "line-opacity": 0.7 },
       });
       setReady(true);
     });

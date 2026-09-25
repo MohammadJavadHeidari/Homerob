@@ -76,7 +76,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Fixed: Neshan CSS `:root { --primary }` turned the brand color blue on desktop results (tokens now
     on `html:root`). Rule parser reads "۵۰۰ رهن" (number before keyword). 59 tests.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
-- **Blocked:** torob.com identity report from the owner (Claude in Chrome); torob.com blocks the sandbox. AI provider: Gemini free tier (see DECISIONS).
+- **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
 - **Notes:** Demo recording: location permission is on → queries without a neighborhood are limited to
@@ -184,10 +184,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Landing declutter (owner: keep the animated map, drop "how it works") — subtitle, 3 short examples, 1-line footer
 - [x] Palette: Torob-family red (owner's choice) — tokens, one chip style, neutral source badges, icon/OG image
 - [x] Home wordmark «ترب» instead of «هومراب» (owner request), stacked like torob.com; results header keeps هومراب
-- [x] Torob logo on the home page (official icon via images.weserv.nl, torob.com itself blocks the sandbox;
-      white version for the dark home) + brand red retuned to Torob's hue (`#D41A2E` / `#F2566A`)
-- [ ] Owner is collecting torob.com's identity (logo SVG, colors, fonts, results-page patterns) with Claude in
-      Chrome → apply when the report arrives. Tab icon switch to Torob's icon: pending owner approval.
+- [x] Torob identity from the owner's torob.com capture: exact logo SVG (themed via `--logo-color-*`), Torob
+      tokens (slate + `#d73948`, `#15202b` dark), 8px radius, torob.com home layout (mark over 40px «ترب»,
+      icon-in-input search, tagline under it); map background on Torob's dark navy
+- [ ] [DECISION] Results header / tab icon / og.png: switch from Homerob to Torob too? (asked 2026-09-25)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

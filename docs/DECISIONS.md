@@ -61,3 +61,7 @@
 - 2026-09-25 — **Home page shows Torob's name** «ترب» (and Torob's logo once the owner supplies the file)
   instead of «هومراب», stacked like torob.com's own home. Owner request for the hiring pitch; supersedes
   the home-page wordmark only (repo, results header and product name stay Homerob for now).
+- 2026-09-25 — **Adopt Torob's own identity** (supersedes the "Torob-family red" palette entry above):
+  logo SVG, colors (`--brand #d73948`, slate neutrals, `#15202b` dark), 8px radius and home layout from
+  torob.com, captured by the owner with Claude in Chrome (`docs/research/torob-identity.md`). Font stays
+  Vazirmatn (IRANYekan is commercial). Spec: `docs/BRAND.md`.

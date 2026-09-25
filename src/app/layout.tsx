@@ -29,7 +29,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#d41a2e",
+  // torob.com's own values
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#15202b" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
