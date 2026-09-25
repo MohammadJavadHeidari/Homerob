@@ -242,7 +242,7 @@ export function HeroMap({
   return (
     <div ref={rootRef} aria-hidden className={cn("hero-map pointer-events-none fixed inset-0 overflow-hidden", className)} data-phase={phase}>
       <div className="hero-map-grid absolute inset-0" />
-      <svg ref={svgRef} className="absolute inset-0 size-full" preserveAspectRatio="none">
+      <svg ref={svgRef} className="hm-lines absolute inset-0 size-full" preserveAspectRatio="none">
         <defs>
           <radialGradient id="hm-reveal">
             <stop offset="0.7" stopColor="#fff" />

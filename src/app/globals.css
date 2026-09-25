@@ -274,6 +274,17 @@ html:root {
   mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
 }
 
+/* Gold lines (Iran, the arc, Mashhad's roads) sit out of focus so the search box owns the page;
+   dots, pins and labels are HTML layers above the SVG and stay sharp. */
+.hm-lines {
+  filter: blur(2.5px);
+}
+@media (min-width: 640px) {
+  .hm-lines {
+    filter: blur(3px);
+  }
+}
+
 .hm-province {
   fill: var(--hm-gold);
   fill-opacity: 0;
