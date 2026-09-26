@@ -1,6 +1,6 @@
 # Homerob 🏠
 
-**AI-powered rental search & comparison for Mashhad — "Torob for home".**
+**AI-powered rental search & comparison for Iran — "Torob for home".**
 
 🔗 **Live demo: https://homerob.vercel.app**
 
@@ -74,7 +74,7 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 - **Tailwind CSS v4** + **shadcn/ui** (base-ui), full RTL
 - **Google Gemini** (free tier) via an OpenAI-compatible client — `AI_PROVIDER` switches to DeepSeek / OpenAI / a no-key `mock` (rule-based) mode
 - **zod** for intent validation, **vitest** for unit tests
-- **Sample dataset** — 96 generated Divar/Sheypoor-style listings across 6 Mashhad neighborhoods (الهیه، سجاد، وکیل‌آباد، احمدآباد، هاشمیه، قاسم‌آباد). No scraping; no database.
+- **Data** — real listings only from 2026-09-26 (`docs/DATA.md`). Until the real-data import lands, the app still runs on 100 generated Divar/Sheypoor-style Mashhad listings (الهیه، سجاد، وکیل‌آباد، احمدآباد، هاشمیه، قاسم‌آباد). The code is city-aware: adding a city = registering its neighborhoods in `src/lib/places.ts` + its listings.
 
 ## Run locally
 

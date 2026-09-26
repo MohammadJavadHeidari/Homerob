@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { areaAround, distanceKm, HOOD_CENTERS, listingLatLng, locate } from "./geo";
+import { areaAround, distanceKm, listingLatLng, locate } from "./geo";
 import { EMPTY_INTENT } from "./intent/schema";
+import { hoodCenter } from "./places";
 import { search } from "./search";
 
 describe("locate", () => {
@@ -10,7 +11,7 @@ describe("locate", () => {
     expect(locate({ lat: 36.3, lng: 59.59 }).neighborhood).toBe("احمدآباد");
   });
 
-  it("names other cities but marks them unsupported", () => {
+  it("names cities without listings but marks them unsupported", () => {
     expect(locate({ lat: 35.7, lng: 51.4 })).toEqual({ city: "تهران", supported: false, neighborhood: null });
   });
 
@@ -29,16 +30,21 @@ describe("near-me search", () => {
   });
 
   it("ignores near-me when the query names a neighborhood", () => {
-    const named = { ...EMPTY_INTENT, neighborhoods: ["وکیل‌آباد" as const] };
+    const named = { ...EMPTY_INTENT, neighborhoods: ["وکیل‌آباد"] };
     expect(search({ ...named, nearMe: "احمدآباد" }).total).toBe(search(named).total);
   });
 });
 
 describe("listingLatLng", () => {
   it("is stable and stays inside the listing's neighborhood", () => {
-    const a = listingLatLng({ id: "dv-0901", neighborhood: "وکیل‌آباد" });
-    expect(listingLatLng({ id: "dv-0901", neighborhood: "وکیل‌آباد" })).toEqual(a);
-    expect(distanceKm(a, HOOD_CENTERS["وکیل‌آباد"])).toBeLessThan(1.2);
-    expect(listingLatLng({ id: "dv-0902", neighborhood: "وکیل‌آباد" })).not.toEqual(a);
+    const at = (id: string) => listingLatLng({ id, city: "مشهد", neighborhood: "وکیل‌آباد" });
+    const a = at("dv-0901");
+    expect(at("dv-0901")).toEqual(a);
+    expect(distanceKm(a, hoodCenter("وکیل‌آباد", "مشهد")!)).toBeLessThan(1.2);
+    expect(at("dv-0902")).not.toEqual(a);
+  });
+
+  it("uses the listing's own coordinates when the source gives them", () => {
+    expect(listingLatLng({ id: "x", city: "مشهد", neighborhood: "سجاد", lat: 36.31, lng: 59.55 })).toEqual({ lat: 36.31, lng: 59.55 });
   });
 });

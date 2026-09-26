@@ -35,6 +35,7 @@ import {
   facets,
   FILTER_AMENITIES,
   histogram,
+  neighborhoodsOf,
   RANGE_STEPS,
   RANGE_VALUE,
   ROOM_OPTIONS,
@@ -46,7 +47,7 @@ import {
   type RangeKey,
   type Refine,
 } from "@/lib/search/refine";
-import { NEIGHBORHOODS, type ListingSource } from "@/lib/types";
+import type { ListingSource } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
@@ -125,7 +126,7 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
 
         <Section title="محله" icon={MapPin} active={refine.neighborhoods.length > 0} onClear={() => set("neighborhoods", [])}>
           <div className="flex flex-wrap gap-1.5">
-            {NEIGHBORHOODS.map((n) => (
+            {neighborhoodsOf(results).map((n) => (
               <ToggleChip
                 key={n}
                 label={n}

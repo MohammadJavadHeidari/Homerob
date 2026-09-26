@@ -1,5 +1,6 @@
 import type { SearchIntent } from "@/lib/intent/schema";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import { COVERED_CITIES, isCovered } from "@/lib/places";
 
 import { search } from "./index";
 
@@ -16,6 +17,16 @@ const round = (v: number, step: number) => Math.ceil(v / step) * step;
 /** When nothing fits, find the smallest sensible relaxation that returns results. */
 export function suggest(intent: SearchIntent): Suggestion | null {
   const { maxDeposit: D, maxRent: R } = intent;
+
+  // A city with no listings yet: no budget change helps, point to the cities that have some.
+  if (intent.city && !isCovered(intent.city)) {
+    const relaxed: SearchIntent = { ...intent, city: null, neighborhoods: [], nearMe: null };
+    const { total } = search(relaxed);
+    const where = COVERED_CITIES.join("، ");
+    return total > 0
+      ? { text: `در ${where} ${toFaDigits(total)} آگهی هست`, intent: relaxed, count: total }
+      : null;
+  }
 
   if (D !== null || R !== null) {
     for (const f of [1.15, 1.3, 1.5, 1.75, 2, 2.5]) {

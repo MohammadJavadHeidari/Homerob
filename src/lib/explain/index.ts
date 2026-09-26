@@ -7,7 +7,7 @@ import type { SearchIntent } from "@/lib/intent/schema";
 import { formatToman, toEnDigits, toFaDigits } from "@/lib/persian";
 import type { SearchResult } from "@/lib/search";
 
-const SYSTEM_PROMPT = `You are Homerob, a friendly Persian rental assistant for Mashhad. For each listing, write ONE short
+const SYSTEM_PROMPT = `You are Homerob, a friendly Persian rental assistant for Iranian cities. For each listing, write ONE short
 Persian explanation (1–2 sentences, max ~200 characters) of how well it fits THIS user's request.
 
 Rules:
@@ -80,6 +80,7 @@ function summarizeIntent(i: SearchIntent) {
   return {
     maxDeposit: i.maxDeposit === null ? null : formatToman(i.maxDeposit),
     maxRent: i.maxRent === null ? null : formatToman(i.maxRent),
+    city: i.city,
     neighborhoods: i.neighborhoods,
     userLivesNear: i.neighborhoods.length ? null : i.nearMe,
     rooms: i.minRooms === null ? null : i.maxRooms !== null && i.maxRooms !== i.minRooms ? `${i.minRooms}–${i.maxRooms}` : `${i.minRooms}+`,
@@ -95,6 +96,7 @@ function facts(r: SearchResult) {
   const l = r.listing;
   return {
     id: l.id,
+    city: l.city,
     neighborhood: l.neighborhood,
     rooms: l.rooms === 0 ? "سوئیت" : `${toFaDigits(l.rooms)} خوابه`,
     area: `${toFaDigits(l.areaM2)} متر`,

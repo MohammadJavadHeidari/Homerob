@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import type { UserPlace } from "@/lib/geo";
-import type { HoodStat } from "@/lib/hood-stats";
+import type { getHoodStats } from "@/lib/hood-stats";
 import { toFaDigits } from "@/lib/persian";
+import { isCovered } from "@/lib/places";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ const COMPARE_MAX = 3;
 
 type Status = "idle" | "loading" | "done" | "error";
 
-export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: HoodStat[] } }) {
+export function SearchApp({ hoodStats }: { hoodStats: ReturnType<typeof getHoodStats> }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
@@ -88,7 +89,6 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   };
 
   const compact = status !== "idle";
-  // Listings exist only for Mashhad; elsewhere the title stays on Mashhad and the pill says so.
 
   return (
     <>
@@ -275,14 +275,18 @@ function LoadingState() {
 
 function EmptyState({ data, onApply }: { data: SearchApiResponse; onApply: (i: SearchIntent) => void }) {
   const hasBudget = data.intent.maxDeposit !== null || data.intent.maxRent !== null;
+  const newCity = data.intent.city && !isCovered(data.intent.city) ? data.intent.city : null;
+  const [title, hint] = newCity
+    ? [`هنوز آگهی‌ای از ${newCity} نداریم`, "ترب شهربه‌شهر آگهی‌های واقعی رو اضافه می‌کنه."]
+    : hasBudget
+      ? ["هیچ آگهی‌ای با این بودجه نیست", "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره."]
+      : ["آگهی‌ای پیدا نشد", "فیلترها رو کمتر کن یا جور دیگه‌ای بنویس."];
   return (
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed px-6 py-12 text-center">
       <SearchX className="text-muted-foreground size-10" />
       <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-bold">{hasBudget ? "هیچ آگهی‌ای با این بودجه نیست" : "آگهی‌ای پیدا نشد"}</h2>
-        <p className="text-muted-foreground text-sm">
-          {hasBudget ? "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره." : "فیلترها رو کمتر کن یا جور دیگه‌ای بنویس."}
-        </p>
+        <h2 className="text-lg font-bold">{title}</h2>
+        <p className="text-muted-foreground text-sm">{hint}</p>
       </div>
       {data.suggestion && (
         <Button variant="outline" className="h-auto rounded-xl px-4 py-2.5 text-sm whitespace-normal" onClick={() => onApply(data.suggestion!.intent)}>

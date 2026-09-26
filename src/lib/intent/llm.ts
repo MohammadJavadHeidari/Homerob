@@ -2,21 +2,23 @@ import "server-only";
 
 import { AMENITIES, AMENITY_KEYS } from "@/lib/amenities";
 import { chatJson } from "@/lib/ai/client";
-import { canonicalNeighborhood } from "@/lib/neighborhoods";
-import { NEIGHBORHOODS } from "@/lib/types";
+import { canonicalCity, canonicalNeighborhood, COVERED_CITIES, hoodsIn } from "@/lib/places";
 
 import { SearchIntentSchema, type SearchIntent } from "./schema";
 
 const AMENITY_LIST = AMENITY_KEYS.map((k) => `${k} (${AMENITIES[k].label})`).join(", ");
 
-const SYSTEM_PROMPT = `You convert a Persian rental-housing search query (Mashhad, Iran) into a strict JSON object.
+const PLACES = COVERED_CITIES.map((c) => `${c}: ${hoodsIn(c).map((h) => h.name).join("، ")}`).join("\n");
+
+const SYSTEM_PROMPT = `You convert a Persian rental-housing search query (any city in Iran) into a strict JSON object.
 
 Output ONLY a JSON object with exactly these keys:
 {
   "maxDeposit": number | null,        // max rahn / vadie / pool-e pish the user can pay, in TOMAN
   "maxRent": number | null,           // max monthly ejare, in TOMAN
   "flexibleConversion": boolean,      // false only if the user refuses to shift money between rahn and ejare
-  "neighborhoods": string[],          // only from: ${NEIGHBORHOODS.join("، ")}
+  "city": string | null,              // Persian city name if the user names one or a neighborhood implies it; else null
+  "neighborhoods": string[],          // canonical names from the list below (same city only)
   "minRooms": number | null,          // bedrooms; سوئیت/استودیو = 0
   "maxRooms": number | null,          // set only for ranges ("سوئیت یا یک‌خوابه" → 0..1) or an explicit maximum
   "minArea": number | null,           // square meters; for "حدود X متر" use ~0.85·X
@@ -26,6 +28,8 @@ Output ONLY a JSON object with exactly these keys:
   "freeTextNotes": string | null      // short Persian note for anything else useful (household, lifestyle); else null
 }
 Amenity keys: ${AMENITY_LIST}.
+Known cities and neighborhoods (city: neighborhoods):
+${PLACES}
 
 Money rules (critical):
 - Everything is TOMAN. "میلیون" = 1,000,000; "میلیارد" = 1,000,000,000; "هزار" = 1,000.
@@ -37,16 +41,19 @@ Money rules (critical):
 - Never invent a budget that was not stated; use null.
 
 Other rules:
-- Map neighborhood spellings to the canonical names above ("وکیل آباد" → "وکیل‌آباد"). Ignore other places.
+- Map neighborhood spellings to the canonical names above ("وکیل آباد" → "وکیل‌آباد"). Ignore unknown neighborhoods.
+- Any Iranian city the user names goes in "city" in Persian (e.g. "تهران"), even if it is not in the list.
 - "خانواده ۳ نفره" or more → minRooms 2 if rooms not stated, and mention it in freeTextNotes.
 - Amenities the user says don't matter ("مهم نیست") go nowhere.
 - Default flexibleConversion to true.
 
 Examples:
 Q: یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن
-A: {"maxDeposit":500000000,"maxRent":null,"flexibleConversion":true,"neighborhoods":["وکیل‌آباد"],"minRooms":2,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}
+A: {"maxDeposit":500000000,"maxRent":null,"flexibleConversion":true,"city":"مشهد","neighborhoods":["وکیل‌آباد"],"minRooms":2,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}
 Q: سوئیت یا یک خوابه مبله تو سجاد، ماهی حداکثر ۱۰ تومن، پول پیش زیاد ندارم
-A: {"maxDeposit":null,"maxRent":10000000,"flexibleConversion":true,"neighborhoods":["سجاد"],"minRooms":0,"maxRooms":1,"minArea":null,"mustHave":["furnished"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":"پول پیش کم"}`;
+A: {"maxDeposit":null,"maxRent":10000000,"flexibleConversion":true,"city":"مشهد","neighborhoods":["سجاد"],"minRooms":0,"maxRooms":1,"minArea":null,"mustHave":["furnished"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":"پول پیش کم"}
+Q: آپارتمان سه خوابه در تهران با پارکینگ، رهن کامل تا ۳ میلیارد
+A: {"maxDeposit":3000000000,"maxRent":0,"flexibleConversion":true,"city":"تهران","neighborhoods":[],"minRooms":3,"maxRooms":null,"minArea":null,"mustHave":["parking"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}`;
 
 /** Parse a query with the LLM. Throws if the provider fails or returns an unusable object. */
 export async function parseIntentWithLLM(query: string): Promise<{ intent: SearchIntent; model: string }> {
@@ -81,6 +88,7 @@ function clean(raw: unknown): unknown {
     maxDeposit: num(r.maxDeposit),
     maxRent: num(r.maxRent),
     flexibleConversion: r.flexibleConversion !== false,
+    city: typeof r.city === "string" ? canonicalCity(r.city) : null,
     neighborhoods: hoods,
     minRooms: int(r.minRooms),
     maxRooms: int(r.maxRooms),

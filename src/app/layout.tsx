@@ -8,9 +8,9 @@ const vazirmatn = Vazirmatn({
   subsets: ["arabic", "latin"],
 });
 
-const TITLE = "ترب — جستجوی هوشمند اجاره خانه در مشهد";
+const TITLE = "ترب — جستجوی هوشمند اجاره خانه در ایران";
 const DESCRIPTION =
-  "نیازت رو به زبان خودت بنویس؛ ترب با هوش مصنوعی آگهی‌های رهن و اجارهٔ مشهد رو می‌فهمه، قیمت‌ها رو هم‌تراز می‌کنه، رتبه‌بندی می‌کنه و می‌گه چرا.";
+  "نیازت رو به زبان خودت بنویس؛ ترب با هوش مصنوعی آگهی‌های رهن و اجارهٔ شهرهای ایران رو می‌فهمه، قیمت‌ها رو هم‌تراز می‌کنه، رتبه‌بندی می‌کنه و می‌گه چرا.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://homerob.vercel.app"),
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: "ترب",
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "ترب — جستجوی هوشمند رهن و اجاره در مشهد" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "ترب — جستجوی هوشمند رهن و اجاره در ایران" }],
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/og.png"] },
 };

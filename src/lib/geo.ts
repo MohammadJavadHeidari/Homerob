@@ -1,65 +1,11 @@
-import { ADJACENT } from "@/lib/neighborhoods";
-import type { Neighborhood } from "@/lib/types";
+import { adjacentHoods, CITIES, hoodCenter, hoodsIn, isCovered, type LatLng } from "@/lib/places";
+import type { Listing } from "@/lib/types";
 
 /** Offline "reverse geocoding": nearest big Iranian city, no API key or network call needed. */
 
-export interface LatLng {
-  lat: number;
-  lng: number;
-}
+export type { LatLng };
 
-/** Cities Homerob has listings for. */
-export const SUPPORTED_CITY = "مشهد";
-
-const CITIES: [name: string, lat: number, lng: number][] = [
-  ["مشهد", 36.3, 59.58],
-  ["تهران", 35.69, 51.39],
-  ["کرج", 35.83, 50.99],
-  ["اصفهان", 32.65, 51.67],
-  ["شیراز", 29.61, 52.53],
-  ["تبریز", 38.08, 46.29],
-  ["قم", 34.64, 50.88],
-  ["اهواز", 31.32, 48.67],
-  ["کرمانشاه", 34.31, 47.07],
-  ["ارومیه", 37.55, 45.08],
-  ["رشت", 37.28, 49.58],
-  ["زاهدان", 29.5, 60.86],
-  ["کرمان", 30.28, 57.08],
-  ["یزد", 31.9, 54.37],
-  ["همدان", 34.8, 48.51],
-  ["اراک", 34.09, 49.69],
-  ["اردبیل", 38.25, 48.29],
-  ["بندرعباس", 27.18, 56.27],
-  ["قزوین", 36.27, 50.0],
-  ["زنجان", 36.67, 48.48],
-  ["ساری", 36.56, 53.06],
-  ["گرگان", 36.84, 54.44],
-  ["سنندج", 35.31, 47.0],
-  ["خرم‌آباد", 33.49, 48.36],
-  ["بوشهر", 28.97, 50.84],
-  ["بجنورد", 37.47, 57.33],
-  ["بیرجند", 32.87, 59.22],
-  ["نیشابور", 36.21, 58.8],
-  ["سبزوار", 36.21, 57.68],
-  ["تربت حیدریه", 35.27, 59.22],
-  ["قوچان", 37.11, 58.51],
-  ["سمنان", 35.57, 53.39],
-  ["شهرکرد", 32.33, 50.86],
-  ["یاسوج", 30.67, 51.59],
-  ["ایلام", 33.64, 46.42],
-  ["کاشان", 33.98, 51.44],
-];
 const CITY_RADIUS_KM = 60;
-
-/** Neighborhood centers (from OpenStreetMap; same points as the home-page map pins). */
-export const HOOD_CENTERS: Record<Neighborhood, LatLng> = {
-  "الهیه": { lat: 36.3705, lng: 59.4835 },
-  "قاسم‌آباد": { lat: 36.3505, lng: 59.5055 },
-  "وکیل‌آباد": { lat: 36.3345, lng: 59.4875 },
-  "هاشمیه": { lat: 36.3105, lng: 59.5045 },
-  "سجاد": { lat: 36.3185, lng: 59.5525 },
-  "احمدآباد": { lat: 36.2965, lng: 59.5755 },
-};
 
 export function distanceKm(a: LatLng, b: LatLng): number {
   const rad = Math.PI / 180;
@@ -75,29 +21,27 @@ export interface UserPlace {
   /** True when Homerob has listings for that city. */
   supported: boolean;
   /** Closest dataset neighborhood (only in a supported city). */
-  neighborhood: Neighborhood | null;
+  neighborhood: string | null;
 }
 
 export function locate(p: LatLng): UserPlace {
   let city: string | null = null;
   let best = CITY_RADIUS_KM;
-  for (const [name, lat, lng] of CITIES) {
-    const d = distanceKm(p, { lat, lng });
+  for (const c of CITIES) {
+    const d = distanceKm(p, c.center);
     if (d <= best) {
       best = d;
-      city = name;
+      city = c.fa;
     }
   }
-  if (city !== SUPPORTED_CITY) return { city, supported: false, neighborhood: null };
-  const neighborhood = (Object.keys(HOOD_CENTERS) as Neighborhood[]).reduce((a, b) =>
-    distanceKm(p, HOOD_CENTERS[b]) < distanceKm(p, HOOD_CENTERS[a]) ? b : a,
-  );
+  if (!city || !isCovered(city)) return { city, supported: false, neighborhood: null };
+  const neighborhood = hoodsIn(city).reduce((a, b) => (distanceKm(p, b.center) < distanceKm(p, a.center) ? b : a)).name;
   return { city, supported: true, neighborhood };
 }
 
 /** The user's area: their neighborhood plus the ones next to it. */
-export function areaAround(n: Neighborhood): Neighborhood[] {
-  return [n, ...ADJACENT[n]];
+export function areaAround(n: string, city?: string | null): string[] {
+  return [n, ...adjacentHoods(n, city)];
 }
 
 /** [west, south, east, north] */
@@ -110,14 +54,15 @@ const SPREAD = 0.01;
  * Approximate map position of a seeded listing: a stable point inside its neighborhood, derived
  * from the id (the sample data has no real addresses). Same id → same point, on server and client.
  */
-export function listingLatLng(l: { id: string; neighborhood: Neighborhood }): LatLng {
+export function listingLatLng(l: Pick<Listing, "id" | "neighborhood" | "city" | "lat" | "lng">): LatLng {
+  if (l.lat != null && l.lng != null) return { lat: l.lat, lng: l.lng };
   let h = 2166136261;
   for (let i = 0; i < l.id.length; i++) h = Math.imul(h ^ l.id.charCodeAt(i), 16777619);
   const u = ((h >>> 0) % 10_000) / 10_000;
   const v = ((Math.imul(h, 2654435761) >>> 0) % 10_000) / 10_000;
   const r = SPREAD * Math.sqrt(0.08 + 0.92 * u); // uniform over a disc, never exactly the center
   const a = 2 * Math.PI * v;
-  const c = HOOD_CENTERS[l.neighborhood];
+  const c = hoodCenter(l.neighborhood, l.city) ?? { lat: 32.4, lng: 53.7 }; // unknown place → middle of Iran
   return { lat: c.lat + r * Math.sin(a), lng: c.lng + (r * Math.cos(a)) / Math.cos((c.lat * Math.PI) / 180) };
 }
 

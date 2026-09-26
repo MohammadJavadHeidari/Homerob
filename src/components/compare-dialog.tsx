@@ -26,6 +26,7 @@ const yesNo = (v: boolean) =>
 
 const ROWS: Row[] = [
   { label: "تطابق با نیازت", show: (r) => `${toFaDigits(r.score)}٪`, key: (r) => r.score, better: "high" },
+  { label: "شهر", show: (r) => r.listing.city, key: (r) => r.listing.city },
   { label: "محله", show: (r) => r.listing.neighborhood, key: (r) => r.listing.neighborhood },
   { label: "رهن", show: (r) => formatToman(r.listing.deposit), key: (r) => r.listing.deposit, better: "low" },
   {
