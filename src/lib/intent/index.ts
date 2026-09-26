@@ -4,6 +4,7 @@ import { activeProvider } from "@/lib/ai/client";
 import { normalizeFa } from "@/lib/text";
 
 import { parseIntentWithLLM } from "./llm";
+import { resolvePlace } from "./place";
 import { parseIntentWithRules } from "./rules";
 import type { SearchIntent } from "./schema";
 
@@ -27,15 +28,15 @@ export async function parseIntent(query: string): Promise<ParsedIntent> {
   const started = Date.now();
   let result: ParsedIntent;
   if (activeProvider() === "mock") {
-    result = { intent: parseIntentWithRules(query), source: "rules", model: null, ms: Date.now() - started };
+    result = { intent: resolvePlace(parseIntentWithRules(query)), source: "rules", model: null, ms: Date.now() - started };
   } else {
     try {
       const { intent, model } = await parseIntentWithLLM(query);
-      result = { intent, source: "ai", model, ms: Date.now() - started };
+      result = { intent: resolvePlace(intent), source: "ai", model, ms: Date.now() - started };
     } catch (err) {
       console.error("[intent] LLM failed, using rules:", err instanceof Error ? err.message : err);
       // Don't cache fallbacks: the LLM may be back on the next try.
-      return { intent: parseIntentWithRules(query), source: "rules", model: null, ms: Date.now() - started };
+      return { intent: resolvePlace(parseIntentWithRules(query)), source: "rules", model: null, ms: Date.now() - started };
     }
   }
 

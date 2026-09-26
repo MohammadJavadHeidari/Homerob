@@ -1,11 +1,11 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
 import { AMENITIES, amenityNo, amenityYes, type AmenityKey } from "@/lib/amenities";
 import type { SearchIntent } from "@/lib/intent/schema";
-import { ADJACENT } from "@/lib/neighborhoods";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import { adjacentHoods } from "@/lib/places";
 import { pricePerM2 } from "@/lib/pricing";
 import { isComparable } from "@/lib/quality";
-import type { Listing, Neighborhood } from "@/lib/types";
+import type { Listing } from "@/lib/types";
 
 import type { BudgetFit } from "./budget";
 
@@ -38,17 +38,23 @@ function median(xs: number[]) {
 }
 
 const COMPARABLE = ALL_LISTINGS.filter(isComparable);
-const HOODS = [...new Set(COMPARABLE.map((l) => l.neighborhood))];
+
+/** Neighborhood names repeat across cities, so stats are keyed by city + neighborhood. */
+export const hoodKey = (l: Pick<Listing, "city" | "neighborhood">) => `${l.city}/${l.neighborhood}`;
+const HOODS = [...new Set(COMPARABLE.map(hoodKey))];
 
 /** Median full-deposit price per m² in each neighborhood (placeholder prices and shared rooms excluded). */
-export const HOOD_MEDIAN_PPM: Record<Neighborhood, number> = Object.fromEntries(
-  HOODS.map((h) => [h, median(COMPARABLE.filter((l) => l.neighborhood === h).map((l) => pricePerM2(l)))]),
-) as Record<Neighborhood, number>;
+export const HOOD_MEDIAN_PPM: Record<string, number> = Object.fromEntries(
+  HOODS.map((h) => [h, median(COMPARABLE.filter((l) => hoodKey(l) === h).map((l) => pricePerM2(l)))]),
+);
+
+/** Fewer comparable listings than this → no "cheaper/pricier than the neighborhood" verdict. */
+const MIN_SAMPLE = 5;
 
 /** How many listings each median is based on — shown to the user, like any honest price verdict. */
-export const HOOD_SAMPLE_SIZE: Record<Neighborhood, number> = Object.fromEntries(
-  HOODS.map((h) => [h, COMPARABLE.filter((l) => l.neighborhood === h).length]),
-) as Record<Neighborhood, number>;
+export const HOOD_SAMPLE_SIZE: Record<string, number> = Object.fromEntries(
+  HOODS.map((h) => [h, COMPARABLE.filter((l) => hoodKey(l) === h).length]),
+);
 
 /** "Now" for recency = newest listing, so the demo doesn't age. */
 const REFERENCE_TIME = Math.max(...ALL_LISTINGS.map((l) => Date.parse(l.postedAt)));
@@ -81,7 +87,7 @@ function neighborhoodScore(l: Listing, intent: SearchIntent) {
     return 1;
   }
   if (intent.neighborhoods.includes(l.neighborhood)) return 1;
-  if (intent.neighborhoods.some((n) => ADJACENT[n]?.includes(l.neighborhood))) return 0.45;
+  if (intent.neighborhoods.some((n) => adjacentHoods(n, l.city).includes(l.neighborhood))) return 0.45;
   return 0;
 }
 
@@ -101,7 +107,9 @@ function fraction(keys: AmenityKey[], l: Listing, empty: number) {
 
 /** 1 = ≥20% cheaper per m² than the neighborhood median, 0.5 = at median, 0 = ≥20% pricier. */
 function valueScore(l: Listing) {
-  const ratio = pricePerM2(l) / HOOD_MEDIAN_PPM[l.neighborhood];
+  const med = (HOOD_SAMPLE_SIZE[hoodKey(l)] ?? 0) >= MIN_SAMPLE ? HOOD_MEDIAN_PPM[hoodKey(l)] : 0;
+  if (!med) return 0.5;
+  const ratio = pricePerM2(l) / med;
   return clamp01(0.5 + (1 - ratio) * 2.5);
 }
 
@@ -136,7 +144,7 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   if (intent.neighborhoods.length) {
     if (intent.neighborhoods.includes(l.neighborhood)) add("pro", `خود ${l.neighborhood}`, 5);
     else {
-      const near = intent.neighborhoods.find((n) => ADJACENT[n]?.includes(l.neighborhood));
+      const near = intent.neighborhoods.find((n) => adjacentHoods(n, l.city).includes(l.neighborhood));
       if (near) add("con", `${l.neighborhood} است، نزدیک ${near}`, 7);
       else add("con", `در ${l.neighborhood}، خارج از محله‌های مدنظرت`, 9);
     }
@@ -165,8 +173,9 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   }
 
   // value vs neighborhood
-  const ratio = pricePerM2(l) / HOOD_MEDIAN_PPM[l.neighborhood];
-  const sample = `میانهٔ ${toFaDigits(HOOD_SAMPLE_SIZE[l.neighborhood])} آگهی ${l.neighborhood}`;
+  const med = (HOOD_SAMPLE_SIZE[hoodKey(l)] ?? 0) >= MIN_SAMPLE ? HOOD_MEDIAN_PPM[hoodKey(l)] : 0;
+  const ratio = med ? pricePerM2(l) / med : 1;
+  const sample = `میانهٔ ${toFaDigits(HOOD_SAMPLE_SIZE[hoodKey(l)] ?? 0)} آگهی ${l.neighborhood}`;
   if (ratio <= 0.9) add("pro", `حدود ${toFaDigits(Math.round((1 - ratio) * 100))}٪ ارزان‌تر از ${sample}`, 6);
   else if (ratio >= 1.12) add("con", `حدود ${toFaDigits(Math.round((ratio - 1) * 100))}٪ گران‌تر از ${sample}`, 5);
 

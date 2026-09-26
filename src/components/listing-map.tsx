@@ -9,7 +9,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { SearchResult } from "@/lib/api-types";
-import { HOOD_CENTERS, listingLatLng, type BBox } from "@/lib/geo";
+import { listingLatLng, type BBox } from "@/lib/geo";
+import { hoodCenter } from "@/lib/places";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import type { Neighborhood } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -102,7 +103,7 @@ export default function ListingMap(props: ListingMapProps) {
       loaded = true;
       clearTimeout(timer);
       if (map.getSource("focus")) return;
-      map.addSource("focus", { type: "geojson", data: circles(live.current.focus) });
+      map.addSource("focus", { type: "geojson", data: circles(live.current.focus, live.current.results) });
       map.addLayer({ id: "focus-fill", type: "fill", source: "focus", paint: { "fill-color": "#d73948", "fill-opacity": 0.09 } });
       map.addLayer({
         id: "focus-line",
@@ -203,8 +204,8 @@ export default function ListingMap(props: ListingMapProps) {
   // ---------- focus outline ----------
   useEffect(() => {
     const src = mapRef.current?.getSource("focus") as GeoJSONSource | undefined;
-    if (ready && src) src.setData(circles(focus));
-  }, [focus, ready]);
+    if (ready && src) src.setData(circles(focus, results));
+  }, [focus, results, ready]);
 
   const zoom = (d: number) => mapRef.current?.easeTo({ zoom: mapRef.current.getZoom() + d, duration: 300 });
 
@@ -388,11 +389,13 @@ function pinElement(r: SearchResult, i: number): HTMLElement {
 }
 
 /** ~1.2 km circles around neighborhood centers, as GeoJSON polygons. */
-function circles(hoods: Neighborhood[]) {
+function circles(hoods: Neighborhood[], results: SearchResult[]) {
   return {
     type: "FeatureCollection" as const,
-    features: hoods.map((h) => {
-      const c = HOOD_CENTERS[h];
+    features: hoods.flatMap((h) => {
+      // names can repeat across cities: take the city from a result in that neighborhood
+      const c = hoodCenter(h, results.find((r) => r.listing.neighborhood === h)?.listing.city);
+      if (!c) return [];
       const ring = Array.from({ length: 65 }, (_, i) => {
         const a = (i / 64) * 2 * Math.PI;
         return [c.lng + (0.0115 * Math.cos(a)) / Math.cos((c.lat * Math.PI) / 180), c.lat + 0.0115 * Math.sin(a)];

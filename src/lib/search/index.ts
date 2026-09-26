@@ -1,5 +1,6 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
 import { areaAround } from "@/lib/geo";
+import { searchCity } from "@/lib/intent/place";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { toFullDeposit } from "@/lib/pricing";
 import { isPlaceholderPrice, isSharedHousing } from "@/lib/quality";
@@ -40,16 +41,18 @@ export interface SearchResponse {
 const LIMIT = 20;
 
 /**
- * Hard-filter by budget, then soft-score and rank. `limit` defaults to the top 20; the API asks
+ * Hard-filter by city and budget, then soft-score and rank. `limit` defaults to the top 20; the API asks
  * for everything so the client can refine (filter / re-sort) instantly without a round trip.
  */
 export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS, limit = LIMIT): SearchResponse {
   const results: SearchResult[] = [];
-  const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(intent.nearMe) : null;
+  const city = searchCity(intent);
+  const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(intent.nearMe, city) : null;
   const excluded = { placeholderPrice: 0, sharedRoom: 0 };
   const relevant = (l: Listing) =>
     area ? area.includes(l.neighborhood) : !intent.neighborhoods.length || intent.neighborhoods.includes(l.neighborhood);
   for (const { listing, alsoOn } of dedupe(listings)) {
+    if (city && listing.city !== city) continue;
     if (area && !area.includes(listing.neighborhood)) continue;
     if (isPlaceholderPrice(listing)) {
       if (relevant(listing)) excluded.placeholderPrice++;

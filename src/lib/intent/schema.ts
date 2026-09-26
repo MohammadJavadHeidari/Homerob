@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import { AMENITY_KEYS } from "@/lib/amenities";
-import { NEIGHBORHOODS } from "@/lib/types";
 
 /** Structured version of what the user asked for. Money is in Toman. */
 export const SearchIntentSchema = z.object({
@@ -11,7 +10,10 @@ export const SearchIntentSchema = z.object({
   maxRent: z.number().nonnegative().nullable(),
   /** User accepts shifting money between deposit and rent (default true). */
   flexibleConversion: z.boolean(),
-  neighborhoods: z.array(z.enum(NEIGHBORHOODS)),
+  /** City the user asked for (Persian name). null = any city (or the user's own, via nearMe). */
+  city: z.string().nullable().default(null),
+  /** Canonical neighborhood names in that city. */
+  neighborhoods: z.array(z.string()),
   minRooms: z.number().int().min(0).nullable(),
   maxRooms: z.number().int().min(0).nullable(),
   minArea: z.number().positive().nullable(),
@@ -25,7 +27,7 @@ export const SearchIntentSchema = z.object({
    * The user's own neighborhood (from browser location, never from the LLM). When set, results are
    * limited to it and the neighborhoods next to it. Only used when no neighborhood was named.
    */
-  nearMe: z.enum(NEIGHBORHOODS).nullable().default(null),
+  nearMe: z.string().nullable().default(null),
 });
 
 export type SearchIntent = z.infer<typeof SearchIntentSchema>;
@@ -34,6 +36,7 @@ export const EMPTY_INTENT: SearchIntent = {
   maxDeposit: null,
   maxRent: null,
   flexibleConversion: true,
+  city: null,
   neighborhoods: [],
   minRooms: null,
   maxRooms: null,

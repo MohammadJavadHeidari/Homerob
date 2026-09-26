@@ -8,6 +8,7 @@ import {
   Car,
   Check,
   Clock,
+  ExternalLink,
   GitCompareArrows,
   MapPin,
   Package,
@@ -54,7 +55,7 @@ export function ListingCard({
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
-            <SourceBadge source={l.source} />
+            <SourceBadge source={l.source} url={l.url} />
             {isSharedHousing(l) && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
@@ -72,6 +73,8 @@ export function ListingCard({
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <MapPin className="size-3.5 shrink-0" />
             {l.neighborhood}، {l.street}
+            <span className="bg-border mx-1 inline-block h-3 w-px" />
+            {l.city}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-center gap-2">
@@ -168,12 +171,22 @@ export function ListingCard({
   );
 }
 
-function SourceBadge({ source }: { source: SearchResult["listing"]["source"] }) {
-  return (
-    <span className="bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold">
+function SourceBadge({ source, url }: { source: SearchResult["listing"]["source"]; url?: string }) {
+  const body = (
+    <>
       <span className={cn("size-1.5 rounded-full", source === "divar" ? "bg-rose-500" : "bg-indigo-500")} />
       {SOURCE_LABEL[source]}
-    </span>
+      {url && <ExternalLink className="size-3" />}
+    </>
+  );
+  const cls = "bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold";
+  // Real listings link back to the original ad.
+  return url ? (
+    <a href={url} target="_blank" rel="noopener noreferrer" className={cn(cls, "hover:text-primary")} aria-label={`آگهی اصلی در ${SOURCE_LABEL[source]}`}>
+      {body}
+    </a>
+  ) : (
+    <span className={cls}>{body}</span>
   );
 }
 

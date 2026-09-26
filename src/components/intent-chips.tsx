@@ -32,6 +32,16 @@ export function intentToChips(intent: SearchIntent): Chip[] {
   if (!intent.flexibleConversion) {
     chips.push({ id: "fixed", label: "بدون تبدیل رهن و اجاره", tone: "budget", remove: (i) => ({ ...i, flexibleConversion: true }) });
   }
+  if (intent.city) {
+    chips.push({
+      id: "city",
+      label: `شهر ${intent.city}`,
+      tone: "place",
+      icon: MapPin,
+      // the neighborhoods belong to the city, so they go with it
+      remove: (i) => ({ ...i, city: null, neighborhoods: [], nearMe: null }),
+    });
+  }
   for (const n of intent.neighborhoods) {
     chips.push({
       id: `hood-${n}`,

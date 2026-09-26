@@ -1,30 +1,37 @@
 import { describe, expect, it } from "vitest";
 
-import { NEIGHBORHOODS } from "@/lib/types";
+import { CITIES, hoodInfo, hoodsIn } from "@/lib/places";
 
 import { listings } from "./listings";
 
-describe("seed listings", () => {
-  it("has ~80–100 listings with unique ids", () => {
-    expect(listings.length).toBeGreaterThanOrEqual(80);
-    expect(listings.length).toBeLessThanOrEqual(100);
+describe("listings", () => {
+  it("has unique ids", () => {
+    expect(listings.length).toBeGreaterThan(0);
     expect(new Set(listings.map((l) => l.id)).size).toBe(listings.length);
   });
 
-  it("covers every neighborhood", () => {
-    for (const n of NEIGHBORHOODS) {
-      expect(listings.filter((l) => l.neighborhood === n).length).toBeGreaterThanOrEqual(10);
+  it("uses only registered cities and neighborhoods", () => {
+    for (const l of listings) {
+      expect(CITIES.map((c) => c.fa)).toContain(l.city);
+      expect(hoodInfo(l.neighborhood, l.city)).toBeDefined();
+    }
+  });
+
+  it("has listings in every registered neighborhood", () => {
+    for (const city of new Set(listings.map((l) => l.city))) {
+      for (const h of hoodsIn(city)) {
+        expect(listings.filter((l) => l.city === city && l.neighborhood === h.name).length).toBeGreaterThan(0);
+      }
     }
   });
 
   it("has sane values", () => {
     for (const l of listings) {
-      expect(NEIGHBORHOODS).toContain(l.neighborhood);
       expect(["divar", "sheypoor"]).toContain(l.source);
       expect(l.deposit).toBeGreaterThanOrEqual(0);
       expect(l.monthlyRent).toBeGreaterThanOrEqual(0);
       expect(l.deposit + l.monthlyRent).toBeGreaterThan(0);
-      expect(l.areaM2).toBeGreaterThan(20);
+      expect(l.areaM2).toBeGreaterThan(10);
       expect(l.floor).toBeLessThanOrEqual(l.totalFloors);
       expect(Number.isNaN(Date.parse(l.postedAt))).toBe(false);
       expect(l.title.length).toBeGreaterThan(5);

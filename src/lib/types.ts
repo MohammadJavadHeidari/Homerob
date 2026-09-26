@@ -1,21 +1,15 @@
 export type ListingSource = "divar" | "sheypoor";
 
-export const NEIGHBORHOODS = [
-  "الهیه",
-  "سجاد",
-  "وکیل‌آباد",
-  "احمدآباد",
-  "هاشمیه",
-  "قاسم‌آباد",
-] as const;
-
-export type Neighborhood = (typeof NEIGHBORHOODS)[number];
+/** Canonical neighborhood name (see HOODS in src/lib/places.ts). Unique within a city. */
+export type Neighborhood = string;
 
 /** A rental (rahn/ejare) listing. All money values are in Toman. */
 export interface Listing {
   id: string;
   source: ListingSource;
   title: string;
+  /** Persian city name, e.g. "مشهد" (see CITIES in src/lib/places.ts). */
+  city: string;
   neighborhood: Neighborhood;
   /** Street / landmark, e.g. "هاشمیه ۴۲". */
   street: string;
@@ -41,4 +35,9 @@ export interface Listing {
   /** ISO date-time. */
   postedAt: string;
   imageUrl?: string;
+  /** Exact map position when the source gives one; otherwise derived inside the neighborhood. */
+  lat?: number;
+  lng?: number;
+  /** Link to the original ad on Divar / Sheypoor (real listings). */
+  url?: string;
 }

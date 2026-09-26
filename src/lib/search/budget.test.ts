@@ -7,7 +7,7 @@ import { fitBudget } from "./budget";
 
 const M = 1_000_000;
 const listing = (p: Partial<Listing>): Listing => ({
-  id: "t", source: "divar", title: "t", neighborhood: "وکیل‌آباد", street: "", deposit: 300 * M,
+  id: "t", source: "divar", title: "t", city: "مشهد", neighborhood: "وکیل‌آباد", street: "", deposit: 300 * M,
   monthlyRent: 20 * M, areaM2: 90, rooms: 2, floor: 1, totalFloors: 4, buildingAge: 5,
   elevator: true, parking: true, storage: true, tags: [], convertible: true, description: "",
   postedAt: "2026-09-20T00:00:00Z", ...p,

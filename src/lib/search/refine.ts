@@ -1,7 +1,7 @@
 import { AMENITIES, type AmenityKey } from "@/lib/amenities";
 import { inBBox, listingLatLng, type BBox } from "@/lib/geo";
 import { MONTHLY_RATE } from "@/lib/pricing";
-import { NEIGHBORHOODS, type ListingSource, type Neighborhood } from "@/lib/types";
+import type { ListingSource, Neighborhood } from "@/lib/types";
 
 import type { SearchResult } from "./index";
 
@@ -117,6 +117,13 @@ export function withoutFilter(results: SearchResult[], f: Refine, skip: FilterKe
 
 // ---------- facets ----------
 
+/** Neighborhoods present in the results, most listings first (the filter's options). */
+export function neighborhoodsOf(results: SearchResult[]): Neighborhood[] {
+  const n = new Map<string, number>();
+  for (const r of results) n.set(r.listing.neighborhood, (n.get(r.listing.neighborhood) ?? 0) + 1);
+  return [...n].sort((a, b) => b[1] - a[1]).map(([k]) => k);
+}
+
 export interface Facets {
   rooms: Record<number, number>;
   neighborhoods: Record<string, number>;
@@ -134,7 +141,7 @@ export function facets(results: SearchResult[], f: Refine): Facets {
   const ages = AGE_OPTIONS.map((a) => String(a));
   return {
     rooms: count("rooms", ROOM_OPTIONS, (r, k) => Math.min(r.listing.rooms, 4) === k),
-    neighborhoods: count("neighborhoods", NEIGHBORHOODS, (r, k) => r.listing.neighborhood === k),
+    neighborhoods: count("neighborhoods", neighborhoodsOf(results), (r, k) => r.listing.neighborhood === k),
     // amenities combine with AND, so each count also includes the already-selected ones
     amenities: count("amenities", FILTER_AMENITIES, (r, k) =>
       [...f.amenities, k].every((a) => AMENITIES[a].has(r.listing)),
