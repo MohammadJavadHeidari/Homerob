@@ -11,7 +11,7 @@ Read these before doing anything, every session:
 
 ## Product in one paragraph
 Homerob = "Torob for home": an AI-powered meta-search for rental listings (rahn/ejare) in
-Mashhad, aggregating Divar/Sheypoor-style listings (seeded sample data, no scraping). The user
+Mashhad, aggregating Divar/Sheypoor-style listings (seeded sample data today; live scraping allowed since 2026-09-26). The user
 types a need in natural Persian ("یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن…"), the AI
 parses it into a structured intent (shown as chips), listings are filtered and ranked, and each
 result gets a short AI explanation of why it fits.
@@ -50,7 +50,6 @@ How to ask:
 - No `git push --force`, no history rewrites, no deleting branches or the repo.
 - Never commit secrets. Keys live only in env vars (`.env.local` is gitignored).
 - No paid services, purchases, or new third-party accounts.
-- No live scraping of Divar/Sheypoor.
 
 ## Time discipline
 - Every task in the plan has a time box. If you exceed it by ~50%, cut scope to the simplest

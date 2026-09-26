@@ -5,7 +5,7 @@
 - Market: real estate, **rental only (rahn/ejare)**, no buy/sell.
 - City: **Mashhad only**.
 - Data: **seeded sample dataset** (~80–100 listings, 5–6 Mashhad neighborhoods), flat JSON/TS
-  file, **no database**, **no live scraping**. Listings look like they come from Divar/Sheypoor.
+  file, **no database**. ("No live scraping" superseded 2026-09-26, see below.) Listings look like they come from Divar/Sheypoor.
 - Core feature: **natural-language intent → ranking + per-result AI explanation**.
 - Secondary feature: price normalization (rahn ↔ ejare comparison). Supporting, not the focus.
 - Ranking: **hard filter** listings over the stated budget; **soft-weight** neighborhood,
@@ -44,7 +44,7 @@
 - 2026-09-24 — **divar-mcp: ideas only, no connection.** Borrow product ideas (placeholder-price
   detection, shared-room flag, sample size in price verdicts, "only differing specs" compare view)
   and mention a live read-only listings source (e.g. an MCP server) as future work in the video.
-  No calls to the service; the "no live scraping" hard stop stays. Its text/branding are not reused.
+  No calls to the service; the "no live scraping" hard stop stays (hard stop lifted 2026-09-26). Its text/branding are not reused.
 - 2026-09-24 — **Location-aware home (owner request).** Ask for browser location on first visit; title
   becomes «جستجوی هوشمند اجاره در {city}» and results are limited to the user's area (nearest
   neighborhood + adjacent ones) unless the query names a neighborhood. Data is still Mashhad only;
@@ -68,3 +68,7 @@
 - 2026-09-25 — **Torob branding everywhere user-facing** (results header, tab icon, og image, title, copy).
   Home page shows no "demo" line (owner's call); the results footer keeps the demo/sample-data note.
   Repo, code identifiers and the Vercel URL stay "homerob".
+- 2026-09-26 — **Live scraping of Divar/Sheypoor allowed (owner request).** The "no live scraping"
+  hard stop is removed from `CLAUDE.md`; supersedes the "no live scraping" parts of the Data and
+  divar-mcp entries above. Owner is considering Ultimate Web Scraper (ultimatewebscraper.com). The
+  seeded dataset stays the current source until a scraper is actually built.
