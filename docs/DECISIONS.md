@@ -3,9 +3,11 @@
 ## Product
 - Name: **Homerob** (Torob + Home). Repo: https://github.com/MohammadJavadHeidari/Homerob
 - Market: real estate, **rental only (rahn/ejare)**, no buy/sell.
-- City: **Mashhad only**.
-- Data: **seeded sample dataset** (~80–100 listings, 5–6 Mashhad neighborhoods), flat JSON/TS
-  file, **no database**, **no live scraping**. Listings look like they come from Divar/Sheypoor.
+- Scale: **all of Iran** — any city; a city is "covered" once it has listings (2026-09-26, supersedes
+  "Mashhad only").
+- Data: **real listings only** (Divar, Sheypoor, …), flat JSON/TS file, **no database** (2026-09-26,
+  supersedes "seeded sample dataset, no live scraping"). The seeded Mashhad sample set stays only until
+  real data replaces it; no new fake listings. No sellers' phone numbers or other personal data.
 - Core feature: **natural-language intent → ranking + per-result AI explanation**.
 - Secondary feature: price normalization (rahn ↔ ejare comparison). Supporting, not the focus.
 - Ranking: **hard filter** listings over the stated budget; **soft-weight** neighborhood,
@@ -45,6 +47,7 @@
   detection, shared-room flag, sample size in price verdicts, "only differing specs" compare view)
   and mention a live read-only listings source (e.g. an MCP server) as future work in the video.
   No calls to the service; the "no live scraping" hard stop stays. Its text/branding are not reused.
+  *(The "no live scraping" part is superseded by the real-data decision of 2026-09-26.)*
 - 2026-09-24 — **Location-aware home (owner request).** Ask for browser location on first visit; title
   becomes «جستجوی هوشمند اجاره در {city}» and results are limited to the user's area (nearest
   neighborhood + adjacent ones) unless the query names a neighborhood. Data is still Mashhad only;
@@ -68,3 +71,12 @@
 - 2026-09-25 — **Torob branding everywhere user-facing** (results header, tab icon, og image, title, copy).
   Home page shows no "demo" line (owner's call); the results footer keeps the demo/sample-data note.
   Repo, code identifiers and the Vercel URL stay "homerob".
+- 2026-09-26 — **Scale: all of Iran, not only Mashhad** (owner, after the call with Mohammad). Code is
+  city-aware: `Listing.city`, registry of cities/neighborhoods in `src/lib/places.ts`, intent `city`
+  (rule parser + LLM), hard city filter in search, city chip, "no listings from X yet" empty state,
+  home map flies to the visitor's city when it has listings (else the city with the most listings).
+  Titles/OG say «ایران». Data for new cities comes from real listings only (next entry).
+- 2026-09-26 — **Real data only** (owner; supersedes "seeded sample data" and the "no live scraping"
+  hard stop). Listings must be real ads; never generated. Existing Mashhad sample set is temporary.
+  Protective rule kept: no sellers' phone numbers / personal data stored. How the real data is
+  obtained is an open question in `docs/PLAN.md` (the sandbox can't reach Divar).

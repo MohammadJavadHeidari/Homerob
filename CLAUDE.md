@@ -10,8 +10,8 @@ Read these before doing anything, every session:
 3. `AGENTS.md` — Next.js version notes (this Next.js has breaking changes; check `node_modules/next/dist/docs/`).
 
 ## Product in one paragraph
-Homerob = "Torob for home": an AI-powered meta-search for rental listings (rahn/ejare) in
-Mashhad, aggregating Divar/Sheypoor-style listings (seeded sample data, no scraping). The user
+Homerob = "Torob for home": an AI-powered meta-search for rental listings (rahn/ejare) across
+**all of Iran**, aggregating **real** Divar/Sheypoor listings. The user
 types a need in natural Persian ("یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن…"), the AI
 parses it into a structured intent (shown as chips), listings are filtered and ranked, and each
 result gets a short AI explanation of why it fits.
@@ -29,13 +29,13 @@ result gets a short AI explanation of why it fits.
 ## Autonomy: decide yourself
 - All implementation details, file structure, libraries within the chosen stack, refactors.
 - Bug fixes, types, error handling, loading/empty states.
-- Seed data content (names, prices, descriptions) — keep it realistic for Mashhad.
+- Cleaning / normalizing real listings (spelling of neighborhoods, prices, dedup) — never inventing them.
 - Small UX details (spacing, copy wording, icons) consistent with the chosen style.
 - Cutting a nice-to-have when a task runs over its time box (log it in Status).
 
 ## Ask the owner (propose, then wait)
 - Anything that changes what the demo shows or the story of the video.
-- Scope changes: adding/removing a feature, a city, a listing type.
+- Scope changes: adding/removing a feature or a listing type.
 - Anything needing money, a new account, or a secret/API key.
 - A decision in `docs/PLAN.md` marked **[DECISION]**.
 
@@ -50,7 +50,9 @@ How to ask:
 - No `git push --force`, no history rewrites, no deleting branches or the repo.
 - Never commit secrets. Keys live only in env vars (`.env.local` is gitignored).
 - No paid services, purchases, or new third-party accounts.
-- No live scraping of Divar/Sheypoor.
+- **Real data only.** Listings must be real ads (Divar, Sheypoor, …). Never generate, invent or add
+  fake listings. The seeded Mashhad sample set is a temporary leftover until real data replaces it.
+- Don't store sellers' phone numbers or other personal data from listings.
 
 ## Time discipline
 - Every task in the plan has a time box. If you exceed it by ~50%, cut scope to the simplest

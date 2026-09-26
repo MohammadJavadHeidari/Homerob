@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 6
+- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26)
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -75,7 +75,17 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     one screen at 390 and 1440 px), one brand chip style, neutral source badges, new icon + `og.png`.
     Fixed: Neshan CSS `:root { --primary }` turned the brand color blue on desktop results (tokens now
     on `html:root`). Rule parser reads "۵۰۰ رهن" (number before keyword). 59 tests.
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
+  - Owner request (2026-09-26) — **scale to all of Iran:** `src/lib/places.ts` (city list + neighborhood
+    registry with centers/aliases/adjacency; replaces `NEIGHBORHOODS` / `neighborhoods.ts`), `Listing.city`
+    (+ optional `lat`/`lng`/`url` for real ads), intent `city` (rule parser `findCity`, LLM prompt lists
+    covered cities), `resolvePlace` (city implied by a neighborhood, neighborhoods of other cities dropped),
+    hard city filter in search, stats keyed city+neighborhood (no price verdict under 5 listings), city chip,
+    empty state «هنوز آگهی‌ای از X نداریم» + «در مشهد N آگهی هست», city on cards/compare, link to the
+    original ad when `url` is set, filter panel lists only neighborhoods in the results, home map flies to
+    the visitor's covered city (else the city with the most listings; roads only baked for Mashhad), titles +
+    `og.png` say «ایران». 69 tests. Rules: CLAUDE.md hard stop "no live scraping" replaced by **real data only**.
+- **Next:** owner answers "real data source" (Open questions) → build the importer, replace the sample set.
+  Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -102,6 +112,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
+  (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
+  (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.
+  سریع، بدون حساب جدید. (ب) API رسمی دیوار (کنار): تمیزتر، ولی حساب و کلید می‌خواد و زمان‌بره.
+  (ج) جمع‌آوری دستی در CSV / Google Sheet: ساده ولی کند. فرمت لازم: `docs/DATA.md`.
+  تا جواب: داده‌ی نمونه‌ی مشهد موقتاً می‌مونه (در فوتر نتایج هم نوشته شده).
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -190,6 +206,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Torob everywhere the user sees it (owner: yes): results header, tab icon, apple icon, og.png, title, copy;
       home-page demo line removed (map credit kept, ODbL)
 - [x] Home map: gold lines (Iran, arc, roads) blurred, dots/pins sharp — focus on the search box (owner request)
+- [x] Scale to all of Iran: city-aware data model, intent, search, UI, home map (2026-09-26)
+- [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
+- [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
+- [ ] Home map roads for new cities (`scripts/build-hero-map.mjs` + Overpass; not reachable from the sandbox)
+- [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
