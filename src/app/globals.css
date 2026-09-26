@@ -372,7 +372,8 @@ html:root {
   color: #d73948;
   fill: #fff4dc;
   stroke-width: 2.2;
-  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.45));
+  /* slightly soft, like the map lines; the title stays sharp */
+  filter: blur(0.8px) drop-shadow(0 2px 6px rgb(0 0 0 / 0.45));
   transform-origin: 50% 100%;
   animation: hm-pin-drop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
@@ -388,6 +389,7 @@ html:root {
   margin: -4px 0 0 -9px;
   border-radius: 999px;
   border: 1.5px solid var(--hm-gold);
+  filter: blur(0.8px);
   animation: hm-ring 1.6s 0.35s cubic-bezier(0, 0, 0.2, 1) both;
 }
 @keyframes hm-ring {
