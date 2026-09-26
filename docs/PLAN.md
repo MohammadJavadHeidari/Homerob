@@ -91,6 +91,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     under the logo/search, max 4, no duplicate titles), home shows only logo + search (credit moved to the
     results footer). Checked at 390 and 1440 px: 0 geolocation calls, no page errors.
     Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
+  - PR #13 (nationwide scale + real-data rule + Iran-only landing) merged 2026-09-26; Production live
+    (title «… در ایران», `/api/geo` gone, Tehran query → «در مشهد ۹۴ آگهی هست»).
 - **Next:** owner answers "real data source" (Open questions) → build the importer, replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
