@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { parseIntentWithRules as parse } from "./rules";
+import { SYNTHETIC_CATALOG } from "@/data/fixtures";
+
+import { parseIntentWithRules } from "./rules";
+
+const parse = (q: string) => parseIntentWithRules(q, SYNTHETIC_CATALOG);
 
 const M = 1_000_000;
 

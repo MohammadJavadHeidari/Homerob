@@ -1,6 +1,7 @@
 import "server-only";
 
 import { activeProvider } from "@/lib/ai/client";
+import type { CityCatalog } from "@/lib/catalog";
 import { normalizeFa } from "@/lib/text";
 
 import { parseIntentWithLLM } from "./llm";
@@ -19,23 +20,23 @@ const cache = new Map<string, ParsedIntent>();
 const CACHE_MAX = 300;
 
 /** Understand a Persian query. Never throws: falls back to the rule-based parser. */
-export async function parseIntent(query: string): Promise<ParsedIntent> {
-  const key = normalizeFa(query);
+export async function parseIntent(query: string, catalog: CityCatalog): Promise<ParsedIntent> {
+  const key = `${catalog.city}::${normalizeFa(query)}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
   const started = Date.now();
   let result: ParsedIntent;
   if (activeProvider() === "mock") {
-    result = { intent: parseIntentWithRules(query), source: "rules", model: null, ms: Date.now() - started };
+    result = { intent: parseIntentWithRules(query, catalog), source: "rules", model: null, ms: Date.now() - started };
   } else {
     try {
-      const { intent, model } = await parseIntentWithLLM(query);
+      const { intent, model } = await parseIntentWithLLM(query, catalog);
       result = { intent, source: "ai", model, ms: Date.now() - started };
     } catch (err) {
       console.error("[intent] LLM failed, using rules:", err instanceof Error ? err.message : err);
       // Don't cache fallbacks: the LLM may be back on the next try.
-      return { intent: parseIntentWithRules(query), source: "rules", model: null, ms: Date.now() - started };
+      return { intent: parseIntentWithRules(query, catalog), source: "rules", model: null, ms: Date.now() - started };
     }
   }
 

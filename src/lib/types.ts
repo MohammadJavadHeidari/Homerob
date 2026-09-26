@@ -1,20 +1,22 @@
 export type ListingSource = "divar" | "sheypoor";
 
-export const NEIGHBORHOODS = [
-  "الهیه",
-  "سجاد",
-  "وکیل‌آباد",
-  "احمدآباد",
-  "هاشمیه",
-  "قاسم‌آباد",
-] as const;
+/**
+ * The six Mashhad neighborhoods pinned on the home-page map (hero animation only). Search works on
+ * whatever neighborhoods the data has for the chosen city (see `CityCatalog`).
+ */
+export const HERO_NEIGHBORHOODS = ["الهیه", "سجاد", "وکیل‌آباد", "احمدآباد", "هاشمیه", "قاسم‌آباد"] as const;
+export type HeroNeighborhood = (typeof HERO_NEIGHBORHOODS)[number];
 
-export type Neighborhood = (typeof NEIGHBORHOODS)[number];
+/** Persian neighborhood name as the data spells it (or the city name when the ad has none). */
+export type Neighborhood = string;
 
 /** A rental (rahn/ejare) listing. All money values are in Toman. */
 export interface Listing {
   id: string;
   source: ListingSource;
+  /** Divar city slug, e.g. "mashhad". */
+  city?: string;
+  cityFa?: string;
   title: string;
   neighborhood: Neighborhood;
   /** Street / landmark, e.g. "هاشمیه ۴۲". */
@@ -27,7 +29,8 @@ export interface Listing {
   /** Bedrooms. 0 = studio (suite). */
   rooms: number;
   floor: number;
-  totalFloors: number;
+  /** null when the ad does not say. */
+  totalFloors: number | null;
   /** Years since construction. 0 = brand new. */
   buildingAge: number;
   elevator: boolean;
@@ -41,4 +44,10 @@ export interface Listing {
   /** ISO date-time. */
   postedAt: string;
   imageUrl?: string;
+  /** Map position. Approximate (neighborhood center + jitter) when `approxLocation`. */
+  lat?: number;
+  lng?: number;
+  approxLocation?: boolean;
+  /** Link to the original ad, when known. */
+  url?: string | null;
 }

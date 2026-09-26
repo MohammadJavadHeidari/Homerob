@@ -2,21 +2,23 @@ import "server-only";
 
 import { AMENITIES, AMENITY_KEYS } from "@/lib/amenities";
 import { chatJson } from "@/lib/ai/client";
-import { canonicalNeighborhood } from "@/lib/neighborhoods";
-import { NEIGHBORHOODS } from "@/lib/types";
+import { canonicalNeighborhood, type CityCatalog } from "@/lib/catalog";
 
 import { SearchIntentSchema, type SearchIntent } from "./schema";
 
 const AMENITY_LIST = AMENITY_KEYS.map((k) => `${k} (${AMENITIES[k].label})`).join(", ");
 
-const SYSTEM_PROMPT = `You convert a Persian rental-housing search query (Mashhad, Iran) into a strict JSON object.
+/** Neighborhood names offered to the model (most listings first). */
+const PROMPT_HOODS = 90;
+
+const systemPrompt = (catalog: CityCatalog) => `You convert a Persian rental-housing search query (${catalog.cityFa}, Iran) into a strict JSON object.
 
 Output ONLY a JSON object with exactly these keys:
 {
   "maxDeposit": number | null,        // max rahn / vadie / pool-e pish the user can pay, in TOMAN
   "maxRent": number | null,           // max monthly ejare, in TOMAN
   "flexibleConversion": boolean,      // false only if the user refuses to shift money between rahn and ejare
-  "neighborhoods": string[],          // only from: ${NEIGHBORHOODS.join("، ")}
+  "neighborhoods": string[],          // only from: ${catalog.hoods.slice(0, PROMPT_HOODS).map((h) => h.name).join("، ")}
   "minRooms": number | null,          // bedrooms; سوئیت/استودیو = 0
   "maxRooms": number | null,          // set only for ranges ("سوئیت یا یک‌خوابه" → 0..1) or an explicit maximum
   "minArea": number | null,           // square meters; for "حدود X متر" use ~0.85·X
@@ -37,29 +39,32 @@ Money rules (critical):
 - Never invent a budget that was not stated; use null.
 
 Other rules:
-- Map neighborhood spellings to the canonical names above ("وکیل آباد" → "وکیل‌آباد"). Ignore other places.
+- Map neighborhood spellings to the canonical names above ("وکیل آباد" → "وکیل‌آباد", "قاسم آباد" → the name that contains it). Ignore other places and city names.
 - "خانواده ۳ نفره" or more → minRooms 2 if rooms not stated, and mention it in freeTextNotes.
 - Amenities the user says don't matter ("مهم نیست") go nowhere.
 - Default flexibleConversion to true.
 
-Examples:
+Examples (from Mashhad):
 Q: یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن
 A: {"maxDeposit":500000000,"maxRent":null,"flexibleConversion":true,"neighborhoods":["وکیل‌آباد"],"minRooms":2,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}
 Q: سوئیت یا یک خوابه مبله تو سجاد، ماهی حداکثر ۱۰ تومن، پول پیش زیاد ندارم
 A: {"maxDeposit":null,"maxRent":10000000,"flexibleConversion":true,"neighborhoods":["سجاد"],"minRooms":0,"maxRooms":1,"minArea":null,"mustHave":["furnished"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":"پول پیش کم"}`;
 
 /** Parse a query with the LLM. Throws if the provider fails or returns an unusable object. */
-export async function parseIntentWithLLM(query: string): Promise<{ intent: SearchIntent; model: string }> {
+export async function parseIntentWithLLM(
+  query: string,
+  catalog: CityCatalog,
+): Promise<{ intent: SearchIntent; model: string }> {
   const { data, model } = await chatJson({
-    system: SYSTEM_PROMPT,
+    system: systemPrompt(catalog),
     user: `Q: ${query}\nA:`,
     temperature: 0,
   });
-  return { intent: SearchIntentSchema.parse(clean(data)), model };
+  return { intent: SearchIntentSchema.parse({ ...(clean(data, catalog) as object), city: catalog.city }), model };
 }
 
 /** Lenient cleanup before strict validation: canonical names, numbers from strings, drop unknowns. */
-function clean(raw: unknown): unknown {
+function clean(raw: unknown, catalog: CityCatalog): unknown {
   if (!raw || typeof raw !== "object") return raw;
   const r = raw as Record<string, unknown>;
   const num = (v: unknown) => {
@@ -70,7 +75,7 @@ function clean(raw: unknown): unknown {
   const amenities = (v: unknown) =>
     Array.isArray(v) ? v.filter((k): k is string => (AMENITY_KEYS as readonly string[]).includes(k)) : [];
   const hoods = Array.isArray(r.neighborhoods)
-    ? [...new Set(r.neighborhoods.map((n) => canonicalNeighborhood(String(n))).filter(Boolean))]
+    ? [...new Set(r.neighborhoods.map((n) => canonicalNeighborhood(String(n), catalog.hoods)).filter(Boolean))]
     : [];
   const mustHave = amenities(r.mustHave);
   const int = (v: unknown) => {

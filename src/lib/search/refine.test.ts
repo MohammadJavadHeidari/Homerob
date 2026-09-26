@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { EMPTY_INTENT } from "@/lib/intent/schema";
 
+import { syntheticContext } from "@/data/fixtures";
+
 import { search } from "./index";
 import { activeCount, applyRefine, bounds, clampRanges, EMPTY_REFINE, facets, histogram, ppmOf, priceOf } from "./refine";
 
-const { results } = search(EMPTY_INTENT, undefined, Infinity);
+const { results } = search(EMPTY_INTENT, syntheticContext(), Infinity);
 
 describe("refine", () => {
   it("is a no-op with no filters and keeps the AI ranking", () => {

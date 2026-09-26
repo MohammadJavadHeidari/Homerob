@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SearchResult } from "@/lib/api-types";
-import { ageFa, roomsFa } from "@/lib/format";
+import { ageFa, roomsFa, floorFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +53,7 @@ const ROWS: Row[] = [
   { label: "خواب", show: (r) => roomsFa(r.listing.rooms), key: (r) => r.listing.rooms },
   {
     label: "طبقه",
-    show: (r) => `${r.listing.floor === 0 ? "همکف" : toFaDigits(r.listing.floor)} از ${toFaDigits(r.listing.totalFloors)}`,
+    show: (r) => floorFa(r.listing.floor, r.listing.totalFloors),
     key: (r) => `${r.listing.floor}/${r.listing.totalFloors}`,
   },
   { label: "سن بنا", show: (r) => ageFa(r.listing.buildingAge), key: (r) => r.listing.buildingAge, better: "low" },

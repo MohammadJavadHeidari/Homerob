@@ -12,18 +12,27 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { DEMO_QUERIES } from "@/lib/demo-queries";
-import { SUPPORTED_CITY, type UserPlace } from "@/lib/geo";
+import { SUPPORTED_CITY, type LatLng, type UserPlace } from "@/lib/geo";
 import type { HoodStat } from "@/lib/hood-stats";
 import { toFaDigits } from "@/lib/persian";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
 
 const COMPARE_MAX = 3;
+
+const atOf = (p: UserPlace | null): LatLng | null => (p?.lat != null && p.lng != null ? { lat: p.lat, lng: p.lng } : null);
 const HERO_EXAMPLES = DEMO_QUERIES.slice(0, 6);
 
 type Status = "idle" | "loading" | "done" | "error";
 
-export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: HoodStat[] } }) {
+export function SearchApp({
+  hoodStats,
+  coveredCities,
+}: {
+  hoodStats: { total: number; hoods: HoodStat[] };
+  /** Persian names of the cities that have listings. */
+  coveredCities: string[];
+}) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
@@ -31,11 +40,12 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
-  const { status: placeStatus, place, request: requestPlace } = useUserPlace();
-  const near = useRef<UserPlace["neighborhood"]>(null);
+  const { status: placeStatus, place: rawPlace, request: requestPlace } = useUserPlace(coveredCities);
+  const place = rawPlace && { ...rawPlace, supported: rawPlace.city !== null && coveredCities.includes(rawPlace.city) };
+  const at = useRef<LatLng | null>(null);
   useEffect(() => {
-    near.current = place?.neighborhood ?? null;
-  }, [place]);
+    at.current = atOf(rawPlace);
+  }, [rawPlace]);
 
   const run = useCallback(async (q: string, intent?: SearchIntent) => {
     const text = q.trim();
@@ -49,7 +59,7 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: text, intent, near: near.current ?? undefined }),
+        body: JSON.stringify({ query: text, intent, at: at.current ?? undefined }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
@@ -67,7 +77,7 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q) {
-      near.current = readStoredPlace()?.neighborhood ?? null;
+      at.current = atOf(readStoredPlace());
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the input with the URL once on mount
       setQuery(q);
       void run(q);
@@ -89,8 +99,10 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   };
 
   const compact = status !== "idle";
-  // Listings exist only for Mashhad; elsewhere the title stays on Mashhad and the pill says so.
-  const city = place?.supported ? place.city : placeStatus === "idle" || placeStatus === "locating" ? null : SUPPORTED_CITY;
+  // After a search: the city it ran in. Before: the user's city when covered, else Mashhad.
+  const city =
+    (status === "done" && data?.cityFa) ||
+    (place?.supported ? place.city : placeStatus === "idle" || placeStatus === "locating" ? null : SUPPORTED_CITY);
 
   return (
     <>
@@ -122,7 +134,7 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
               </h1>
               <PlacePill status={placeStatus} place={place} onRetry={requestPlace} />
               <p data-hero-block className="text-muted-foreground max-w-xl text-base sm:text-lg">
-                نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های رهن و اجارهٔ دیوار و شیپور رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
+                نیازت رو به زبان خودت بنویس؛ هومراب آگهی‌های واقعی رهن و اجارهٔ دیوار رو برات پیدا، مقایسه و رتبه‌بندی می‌کنه.
               </p>
             </>
           )}
@@ -249,6 +261,16 @@ function PlacePill({ status, place, onRetry }: { status: PlaceStatus; place: Use
         <MapPin className="size-4" />
         <span>
           نتایج برای اطراف <b className="font-bold">{place.neighborhood}</b>، نزدیک خودت
+        </span>
+      </span>
+    );
+  }
+  if (place?.supported && place.city) {
+    return (
+      <span className={cn(base, "bg-sky-500/10 text-sky-700 dark:text-sky-300")}>
+        <MapPin className="size-4" />
+        <span>
+          نتایج برای <b className="font-bold">{place.city}</b>، نزدیک خودت
         </span>
       </span>
     );

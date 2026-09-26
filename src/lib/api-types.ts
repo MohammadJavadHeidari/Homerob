@@ -6,6 +6,9 @@ export type { SearchIntent, SearchResult, Suggestion };
 
 export interface SearchApiResponse {
   query: string;
+  /** City the search ran in. */
+  city: string;
+  cityFa: string;
   intent: SearchIntent;
   results: SearchResult[];
   total: number;
@@ -16,6 +19,8 @@ export interface SearchApiResponse {
     model: string | null;
     intentMs: number;
     totalMs: number;
+    store?: "postgres" | "bundled";
+    candidates?: number;
   };
 }
 

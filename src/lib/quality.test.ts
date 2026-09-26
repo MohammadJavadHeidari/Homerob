@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { listings } from "@/data/listings";
+import { SYNTHETIC as listings } from "@/data/fixtures";
 
 import { isPlaceholderPrice, isSharedHousing } from "./quality";
 

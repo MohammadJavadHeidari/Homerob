@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { locate, type UserPlace } from "@/lib/geo";
 
@@ -27,9 +27,10 @@ function storePlace(place: UserPlace) {
 }
 
 /** Ask for the browser location on first visit and turn it into a city + nearest neighborhood. */
-export function useUserPlace() {
+export function useUserPlace(covered: readonly string[]) {
   const [status, setStatus] = useState<PlaceStatus>("idle");
   const [place, setPlace] = useState<UserPlace | null>(null);
+  const coveredRef = useRef(covered);
 
   const request = useCallback(() => {
     if (!("geolocation" in navigator)) {
@@ -39,7 +40,7 @@ export function useUserPlace() {
     setStatus((s) => (s === "found" ? s : "locating"));
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        const next = locate({ lat: coords.latitude, lng: coords.longitude });
+        const next = locate({ lat: coords.latitude, lng: coords.longitude }, coveredRef.current);
         setPlace(next);
         setStatus("found");
         storePlace(next);

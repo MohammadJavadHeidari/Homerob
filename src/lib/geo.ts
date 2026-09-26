@@ -1,5 +1,4 @@
-import { ADJACENT } from "@/lib/neighborhoods";
-import type { Neighborhood } from "@/lib/types";
+import type { HeroNeighborhood } from "@/lib/types";
 
 /** Offline "reverse geocoding": nearest big Iranian city, no API key or network call needed. */
 
@@ -8,10 +7,10 @@ export interface LatLng {
   lng: number;
 }
 
-/** Cities Homerob has listings for. */
+/** Default city (and the only one in the bundled data when there is no database). */
 export const SUPPORTED_CITY = "مشهد";
 
-const CITIES: [name: string, lat: number, lng: number][] = [
+export const CITIES: [name: string, lat: number, lng: number][] = [
   ["مشهد", 36.3, 59.58],
   ["تهران", 35.69, 51.39],
   ["کرج", 35.83, 50.99],
@@ -51,8 +50,8 @@ const CITIES: [name: string, lat: number, lng: number][] = [
 ];
 const CITY_RADIUS_KM = 60;
 
-/** Neighborhood centers (from OpenStreetMap; same points as the home-page map pins). */
-export const HOOD_CENTERS: Record<Neighborhood, LatLng> = {
+/** Home-page map pins (from OpenStreetMap). Search uses the data's own neighborhood centers. */
+export const HOOD_CENTERS: Record<HeroNeighborhood, LatLng> = {
   "الهیه": { lat: 36.3705, lng: 59.4835 },
   "قاسم‌آباد": { lat: 36.3505, lng: 59.5055 },
   "وکیل‌آباد": { lat: 36.3345, lng: 59.4875 },
@@ -72,13 +71,16 @@ export function distanceKm(a: LatLng, b: LatLng): number {
 export interface UserPlace {
   /** Persian city name, or null when we can't tell. */
   city: string | null;
-  /** True when Homerob has listings for that city. */
+  /** True when the city is one Homerob can search (set by the caller from the covered-city list). */
   supported: boolean;
-  /** Closest dataset neighborhood (only in a supported city). */
-  neighborhood: Neighborhood | null;
+  /** Closest home-map pin (Mashhad only). */
+  neighborhood: HeroNeighborhood | null;
+  /** Where the user is; sent with searches so the server can pick the city and "near me". */
+  lat?: number;
+  lng?: number;
 }
 
-export function locate(p: LatLng): UserPlace {
+export function locate(p: LatLng, covered: readonly string[] = [SUPPORTED_CITY]): UserPlace {
   let city: string | null = null;
   let best = CITY_RADIUS_KM;
   for (const [name, lat, lng] of CITIES) {
@@ -88,37 +90,21 @@ export function locate(p: LatLng): UserPlace {
       city = name;
     }
   }
-  if (city !== SUPPORTED_CITY) return { city, supported: false, neighborhood: null };
-  const neighborhood = (Object.keys(HOOD_CENTERS) as Neighborhood[]).reduce((a, b) =>
+  const at = { lat: p.lat, lng: p.lng };
+  const supported = city !== null && covered.includes(city);
+  if (city !== SUPPORTED_CITY) return { city, supported, neighborhood: null, ...at };
+  const neighborhood = (Object.keys(HOOD_CENTERS) as HeroNeighborhood[]).reduce((a, b) =>
     distanceKm(p, HOOD_CENTERS[b]) < distanceKm(p, HOOD_CENTERS[a]) ? b : a,
   );
-  return { city, supported: true, neighborhood };
-}
-
-/** The user's area: their neighborhood plus the ones next to it. */
-export function areaAround(n: Neighborhood): Neighborhood[] {
-  return [n, ...ADJACENT[n]];
+  return { city, supported, neighborhood, ...at };
 }
 
 /** [west, south, east, north] */
 export type BBox = [number, number, number, number];
 
-/** How far (degrees of latitude, ~1.1 km) a listing may sit from its neighborhood center. */
-const SPREAD = 0.01;
-
-/**
- * Approximate map position of a seeded listing: a stable point inside its neighborhood, derived
- * from the id (the sample data has no real addresses). Same id → same point, on server and client.
- */
-export function listingLatLng(l: { id: string; neighborhood: Neighborhood }): LatLng {
-  let h = 2166136261;
-  for (let i = 0; i < l.id.length; i++) h = Math.imul(h ^ l.id.charCodeAt(i), 16777619);
-  const u = ((h >>> 0) % 10_000) / 10_000;
-  const v = ((Math.imul(h, 2654435761) >>> 0) % 10_000) / 10_000;
-  const r = SPREAD * Math.sqrt(0.08 + 0.92 * u); // uniform over a disc, never exactly the center
-  const a = 2 * Math.PI * v;
-  const c = HOOD_CENTERS[l.neighborhood];
-  return { lat: c.lat + r * Math.sin(a), lng: c.lng + (r * Math.cos(a)) / Math.cos((c.lat * Math.PI) / 180) };
+/** Map position of a listing (the server fills in an approximate one when the ad has none). */
+export function listingLatLng(l: { lat?: number; lng?: number }): LatLng {
+  return { lat: l.lat ?? 36.3, lng: l.lng ?? 59.58 };
 }
 
 export const inBBox = (p: LatLng, [w, s, e, n]: BBox) => p.lng >= w && p.lng <= e && p.lat >= s && p.lat <= n;

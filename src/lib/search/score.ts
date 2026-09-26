@@ -1,13 +1,11 @@
-import { listings as ALL_LISTINGS } from "@/data/listings";
 import { AMENITIES, amenityNo, amenityYes, type AmenityKey } from "@/lib/amenities";
 import type { SearchIntent } from "@/lib/intent/schema";
-import { ADJACENT } from "@/lib/neighborhoods";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { pricePerM2 } from "@/lib/pricing";
-import { isComparable } from "@/lib/quality";
-import type { Listing, Neighborhood } from "@/lib/types";
+import type { Listing } from "@/lib/types";
 
 import type { BudgetFit } from "./budget";
+import type { SearchContext } from "./index";
 
 /** Soft-score weights (sum = 100 → the match score is a percentage). Tune here. */
 export const WEIGHTS = {
@@ -29,43 +27,33 @@ export interface Highlight {
   weight: number;
 }
 
-// ---------- reference stats ----------
+// ---------- reference stats (per city, from the catalog) ----------
 
-function median(xs: number[]) {
-  const s = [...xs].sort((a, b) => a - b);
-  const mid = Math.floor(s.length / 2);
-  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+/** Median price per m² for a listing's neighborhood (city median when the neighborhood is too thin). */
+function reference(l: Listing, ctx: SearchContext): { ppm2: number; n: number; label: string } {
+  const h = ctx.hoodIndex.get(l.neighborhood);
+  if (h && h.n >= 5) return { ppm2: h.medianPpm2, n: h.n, label: l.neighborhood };
+  const cityFa = ctx.catalog.cityFa;
+  return { ppm2: ctx.catalog.medianPpm2, n: ctx.catalog.hoods.reduce((s, x) => s + x.n, 0), label: cityFa };
 }
-
-const COMPARABLE = ALL_LISTINGS.filter(isComparable);
-const HOODS = [...new Set(COMPARABLE.map((l) => l.neighborhood))];
-
-/** Median full-deposit price per m² in each neighborhood (placeholder prices and shared rooms excluded). */
-export const HOOD_MEDIAN_PPM: Record<Neighborhood, number> = Object.fromEntries(
-  HOODS.map((h) => [h, median(COMPARABLE.filter((l) => l.neighborhood === h).map((l) => pricePerM2(l)))]),
-) as Record<Neighborhood, number>;
-
-/** How many listings each median is based on — shown to the user, like any honest price verdict. */
-export const HOOD_SAMPLE_SIZE: Record<Neighborhood, number> = Object.fromEntries(
-  HOODS.map((h) => [h, COMPARABLE.filter((l) => l.neighborhood === h).length]),
-) as Record<Neighborhood, number>;
-
-/** "Now" for recency = newest listing, so the demo doesn't age. */
-const REFERENCE_TIME = Math.max(...ALL_LISTINGS.map((l) => Date.parse(l.postedAt)));
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
 // ---------- scoring ----------
 
-export function scoreListing(l: Listing, intent: SearchIntent): { score: number; breakdown: ScoreBreakdown } {
+export function scoreListing(
+  l: Listing,
+  intent: SearchIntent,
+  ctx: SearchContext,
+): { score: number; breakdown: ScoreBreakdown } {
   const b: ScoreBreakdown = {
-    neighborhood: neighborhoodScore(l, intent),
+    neighborhood: neighborhoodScore(l, intent, ctx),
     mustHave: fraction(intent.mustHave, l, 1),
     rooms: roomsScore(l, intent),
     area: intent.minArea === null ? 1 : clamp01(1 - ((intent.minArea - l.areaM2) / intent.minArea) * 3),
-    value: valueScore(l),
+    value: valueScore(l, ctx),
     niceToHave: fraction(intent.niceToHave, l, 1),
-    recency: clamp01(1 - (REFERENCE_TIME - Date.parse(l.postedAt)) / (21 * 864e5)),
+    recency: clamp01(1 - (ctx.referenceTime - Date.parse(l.postedAt)) / (21 * 864e5)),
   };
   const score = (Object.keys(WEIGHTS) as (keyof typeof WEIGHTS)[]).reduce(
     (sum, k) => sum + WEIGHTS[k] * b[k],
@@ -74,14 +62,14 @@ export function scoreListing(l: Listing, intent: SearchIntent): { score: number;
   return { score: Math.round(score), breakdown: b };
 }
 
-function neighborhoodScore(l: Listing, intent: SearchIntent) {
+function neighborhoodScore(l: Listing, intent: SearchIntent, ctx: SearchContext) {
   if (!intent.neighborhoods.length) {
     // "near me": own neighborhood first, then the ones next to it
     if (intent.nearMe) return l.neighborhood === intent.nearMe ? 1 : 0.6;
     return 1;
   }
   if (intent.neighborhoods.includes(l.neighborhood)) return 1;
-  if (intent.neighborhoods.some((n) => ADJACENT[n]?.includes(l.neighborhood))) return 0.45;
+  if (intent.neighborhoods.some((n) => ctx.catalog.adjacent[n]?.includes(l.neighborhood))) return 0.45;
   return 0;
 }
 
@@ -99,15 +87,19 @@ function fraction(keys: AmenityKey[], l: Listing, empty: number) {
   return keys.filter((k) => AMENITIES[k].has(l)).length / keys.length;
 }
 
-/** 1 = ≥20% cheaper per m² than the neighborhood median, 0.5 = at median, 0 = ≥20% pricier. */
-function valueScore(l: Listing) {
-  const ratio = pricePerM2(l) / HOOD_MEDIAN_PPM[l.neighborhood];
+/** 1 = 20% cheaper per m² than the neighborhood median, 0.5 = at median, 0 = ≥20% pricier; fades again below. */
+function valueScore(l: Listing, ctx: SearchContext) {
+  const ref = reference(l, ctx);
+  if (!ref.ppm2) return 0.5;
+  const ratio = pricePerM2(l) / ref.ppm2;
+  // up to 20% under the median is a good deal; far below it is more likely a mislabeled or odd ad
+  if (ratio < 0.8) return clamp01(1 - (0.8 - ratio) * 1.5);
   return clamp01(0.5 + (1 - ratio) * 2.5);
 }
 
 // ---------- highlights (facts the explanation is built from) ----------
 
-export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Highlight[] {
+export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit, ctx: SearchContext): Highlight[] {
   const out: Highlight[] = [];
   const add = (kind: Highlight["kind"], text: string, weight: number) => out.push({ kind, text, weight });
 
@@ -136,7 +128,7 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   if (intent.neighborhoods.length) {
     if (intent.neighborhoods.includes(l.neighborhood)) add("pro", `خود ${l.neighborhood}`, 5);
     else {
-      const near = intent.neighborhoods.find((n) => ADJACENT[n]?.includes(l.neighborhood));
+      const near = intent.neighborhoods.find((n) => ctx.catalog.adjacent[n]?.includes(l.neighborhood));
       if (near) add("con", `${l.neighborhood} است، نزدیک ${near}`, 7);
       else add("con", `در ${l.neighborhood}، خارج از محله‌های مدنظرت`, 9);
     }
@@ -165,8 +157,9 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   }
 
   // value vs neighborhood
-  const ratio = pricePerM2(l) / HOOD_MEDIAN_PPM[l.neighborhood];
-  const sample = `میانهٔ ${toFaDigits(HOOD_SAMPLE_SIZE[l.neighborhood])} آگهی ${l.neighborhood}`;
+  const ref = reference(l, ctx);
+  const ratio = ref.ppm2 ? pricePerM2(l) / ref.ppm2 : 1;
+  const sample = `میانهٔ ${toFaDigits(ref.n)} آگهی ${ref.label}`;
   if (ratio <= 0.9) add("pro", `حدود ${toFaDigits(Math.round((1 - ratio) * 100))}٪ ارزان‌تر از ${sample}`, 6);
   else if (ratio >= 1.12) add("con", `حدود ${toFaDigits(Math.round((ratio - 1) * 100))}٪ گران‌تر از ${sample}`, 5);
 
@@ -174,7 +167,7 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   if (!intent.mustHave.includes("parking") && !l.parking && l.rooms >= 2) add("con", "پارکینگ ندارد", 4);
   if (!l.elevator && l.floor >= 3) add("con", `طبقه ${toFaDigits(l.floor)} بدون آسانسور`, 4);
   if (l.buildingAge <= 2 && !intent.mustHave.includes("newBuilding")) add("pro", "نوساز", 2);
-  if (REFERENCE_TIME - Date.parse(l.postedAt) < 864e5) add("info", "آگهی امروز", 1);
+  if (ctx.referenceTime - Date.parse(l.postedAt) < 864e5) add("info", "آگهی امروز", 1);
 
   return out.sort((a, b) => b.weight - a.weight);
 }

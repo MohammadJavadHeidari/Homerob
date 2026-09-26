@@ -1,6 +1,6 @@
 """Run from data/real/: python3 ../../scripts/realdata/normalize.py
-Normalize Mashhad residential-rent subsets of the two accessible datasets into one
-Listing-like frame (money in Toman). Output: mashhad_rent_normalized.parquet"""
+Normalize the residential-rent ads of the two accessible datasets into one Listing-like frame
+(money in Toman): divarofficial for every city, RadeAI for Mashhad. Output: build/rent_normalized.parquet"""
 import re
 import duckdb
 import pandas as pd
@@ -24,11 +24,13 @@ def parse_year(v):
         y -= 1
     return y
 
-nm = con.sql("SELECT slug, fa FROM 'raw/mashhad_neighborhood_slug_map.parquet'").df()
-slug2fa = dict(zip(nm.slug, nm.fa))
+nm = con.sql("SELECT * FROM 'raw/name_map.parquet'").df()  # built from RadeAI's Persian city/district labels
+city2fa = dict(zip(nm[nm.kind == "city"].city, nm[nm.kind == "city"].fa))
+d = nm[nm.kind == "district"]
+nb2fa = dict(zip(zip(d.city, d.district), d.fa))
 
 # ---------- official ----------
-o = con.sql("SELECT * FROM 'raw/divarofficial_mashhad_rent.parquet'").df()
+o = con.sql("SELECT * FROM 'raw/official_rent_iran.parquet'").df()
 ROOMS = {"بدون اتاق": 0, "یک": 1, "دو": 2, "سه": 3, "چهار": 4, "پنج یا بیشتر": 5}
 def num(x):
     try:
@@ -45,6 +47,7 @@ def tri(x):
 on = pd.DataFrame({
     "src": "divarofficial",
     "src_id": ["off-" + str(i) for i in o.index],
+    "city": o.city_slug,
     "kind": o.cat3_slug.map({"apartment-rent": "apartment", "house-villa-rent": "house-villa"}),
     "title": o.title,
     "description": o.description,
@@ -122,6 +125,7 @@ def clean_desc(d):
 rn = pd.DataFrame({
     "src": "RadeAI",
     "src_id": "rade-" + r.token,
+    "city": "mashhad",
     "kind": "apartment",
     "title": r.title,
     "description": r.description.map(clean_desc),
@@ -153,7 +157,8 @@ rn = pd.DataFrame({
 rn["token"] = r.token.values
 
 df = pd.concat([on, rn], ignore_index=True)
-df["nb_fa"] = df.nb_slug.map(slug2fa)
+df["city_fa"] = df.city.map(city2fa)
+df["nb_fa"] = [nb2fa.get((c, n)) for c, n in zip(df.city, df.nb_slug)]
 df["full_deposit"] = df.deposit + df.rent / 0.03
 df["ppm2"] = df.full_deposit / df.area
 df["building_age_1405"] = 1405 - df.year_built
@@ -188,8 +193,8 @@ def norm_title(t):
     t = fa2en(t) if isinstance(t, str) else ""
     return re.sub(r"[\s‌\-_/|.,،*:()]+", "", t)
 df["k_title"] = df.title.map(norm_title)
-df["k_full"] = df.k_title + "|" + df.area.astype(str) + "|" + df.deposit.astype(str) + "|" + df.rent.astype(str)
-df["k_nb"] = df.nb_slug.fillna("") + "|" + df.area.astype(str) + "|" + df.deposit.astype(str) + "|" + df.rent.astype(str)
+df["k_full"] = df.city + "|" + df.k_title + "|" + df.area.astype(str) + "|" + df.deposit.astype(str) + "|" + df.rent.astype(str)
+df["k_nb"] = df.city + "|" + df.nb_slug.fillna("") + "|" + df.area.astype(str) + "|" + df.deposit.astype(str) + "|" + df.rent.astype(str)
 
-df.to_parquet("build/mashhad_rent_normalized.parquet", index=False)
+df.to_parquet("build/rent_normalized.parquet", index=False)
 print("rows", len(df), df.src.value_counts().to_dict(), "radeai raw rows", r_all_rows, "ppm2 1/99 pct", lo, hi)

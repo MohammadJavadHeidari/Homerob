@@ -1,5 +1,4 @@
-import { listings as ALL_LISTINGS } from "@/data/listings";
-import { areaAround } from "@/lib/geo";
+import { areaAround, type CityCatalog, type HoodInfo } from "@/lib/catalog";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { toFullDeposit } from "@/lib/pricing";
 import { isPlaceholderPrice, isSharedHousing } from "@/lib/quality";
@@ -39,17 +38,35 @@ export interface SearchResponse {
 
 const LIMIT = 20;
 
+/** The listings to rank (one city, possibly pre-filtered by the store) and that city's reference data. */
+export interface SearchContext {
+  listings: Listing[];
+  catalog: CityCatalog;
+  hoodIndex: Map<string, HoodInfo>;
+  /** "Now" for recency = newest listing, so old data doesn't all score 0. */
+  referenceTime: number;
+}
+
+export function makeContext(listings: Listing[], catalog: CityCatalog): SearchContext {
+  return {
+    listings,
+    catalog,
+    hoodIndex: new Map(catalog.hoods.map((h) => [h.name, h])),
+    referenceTime: listings.reduce((m, l) => Math.max(m, Date.parse(l.postedAt) || 0), 0),
+  };
+}
+
 /**
  * Hard-filter by budget, then soft-score and rank. `limit` defaults to the top 20; the API asks
  * for everything so the client can refine (filter / re-sort) instantly without a round trip.
  */
-export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS, limit = LIMIT): SearchResponse {
+export function search(intent: SearchIntent, ctx: SearchContext, limit = LIMIT): SearchResponse {
   const results: SearchResult[] = [];
-  const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(intent.nearMe) : null;
+  const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(ctx.catalog, intent.nearMe) : null;
   const excluded = { placeholderPrice: 0, sharedRoom: 0 };
   const relevant = (l: Listing) =>
     area ? area.includes(l.neighborhood) : !intent.neighborhoods.length || intent.neighborhoods.includes(l.neighborhood);
-  for (const { listing, alsoOn } of dedupe(listings)) {
+  for (const { listing, alsoOn } of dedupe(ctx.listings)) {
     if (area && !area.includes(listing.neighborhood)) continue;
     if (isPlaceholderPrice(listing)) {
       if (relevant(listing)) excluded.placeholderPrice++;
@@ -61,8 +78,8 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
     }
     const budget = fitBudget(listing, intent);
     if (!budget.fits) continue;
-    const { score, breakdown } = scoreListing(listing, intent);
-    const hl = highlights(listing, intent, budget);
+    const { score, breakdown } = scoreListing(listing, intent, ctx);
+    const hl = highlights(listing, intent, budget, ctx);
     results.push({
       listing,
       alsoOn,
@@ -74,13 +91,19 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
       explanation: ruleExplanation(hl),
     });
   }
-  results.sort((a, b) => b.score - a.score || a.fullDeposit - b.fullDeposit);
+  // equal scores: newest ad first (real listings go stale), then cheaper
+  results.sort(
+    (a, b) =>
+      b.score - a.score ||
+      Date.parse(b.listing.postedAt) - Date.parse(a.listing.postedAt) ||
+      a.fullDeposit - b.fullDeposit,
+  );
   return { results: results.slice(0, limit), total: results.length, excluded };
 }
 
 /** Look up already-ranked results by id (used by /api/explain so the client can't forge facts). */
-export function resultsByIds(intent: SearchIntent, ids: string[]): SearchResult[] {
-  const all = search(intent, ALL_LISTINGS, Infinity);
+export function resultsByIds(intent: SearchIntent, ctx: SearchContext, ids: string[]): SearchResult[] {
+  const all = search(intent, ctx, Infinity);
   const byId = new Map(all.results.map((r) => [r.listing.id, r]));
   return ids.map((id) => byId.get(id)).filter((r): r is SearchResult => Boolean(r));
 }

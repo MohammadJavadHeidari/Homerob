@@ -37,6 +37,7 @@ import {
   histogram,
   RANGE_STEPS,
   RANGE_VALUE,
+  neighborhoodsOf,
   ROOM_OPTIONS,
   toMonthly,
   withoutFilter,
@@ -46,10 +47,12 @@ import {
   type RangeKey,
   type Refine,
 } from "@/lib/search/refine";
-import { NEIGHBORHOODS, type ListingSource } from "@/lib/types";
+import type { ListingSource } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
+/** Neighborhood chips shown before "all N neighborhoods". */
+const HOODS_SHOWN = 12;
 
 const AMENITY_ICONS: Record<AmenityKey, LucideIcon> = {
   parking: Car,
@@ -88,6 +91,11 @@ export interface FilterPanelProps {
 export function FilterPanel({ results, refine, onChange, domains, intent, onIntentChange, className }: FilterPanelProps) {
   const group = useId();
   const fc: Facets = useMemo(() => facets(results, refine), [results, refine]);
+  const [allHoods, setAllHoods] = useState(false);
+  const hoodOptions = useMemo(() => neighborhoodsOf(results), [results]);
+  const shownHoods = allHoods
+    ? hoodOptions
+    : [...new Set([...hoodOptions.slice(0, HOODS_SHOWN), ...refine.neighborhoods.filter((n) => hoodOptions.includes(n))])];
   const set = <K extends keyof Refine>(key: K, value: Refine[K]) => onChange({ ...refine, [key]: value });
   const [unit, setUnit] = useState<"deposit" | "rent">("deposit");
   const hasBudget = intent.maxDeposit !== null || intent.maxRent !== null;
@@ -125,15 +133,24 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
 
         <Section title="محله" icon={MapPin} active={refine.neighborhoods.length > 0} onClear={() => set("neighborhoods", [])}>
           <div className="flex flex-wrap gap-1.5">
-            {NEIGHBORHOODS.map((n) => (
+            {shownHoods.map((n) => (
               <ToggleChip
                 key={n}
                 label={n}
-                count={fc.neighborhoods[n]}
+                count={fc.neighborhoods[n] ?? 0}
                 selected={refine.neighborhoods.includes(n)}
                 onClick={() => set("neighborhoods", toggle(refine.neighborhoods, n))}
               />
             ))}
+            {hoodOptions.length > HOODS_SHOWN && (
+              <button
+                type="button"
+                onClick={() => setAllHoods((v) => !v)}
+                className="text-primary px-2 py-1 text-xs font-bold underline-offset-4 hover:underline"
+              >
+                {allHoods ? "کمتر" : `همهٔ ${toFaDigits(hoodOptions.length)} محله`}
+              </button>
+            )}
           </div>
         </Section>
 

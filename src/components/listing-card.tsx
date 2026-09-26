@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import type { SearchResult } from "@/lib/api-types";
-import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
+import { ageFa, roomsFa, timeAgoFa, floorFa, placeFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { isSharedHousing } from "@/lib/quality";
 import { cn } from "@/lib/utils";
@@ -71,7 +71,7 @@ export function ListingCard({
           <h3 className="text-base leading-7 font-bold">{l.title}</h3>
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <MapPin className="size-3.5 shrink-0" />
-            {l.neighborhood}، {l.street}
+            {placeFa(l)}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-center gap-2">
@@ -116,7 +116,7 @@ export function ListingCard({
         <Feature icon={BedDouble}>{roomsFa(l.rooms)}</Feature>
         <Feature icon={Ruler}>{toFaDigits(l.areaM2)} متر</Feature>
         <Feature icon={Building2}>
-          {l.floor === 0 ? "همکف" : `طبقه ${toFaDigits(l.floor)}`} از {toFaDigits(l.totalFloors)}
+          {floorFa(l.floor, l.totalFloors)}
         </Feature>
         <Feature icon={CalendarClock}>{ageFa(l.buildingAge)}</Feature>
       </ul>

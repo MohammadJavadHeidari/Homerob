@@ -74,7 +74,7 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 - **Tailwind CSS v4** + **shadcn/ui** (base-ui), full RTL
 - **Google Gemini** (free tier) via an OpenAI-compatible client — `AI_PROVIDER` switches to DeepSeek / OpenAI / a no-key `mock` (rule-based) mode
 - **zod** for intent validation, **vitest** for unit tests
-- **Sample dataset** — 96 generated Divar/Sheypoor-style listings across 6 Mashhad neighborhoods (الهیه، سجاد، وکیل‌آباد، احمدآباد، هاشمیه، قاسم‌آباد). No scraping; no database.
+- **Real data** — 210,840 Divar rental ads across 262 cities (Hugging Face datasets `divarofficial/real_estate_ads` + `RadeAI/Divar-apartmentsRent`, 2024, prices adjusted ×2.2 to 2026 from a live calibration), cleaned by `scripts/realdata/` and stored in Postgres (`DATABASE_URL`, Neon/Supabase free tier). Without a database the app uses a bundled 1,000-ad Mashhad sample. See `data/real/README.md`.
 
 ## Run locally
 

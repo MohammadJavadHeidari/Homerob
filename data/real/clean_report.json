@@ -1,22 +1,44 @@
 {
- "input": 85606,
- "apartments": 82034,
- "after_price_area_daily_filters": 79440,
- "after_ppm2_outliers": 77853,
- "after_dedup": 56093,
+ "input": 339509,
+ "apartments": 274831,
+ "after_price_area_daily_filters": 262061,
+ "after_ppm2_outliers": 256588,
+ "after_neighborhood_outliers": 255443,
+ "after_dedup": 210845,
  "by_dataset": {
-  "RadeAI": 39925,
-  "divarofficial": 16168
+  "divarofficial": 171373,
+  "RadeAI": 39472
  },
- "phones_scrubbed": 56,
+ "coords_dropped_far_from_city": 1848,
+ "phones_scrubbed": 119,
  "street_source": {
-  "neighborhood": 42987,
-  "numbered": 6614,
-  "text": 6492
+  "neighborhood": 113755,
+  "none": 45394,
+  "text": 44740,
+  "numbered": 6956
  },
- "clean_rows": 56093,
- "neighborhoods": 149,
- "with_coordinates": 11742,
+ "clean_rows": 210840,
+ "cities": 262,
+ "neighborhoods": 1063,
+ "with_neighborhood": 145734,
+ "top_cities": {
+  "تهران": 56814,
+  "مشهد": 55512,
+  "کرج": 11826,
+  "اصفهان": 6719,
+  "شیراز": 6666,
+  "تبریز": 3336,
+  "رشت": 3097,
+  "اهواز": 3056,
+  "کرمانشاه": 2422,
+  "بندرعباس": 2061,
+  "قم": 2046,
+  "اندیشه": 2010,
+  "اراک": 1891,
+  "پرند": 1848,
+  "فردیس": 1714
+ },
+ "with_coordinates": 120322,
  "sample_rows": 1000,
  "sample_neighborhoods": [
   "الهیه",

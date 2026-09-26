@@ -9,7 +9,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { SearchResult } from "@/lib/api-types";
-import { HOOD_CENTERS, listingLatLng, type BBox } from "@/lib/geo";
+import { listingLatLng, type BBox, type LatLng } from "@/lib/geo";
+import { placeFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import type { Neighborhood } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -102,7 +103,7 @@ export default function ListingMap(props: ListingMapProps) {
       loaded = true;
       clearTimeout(timer);
       if (map.getSource("focus")) return;
-      map.addSource("focus", { type: "geojson", data: circles(live.current.focus) });
+      map.addSource("focus", { type: "geojson", data: circles(live.current.focus, live.current.results) });
       map.addLayer({ id: "focus-fill", type: "fill", source: "focus", paint: { "fill-color": "#0b7b73", "fill-opacity": 0.09 } });
       map.addLayer({
         id: "focus-line",
@@ -203,8 +204,8 @@ export default function ListingMap(props: ListingMapProps) {
   // ---------- focus outline ----------
   useEffect(() => {
     const src = mapRef.current?.getSource("focus") as GeoJSONSource | undefined;
-    if (ready && src) src.setData(circles(focus));
-  }, [focus, ready]);
+    if (ready && src) src.setData(circles(focus, results));
+  }, [focus, results, ready]);
 
   const zoom = (d: number) => mapRef.current?.easeTo({ zoom: mapRef.current.getZoom() + d, duration: 300 });
 
@@ -313,7 +314,7 @@ export default function ListingMap(props: ListingMapProps) {
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="truncate text-sm font-bold">{selected.listing.title}</p>
                 <p className="text-muted-foreground truncate text-xs">
-                  {selected.listing.neighborhood}، {selected.listing.street}
+                  {placeFa(selected.listing)}
                 </p>
               </div>
               <span className="bg-primary/10 text-primary shrink-0 rounded-lg px-2 py-1 text-xs font-extrabold">
@@ -387,17 +388,27 @@ function pinElement(r: SearchResult, i: number): HTMLElement {
   return el;
 }
 
+/** Center of a neighborhood = median position of its located results. */
+function hoodCenter(h: Neighborhood, results: SearchResult[]): LatLng | null {
+  const pts = results.filter((r) => r.listing.neighborhood === h && r.listing.lat != null && !r.listing.approxLocation);
+  const all = pts.length ? pts : results.filter((r) => r.listing.neighborhood === h && r.listing.lat != null);
+  if (!all.length) return null;
+  const med = (xs: number[]) => xs.sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+  return { lat: med(all.map((r) => r.listing.lat!)), lng: med(all.map((r) => r.listing.lng!)) };
+}
+
 /** ~1.2 km circles around neighborhood centers, as GeoJSON polygons. */
-function circles(hoods: Neighborhood[]) {
+function circles(hoods: Neighborhood[], results: SearchResult[]) {
   return {
     type: "FeatureCollection" as const,
-    features: hoods.map((h) => {
-      const c = HOOD_CENTERS[h];
+    features: hoods.flatMap((h) => {
+      const c = hoodCenter(h, results);
+      if (!c) return [];
       const ring = Array.from({ length: 65 }, (_, i) => {
         const a = (i / 64) * 2 * Math.PI;
         return [c.lng + (0.0115 * Math.cos(a)) / Math.cos((c.lat * Math.PI) / 180), c.lat + 0.0115 * Math.sin(a)];
       });
-      return { type: "Feature" as const, properties: { name: h }, geometry: { type: "Polygon" as const, coordinates: [ring] } };
+      return [{ type: "Feature" as const, properties: { name: h }, geometry: { type: "Polygon" as const, coordinates: [ring] } }];
     }),
   };
 }

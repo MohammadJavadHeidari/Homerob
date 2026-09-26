@@ -1,5 +1,5 @@
 import { AMENITIES, AMENITY_KEYS, type AmenityKey } from "@/lib/amenities";
-import { findNeighborhoods } from "@/lib/neighborhoods";
+import { findNeighborhoods, type CityCatalog } from "@/lib/catalog";
 import { normalizeFa } from "@/lib/text";
 
 import { EMPTY_INTENT, type SearchIntent } from "./schema";
@@ -8,7 +8,7 @@ import { EMPTY_INTENT, type SearchIntent } from "./schema";
  * Deterministic Persian query parser. Used as the `mock` AI provider and as the fallback
  * when the LLM call fails, so search always works.
  */
-export function parseIntentWithRules(query: string): SearchIntent {
+export function parseIntentWithRules(query: string, catalog: CityCatalog): SearchIntent {
   const text = wordsToDigits(normalizeFa(query));
   const intent: SearchIntent = structuredClone(EMPTY_INTENT);
 
@@ -16,7 +16,8 @@ export function parseIntentWithRules(query: string): SearchIntent {
   parseRooms(text, intent);
   parseArea(text, intent);
   parseAmenities(text, intent);
-  intent.neighborhoods = findNeighborhoods(text);
+  intent.city = catalog.city;
+  intent.neighborhoods = findNeighborhoods(text, catalog.hoods);
 
   if (/غیر ?قابل تبدیل|فقط رهن کامل|مبلغ ثابت/.test(text)) intent.flexibleConversion = false;
   if (/همخونه|هم خونه|هماتاقی|هم اتاقی|اجاره اتاق/.test(text)) intent.sharedRoom = true;
