@@ -103,6 +103,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **Scraping tool (2026-09-26):** owner can't get the Ultimate Web Scraper extension working, and
+  divar.ir / api.divar.ir / sheypoor.com reset the connection from the cloud container (policy or
+  non-Iranian-IP block). Options: (a) owner runs Claude Code locally (`claude --chrome`) with the
+  data-collection prompt → CSVs in `data/raw/` with the importer's headers (recommended), (b) agent
+  writes a DevTools console snippet for Divar list pages (no install, fragile, list-card fields only),
+  (c) keep the seeded sample for the demo. Until answered: seeded data stays; importer is ready.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
