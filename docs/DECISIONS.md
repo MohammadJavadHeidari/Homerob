@@ -70,5 +70,5 @@
   Repo, code identifiers and the Vercel URL stay "homerob".
 - 2026-09-26 — **Live scraping of Divar/Sheypoor allowed (owner request).** The "no live scraping"
   hard stop is removed from `CLAUDE.md`; supersedes the "no live scraping" parts of the Data and
-  divar-mcp entries above. Owner is considering Ultimate Web Scraper (ultimatewebscraper.com). The
-  seeded dataset stays the current source until a scraper is actually built.
+  divar-mcp entries above. Owner chose option (c): scrape with **Ultimate Web Scraper** (ultimatewebscraper.com, Panda Tech).
+  The seeded dataset stays the current source until real scraped data is imported.

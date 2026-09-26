@@ -102,6 +102,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **Scraping route (Ultimate Web Scraper):** the agent can't run the Chrome extension from its cloud
+  container, and the cloud/MCP route needs an account + prepaid credits (the "no paid services / new
+  accounts" hard stop still applies). Options: (a) owner runs the **free Chrome extension** on Divar's
+  Mashhad rent pages, exports CSV, puts it in `data/raw/` → agent writes the importer (recommended,
+  free), (b) owner opens a cloud account and adds the MCP connector/API key to the environment →
+  agent scrapes directly (paid, needs hard-stop exception). Until answered: seeded data stays.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -190,6 +196,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Torob everywhere the user sees it (owner: yes): results header, tab icon, apple icon, og.png, title, copy;
       home-page demo line removed (map credit kept, ODbL)
 - [x] Home map: gold lines (Iran, arc, roads) blurred, dots/pins sharp — focus on the search box (owner request)
+
+- [ ] Live Divar/Sheypoor data via Ultimate Web Scraper (owner chose option c, 2026-09-26) — blocked on
+      the "Scraping route" open question. Then: `scripts/import-scraped.ts` (CSV → `Listing`: Persian
+      digits, «توافقی»/«رایگان» prices, neighborhood matching, dedup via `dedup.ts`), merge or replace
+      `src/data/listings.json`, keep the demo queries returning results.
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
