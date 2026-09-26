@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "generate:listings": "node scripts/generate-listings.mjs",
     "import:scraped": "jiti scripts/import-scraped.ts"
   },
   "dependencies": {

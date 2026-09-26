@@ -204,7 +204,7 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
         <footer data-hero-block className={cn("text-muted-foreground mt-auto text-center text-xs leading-6", compact ? "border-t pt-6" : "pt-4")}>
           {compact ? (
             <>
-              این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+              آگهی‌ها از دیوار و شیپور جمع‌آوری شده‌اند؛ برای دیدن آگهی اصلی روی نام سایت بزنید.
               هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
               تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
             </>

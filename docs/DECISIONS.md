@@ -76,3 +76,8 @@
   from Divar/Sheypoor pages with the extension into `data/raw/`; the agent's importer turns them into
   listings. No cloud account, credits or MCP connector (the "no paid services" hard stop still applies).
   Search shows scraped listings merged with the seeded sample.
+- 2026-09-26 — **Sample data removed; real data only (owner).** The app searches only
+  `src/data/scraped.json` (Divar/Sheypoor CSVs exported by the owner with the Ultimate Web Scraper
+  extension, one run per neighborhood, ~74 ads each). The former seeded sample lives on only as a
+  frozen test fixture (`src/test/fixtures/listings.json`, mocked in `src/test/setup.ts`); its generator
+  is deleted. Supersedes the "seeded sample dataset" Data entry above.

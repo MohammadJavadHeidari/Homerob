@@ -74,7 +74,7 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 - **Tailwind CSS v4** + **shadcn/ui** (base-ui), full RTL
 - **Google Gemini** (free tier) via an OpenAI-compatible client — `AI_PROVIDER` switches to DeepSeek / OpenAI / a no-key `mock` (rule-based) mode
 - **zod** for intent validation, **vitest** for unit tests
-- **Sample dataset** — 96 generated Divar/Sheypoor-style listings across 6 Mashhad neighborhoods (الهیه، سجاد، وکیل‌آباد، احمدآباد، هاشمیه، قاسم‌آباد). No scraping; no database.
+- **Real listings** — Divar/Sheypoor ads for 6 Mashhad neighborhoods (الهیه، سجاد، وکیل‌آباد، احمدآباد، هاشمیه، قاسم‌آباد), exported with a scraper browser extension and imported with `npm run import:scraped` (see `data/raw/README.md`) into `src/data/scraped.json`. No database. Tests use a frozen fixture (`src/test/fixtures/listings.json`).
 
 ## Run locally
 
@@ -83,7 +83,7 @@ npm install
 cp .env.example .env.local   # optional: AI_PROVIDER=gemini + GEMINI_API_KEY=...
 npm run dev                  # http://localhost:3000  (works without a key in mock mode)
 npm test                     # unit tests (pricing, parser, budget, ranking, grounding)
-npm run generate:listings    # regenerate src/data/listings.json (deterministic)
+npm run import:scraped       # data/raw/*.csv → src/data/scraped.json
 ```
 
 Key files: `src/lib/intent/` (schema, rule parser, LLM parser) · `src/lib/pricing.ts` · `src/lib/search/` (budget, score, dedup, suggest) · `src/lib/explain/` · `src/lib/ai/client.ts` · `src/components/`.

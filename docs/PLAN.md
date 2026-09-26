@@ -75,7 +75,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     one screen at 390 and 1440 px), one brand chip style, neutral source badges, new icon + `og.png`.
     Fixed: Neshan CSS `:root { --primary }` turned the brand color blue on desktop results (tokens now
     on `html:root`). Rule parser reads "۵۰۰ رهن" (number before keyword). 59 tests.
-- **Scraping (2026-09-26):** importer ready; waiting for the owner's first CSV export (see Owner requests).
+- **Scraping (2026-09-26):** owner removed the sample data — the app now searches **only**
+  `src/data/scraped.json`, which is **empty until the owner's first CSV export** (extension works:
+  ~74 ads per run; one run per neighborhood filter). Do **not** merge this branch to `main` before
+  real data is imported, or Production shows no results. After import: re-check the 3 demo queries
+  in `docs/DEMO_SCRIPT.md` against real prices, and hide floor/age in the UI if most rows lack them.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -103,12 +107,6 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- **Scraping tool (2026-09-26):** owner can't get the Ultimate Web Scraper extension working, and
-  divar.ir / api.divar.ir / sheypoor.com reset the connection from the cloud container (policy or
-  non-Iranian-IP block). Options: (a) owner runs Claude Code locally (`claude --chrome`) with the
-  data-collection prompt → CSVs in `data/raw/` with the importer's headers (recommended), (b) agent
-  writes a DevTools console snippet for Divar list pages (no install, fragile, list-card fields only),
-  (c) keep the seeded sample for the demo. Until answered: seeded data stays; importer is ready.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -201,6 +199,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Scraped-data importer (owner: option c → route a, 2026-09-26): `src/lib/import/scraped.ts` + tests,
       `npm run import:scraped` (`scripts/import-scraped.ts`, via jiti) reads `data/raw/*.csv` →
       `src/data/scraped.json`; search = scraped + seed; source badge links to the original ad (`url`).
+- [x] Remove the seeded sample from the app (owner); keep it as a frozen test fixture.
 - [ ] **Blocked on owner:** export CSVs with the free Ultimate Web Scraper extension into `data/raw/`
       (steps in `data/raw/README.md`), then run the importer and tune it to the real columns.
       Fields the list page lacks (floor, building age) get neutral defaults (1 of 1, 10 years) — the
