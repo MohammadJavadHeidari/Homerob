@@ -84,4 +84,76 @@ describe("csv + rowToListing", () => {
     });
     expect(r.ok && r.value.guessed).toEqual(["postedAt"]);
   });
+
+  describe("per-ad Divar export (data/raw/*-divar.csv format)", () => {
+    const HEADER = "عنوان,محله,ودیعه,اجاره,متراژ,اتاق,طبقه,سال ساخت,آسانسور,پارکینگ,انباری,توضیحات,زمان,link,image";
+    const row = (cells: Partial<Record<string, string>>) => {
+      const base: Record<string, string> = {
+        عنوان: "آپارتمان ۱۰۰ متری",
+        محله: "الهیه",
+        ودیعه: "۹۰۰٬۰۰۰٬۰۰۰ تومان",
+        اجاره: "۳٬۰۰۰٬۰۰۰ تومان",
+        متراژ: "۱۰۰",
+        اتاق: "۲",
+        طبقه: "۳ از ۵",
+        "سال ساخت": "۱۳۹۸",
+        آسانسور: "دارد",
+        پارکینگ: "دارد",
+        انباری: "ندارد",
+        توضیحات: "",
+        زمان: "۲ ساعت پیش",
+        link: "https://divar.ir/v/gaTest01",
+        image: "",
+        ...cells,
+      };
+      const line = HEADER.split(",").map((h) => `"${(base[h] ?? "").replace(/"/g, '""')}"`).join(",");
+      return csvRecords(`${HEADER}\r\n${line}\r\n`)[0];
+    };
+
+    it("prefers the neighborhood column over areas named in the description", () => {
+      const r = rowToListing(row({ توضیحات: "نزدیک وکیل‌آباد و سجادیه ۳۲\nبالکن" }), { now });
+      expect(r.ok && r.value.listing.neighborhood).toBe("الهیه");
+    });
+
+    it("uses the file's neighborhood when Divar's district name isn't one of ours", () => {
+      const rec = row({ محله: "هنرستان", عنوان: "۱۹۰ متری / هفت تیر / وکیل آباد و پیروزی" });
+      const r = rowToListing(rec, { now, fallbackNeighborhood: "هاشمیه" });
+      expect(r.ok && r.value.listing.neighborhood).toBe("هاشمیه");
+    });
+
+    it("keeps a real description even when it mentions prices", () => {
+      const desc = "۱۰۵ متر | دو خواب\nرهن کامل: ۹۰۰ میلیون تومان\nتراس و پکیج";
+      const r = rowToListing(row({ توضیحات: desc }), { now });
+      expect(r.ok && r.value.listing.description).toBe(desc);
+      expect(r.ok && r.value.listing.tags).toEqual(expect.arrayContaining(["بالکن", "پکیج"]));
+    });
+
+    it("treats a symbolic rent on a full-rahn ad as zero", () => {
+      const r = rowToListing(row({ ودیعه: "۸۵۰٬۰۰۰٬۰۰۰ تومان", اجاره: "۱٬۰۰۰ تومان" }), { now });
+      expect(r.ok && r.value.listing).toMatchObject({ deposit: 850_000_000, monthlyRent: 0 });
+    });
+
+    it("skips implausible floor areas (typos, storage units)", () => {
+      expect(rowToListing(row({ متراژ: "۴۰۴۰" }), { now })).toEqual({ ok: false, reason: "implausible-area" });
+      expect(rowToListing(row({ متراژ: "۱۲" }), { now })).toEqual({ ok: false, reason: "implausible-area" });
+    });
+
+    it("tags split ACs written without a space", () => {
+      const r = rowToListing(row({ توضیحات: "کولرگازی\nپکیج" }), { now });
+      expect(r.ok && r.value.listing.tags).toContain("کولر گازی");
+    });
+
+    it("skips roommate-style placeholder prices", () => {
+      expect(rowToListing(row({ ودیعه: "۱٬۰۰۰ تومان", اجاره: "۱۰٬۰۰۰ تومان" }), { now })).toEqual({
+        ok: false,
+        reason: "placeholder-price",
+      });
+    });
+
+    it("reads «میلیارد» with a Persian-style decimal point and «رایگان» rent", () => {
+      const r = rowToListing(row({ ودیعه: "۱.۵۰۰ میلیارد تومان", اجاره: "رایگان", طبقه: "همکف از ۲" }), { now });
+      expect(r.ok && r.value.listing).toMatchObject({ deposit: 1_500_000_000, monthlyRent: 0, floor: 0, totalFloors: 2 });
+      expect(r.ok && r.value.guessed).toEqual([]);
+    });
+  });
 });

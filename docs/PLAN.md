@@ -75,11 +75,18 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     one screen at 390 and 1440 px), one brand chip style, neutral source badges, new icon + `og.png`.
     Fixed: Neshan CSS `:root { --primary }` turned the brand color blue on desktop results (tokens now
     on `html:root`). Rule parser reads "۵۰۰ رهن" (number before keyword). 59 tests.
-- **Scraping (2026-09-26):** owner removed the sample data — the app now searches **only**
-  `src/data/scraped.json`, which is **empty until the owner's first CSV export** (extension works:
-  ~74 ads per run; one run per neighborhood filter). Do **not** merge this branch to `main` before
-  real data is imported, or Production shows no results. After import: re-check the 3 demo queries
-  in `docs/DEMO_SCRIPT.md` against real prices, and hide floor/age in the UI if most rows lack them.
+- **Scraping (2026-09-26):** owner removed the sample data — the app searches **only**
+  `src/data/scraped.json`. **Real data imported (2026-09-26):** 147 Divar ads collected with Claude in
+  Chrome (owner decision; per-ad pages, 3 s apart, no login, no phone/seller/address) into
+  `data/raw/<hood>-divar.csv` → **142 listings** (الهیه 25, هاشمیه 25, احمدآباد 25, قاسم‌آباد 24,
+  سجاد 24, وکیل‌آباد 19); no field needed a default. Divar has no «هاشمیه» or «قاسم‌آباد» district:
+  used «هنرستان» and «شهرک رازی (شهرک غرب)» (both list those streets first); «سجاد» = «سجاد شهر»;
+  وکیل‌آباد had only 22 ads. Importer now: neighborhood column → file → title → text; skips
+  placeholder prices (roommate posts) and implausible areas (<20 or >1000 m²); symbolic rent
+  (<500k) → full rahn. Still before merging to `main`: re-check the 3 demo queries in
+  `docs/DEMO_SCRIPT.md` against the real prices (Divar prices are much higher than the old seed),
+  and decide on odd rows the owner may want dropped (an office unit in سجاد, a rooftop in وکیل‌آباد,
+  roommate/«همخونه» ads).
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -200,10 +207,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
       `npm run import:scraped` (`scripts/import-scraped.ts`, via jiti) reads `data/raw/*.csv` →
       `src/data/scraped.json`; search = scraped + seed; source badge links to the original ad (`url`).
 - [x] Remove the seeded sample from the app (owner); keep it as a frozen test fixture.
-- [ ] **Blocked on owner:** export CSVs with the free Ultimate Web Scraper extension into `data/raw/`
-      (steps in `data/raw/README.md`), then run the importer and tune it to the real columns.
-      Fields the list page lacks (floor, building age) get neutral defaults (1 of 1, 10 years) — the
-      importer reports how many; if most rows lack them, hide those fields in the UI instead.
+- [x] Export CSVs into `data/raw/` (2026-09-26, Claude in Chrome instead of the extension — owner
+      decision): six `*-divar.csv` files, 147 rows → 142 listings, 0 guessed fields; importer tuned
+      (neighborhood priority, placeholder prices, area sanity, AC tag). Branch `data/divar-scrape-2026-09-26`.
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

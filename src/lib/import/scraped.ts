@@ -10,6 +10,15 @@ import type { Listing, ListingSource, Neighborhood } from "../types";
 /** Current Persian (Shamsi) year, for «سال ساخت» → building age. */
 const SHAMSI_YEAR_NOW = 1405;
 
+/** Below this (Toman), both prices together are a placeholder, not a real offer. */
+const PLACEHOLDER_DEPOSIT = 1_000_000;
+/** A monthly rent below this (Toman) is a symbolic value on a full-rahn ad → treated as 0. */
+const SYMBOLIC_RENT = 500_000;
+
+/** A home's floor area (m²) outside this range is a typo or not a home. */
+const MIN_AREA_M2 = 20;
+const MAX_AREA_M2 = 1000;
+
 /** Fields we fill with a neutral default when the scraped page doesn't show them. */
 export type GuessedField = "floor" | "buildingAge" | "areaM2" | "rooms" | "postedAt";
 
@@ -18,7 +27,7 @@ export interface ImportedListing {
   guessed: GuessedField[];
 }
 
-export type SkipReason = "no-price" | "no-neighborhood" | "no-title" | "not-a-listing";
+export type SkipReason = "no-price" | "placeholder-price" | "implausible-area" | "no-neighborhood" | "no-title" | "not-a-listing";
 
 export type RowResult = { ok: true; value: ImportedListing } | { ok: false; reason: SkipReason };
 
@@ -151,7 +160,7 @@ const TAGS: [tag: string, pattern: RegExp][] = [
   ["لابی‌من", /لابی/],
   ["استخر و سونا", /استخر|سونا|جکوزی/],
   ["پکیج", /پکیج/],
-  ["کولر گازی", /کولر گازی|اسپلیت/],
+  ["کولر گازی", /کولر ?گازی|اسپی?لیت|داکت/],
 ];
 
 function sourceFromUrl(url: string): { source: ListingSource; token: string } | null {
@@ -205,10 +214,22 @@ export function rowToListing(rec: Record<string, string>, opts: RowOptions): Row
   if (deposit === null && monthlyRent !== null && monthlyRent > 0) deposit = 0; // «ودیعه» missing = none
   if (monthlyRent === null && deposit !== null && deposit > 0) monthlyRent = 0;
   if (deposit === null || monthlyRent === null || deposit + monthlyRent === 0) return { ok: false, reason: "no-price" };
+  // Divar needs a number in both fields, so sellers type symbolic values: «۱٬۰۰۰ تومان» rent on a
+  // full-rahn ad, or «۱٬۰۰۰ / ۱۰٬۰۰۰» on roommate posts that have no real price at all.
+  if (deposit < PLACEHOLDER_DEPOSIT && monthlyRent < PLACEHOLDER_DEPOSIT) return { ok: false, reason: "placeholder-price" };
+  if (monthlyRent > 0 && monthlyRent < SYMBOLIC_RENT) monthlyRent = 0;
 
   // Neighborhood
-  const hoodText = [byHeader(rec, "hood"), title, text].filter(Boolean).join(" ");
-  const neighborhood = findNeighborhoods(hoodText)[0] ?? opts.fallbackNeighborhood ?? null;
+  // Most specific source first: the row's own neighborhood column, then the page the file was
+  // exported from (a neighborhood-filtered list), then the title, then free text. Free text often
+  // names other areas («نزدیک وکیل‌آباد», «سجادیه ۳۲»), so it must not override the first two.
+  const header = byHeader(rec, "hood");
+  const neighborhood =
+    (header ? findNeighborhoods(header)[0] : undefined) ??
+    opts.fallbackNeighborhood ??
+    findNeighborhoods(title)[0] ??
+    findNeighborhoods(text)[0] ??
+    null;
   if (!neighborhood) return { ok: false, reason: "no-neighborhood" };
 
   const guessed: GuessedField[] = [];
@@ -221,6 +242,8 @@ export function rowToListing(rec: Record<string, string>, opts: RowOptions): Row
     areaM2 = 80;
     guessed.push("areaM2");
   }
+  // Typos («۴۰۴۰» for a 40 m² suite) and non-homes (a 12 m² storage unit) would top every ranking.
+  if (areaM2 < MIN_AREA_M2 || areaM2 > MAX_AREA_M2) return { ok: false, reason: "implausible-area" };
 
   // Rooms
   let rooms = num(byHeader(rec, "rooms"));
@@ -270,8 +293,11 @@ export function rowToListing(rec: Record<string, string>, opts: RowOptions): Row
     guessed.push("postedAt");
   }
 
+  // A real «توضیحات» column is kept even when it mentions prices; only a short price-only cell
+  // (a list-card column the header regex caught) falls back to the title.
   const desc = byHeader(rec, "description");
-  const description = desc && !/تومان|ودیعه/.test(desc) && desc.length > title.length ? desc : title;
+  const priceOnly = !!desc && !desc.includes("\n") && desc.length < 60 && /تومان|ودیعه/.test(desc);
+  const description = desc && !priceOnly && desc.length > title.length ? desc : title;
   const street = byHeader(rec, "street") ?? "";
   const image = byHeader(rec, "image");
   const imageUrl = image && isUrl(image) ? image : values.find(isImage);
