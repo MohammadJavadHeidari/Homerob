@@ -84,6 +84,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     original ad when `url` is set, filter panel lists only neighborhoods in the results, home map flies to
     the visitor's covered city (else the city with the most listings; roads only baked for Mashhad), titles +
     `og.png` say «ایران». 69 tests. Rules: CLAUDE.md hard stop "no live scraping" replaced by **real data only**.
+  - Owner request (2026-09-26) — **landing for all of Iran:** no location request on entry
+    (`use-user-place.ts`, `/api/geo`, `hood-stats.ts` removed), the map stays on Iran (Mashhad roads /
+    neighborhood pins / panel / status pill removed; `build-hero-map.mjs` builds only Iran), illustrative
+    "new ad" place pins drop across Iran every ~2s with only a generic title (weighted by city size, never
+    under the logo/search, max 4, no duplicate titles), home shows only logo + search (credit moved to the
+    results footer). Checked at 390 and 1440 px: 0 geolocation calls, no page errors.
+    Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
 - **Next:** owner answers "real data source" (Open questions) → build the importer, replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
@@ -208,8 +215,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Home map: gold lines (Iran, arc, roads) blurred, dots/pins sharp — focus on the search box (owner request)
 - [x] Scale to all of Iran: city-aware data model, intent, search, UI, home map (2026-09-26)
 - [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
+- [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
+- [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
-- [ ] Home map roads for new cities (`scripts/build-hero-map.mjs` + Overpass; not reachable from the sandbox)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 
 ## Stretch (only if everything above is done)

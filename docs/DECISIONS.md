@@ -80,3 +80,13 @@
   hard stop). Listings must be real ads; never generated. Existing Mashhad sample set is temporary.
   Protective rule kept: no sellers' phone numbers / personal data stored. How the real data is
   obtained is an open question in `docs/PLAN.md` (the sandbox can't reach Divar).
+- 2026-09-26 — **Landing = Iran only, no location prompt** (owner; supersedes "Location-aware home" and
+  the "Iran → user location → Mashhad" map intro). The home page never asks for the browser location
+  (no near-me filtering unless added back as an explicit button), the map stays on Iran (no flight, no
+  Mashhad roads/neighborhoods/side panel/status pill), and only the logo + search box are shown (map
+  credit moved to the results footer + README). Illustrative "new ad" place pins drop across Iran
+  showing only a generic ad title (owner: psychological "people are posting everywhere" effect). They
+  are a mood layer, not listings: generic titles, no price/neighborhood, not searchable; swap for the
+  newest real titles once real data lands.
+- 2026-09-26 — Findings of the owner's call with Mohammad (2026-09-25) are kept in
+  `docs/research/call-2026-09-25-mohammad.md` (Persian) for future reference.
