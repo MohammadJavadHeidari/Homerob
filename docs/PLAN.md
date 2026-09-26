@@ -114,6 +114,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **Demo queries vs real prices (2026-09-26):** checked on the 142 real listings. Q1 «دوخوابه نزدیک
+  وکیل‌آباد با ۵۰۰ میلیون رهن» works (29 results, top ones in وکیل‌آباد). Q2 «دانشجوام… ماهی ۵ تومن»
+  still gives the empty state + «با ماهی ۷٫۵ میلیون، ۳ آگهی پیدا می‌شه». Q3 «دوخوابه بالکن‌دار سجاد…
+  رهن ۴۰۰» fails: real سجاد has 3 two-bedrooms, none with a balcony, from 930M full-rahn. Home chip
+  «سوئیت سجاد ماهی ۸ تومن» fails too (no suites in سجاد). Proposal: Q3 → «دوخوابه بالکن‌دار الهیه،
+  پارکینگ مهم نیست، رهن ۹۰۰ میلیون» (65 results, top 4 all الهیه + balcony); chip → «سوئیت یا
+  یک‌خوابه ماهی ۱۵ تومن». Until answered: queries unchanged.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),

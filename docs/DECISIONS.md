@@ -81,3 +81,7 @@
   extension, one run per neighborhood, ~74 ads each). The former seeded sample lives on only as a
   frozen test fixture (`src/test/fixtures/listings.json`, mocked in `src/test/setup.ts`); its generator
   is deleted. Supersedes the "seeded sample dataset" Data entry above.
+- 2026-09-26 — **First real dataset: 142 Divar listings** collected by the owner's local Claude Code with
+  Claude in Chrome (instead of the extension), one ad page at a time, no phone numbers / seller names /
+  exact addresses. Divar has no «هاشمیه» or «قاسم‌آباد» district, so those come from «هنرستان» and
+  «شهرک رازی (شهرک غرب)»; «سجاد» = Divar's «سجاد شهر».
