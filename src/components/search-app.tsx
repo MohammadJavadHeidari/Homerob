@@ -8,12 +8,9 @@ import { HeroMap } from "@/components/hero-map/hero-map";
 import { IntentChips } from "@/components/intent-chips";
 import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
-import { readStoredPlace, useUserPlace } from "@/components/use-user-place";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
-import type { UserPlace } from "@/lib/geo";
-import type { getHoodStats } from "@/lib/hood-stats";
 import { toFaDigits } from "@/lib/persian";
 import { isCovered } from "@/lib/places";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
@@ -23,7 +20,7 @@ const COMPARE_MAX = 3;
 
 type Status = "idle" | "loading" | "done" | "error";
 
-export function SearchApp({ hoodStats }: { hoodStats: ReturnType<typeof getHoodStats> }) {
+export function SearchApp() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
@@ -31,11 +28,6 @@ export function SearchApp({ hoodStats }: { hoodStats: ReturnType<typeof getHoodS
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
-  const { status: placeStatus, place } = useUserPlace();
-  const near = useRef<UserPlace["neighborhood"]>(null);
-  useEffect(() => {
-    near.current = place?.neighborhood ?? null;
-  }, [place]);
 
   const run = useCallback(async (q: string, intent?: SearchIntent) => {
     const text = q.trim();
@@ -49,7 +41,7 @@ export function SearchApp({ hoodStats }: { hoodStats: ReturnType<typeof getHoodS
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: text, intent, near: near.current ?? undefined }),
+        body: JSON.stringify({ query: text, intent }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
@@ -67,7 +59,6 @@ export function SearchApp({ hoodStats }: { hoodStats: ReturnType<typeof getHoodS
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q) {
-      near.current = readStoredPlace()?.neighborhood ?? null;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the input with the URL once on mount
       setQuery(q);
       void run(q);
@@ -92,7 +83,7 @@ export function SearchApp({ hoodStats }: { hoodStats: ReturnType<typeof getHoodS
 
   return (
     <>
-      {!compact && <HeroMap stats={hoodStats} placeStatus={placeStatus} place={place} className="z-0" />}
+      {!compact && <HeroMap className="z-0" />}
       <div
         className={cn(
           "relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
@@ -201,18 +192,16 @@ export function SearchApp({ hoodStats }: { hoodStats: ReturnType<typeof getHoodS
           </>
         )}
 
-        <footer data-hero-block className={cn("text-muted-foreground mt-auto text-center text-xs leading-6", compact ? "border-t pt-6" : "pt-4")}>
-          {compact ? (
-            <>
-              این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
-              هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
-              تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
-            </>
-          ) : (
-            // map credit only: OSM's license (ODbL) requires it wherever the map is shown
-            <span className="opacity-60">نقشه: © OpenStreetMap و geoBoundaries</span>
-          )}
-        </footer>
+        {/* Home page: logo + search box only (owner). The home map's credit (geoBoundaries, CC BY 4.0)
+            lives here on the results page and in the README. */}
+        {compact && (
+          <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
+            این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+            هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
+            تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
+            <span className="block opacity-60">نقشهٔ صفحهٔ اول: geoBoundaries (CC BY 4.0)</span>
+          </footer>
+        )}
       </div>
     </>
   );
