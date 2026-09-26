@@ -41,8 +41,19 @@ const CANDIDATE_LIMIT = 4000;
 const BUDGET_HEADROOM = 3;
 const CACHE_MS = 10 * 60_000;
 
+/**
+ * Libpq-only URL options (Neon's URLs carry `channel_binding=require`) would be sent to the server as
+ * session settings by the `postgres` client and rejected, so they are stripped.
+ */
+export function clientUrl(raw: string): string {
+  const u = new URL(raw);
+  for (const k of ["channel_binding", "connect_timeout", "options", "gssencmode"]) u.searchParams.delete(k);
+  return u.toString();
+}
+
 const url = process.env.DATABASE_URL;
-const sql = url ? postgres(url, { max: 3, idle_timeout: 20, prepare: false, connect_timeout: 8 }) : null;
+// prepare: false — Neon's pooled URL goes through PgBouncer (transaction mode)
+const sql = url ? postgres(clientUrl(url), { max: 3, idle_timeout: 20, prepare: false, connect_timeout: 8 }) : null;
 
 export const storeKind = () => (sql ? "postgres" : "bundled");
 

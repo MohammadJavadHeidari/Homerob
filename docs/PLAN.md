@@ -69,6 +69,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Listing coordinates are derived from the id inside the neighborhood (`listingLatLng` in `geo.ts`).
     Layout: xl+ = filters | list | sticky map (toggle «بستن نقشه»); smaller = list/map toggle.
     Screenshots: `docs/screenshots/*-map.png` (fallback tiles).
+- **Neon DB loaded (2026-09-26):** production data lives in Neon; the branch's Vercel preview uses it.
+    Owner should rotate the DB password (it was pasted in chat). Merge to `main` → Production.
 - **Real data in the app (2026-09-26):** 210,840 clean Divar rentals in 262 cities go to Postgres
     (~190 MB, free tier). Search resolves the city (named in the query, else the user's location, else
     Mashhad), loads ≤4,000 candidates from the DB (neighborhood + budget prefilter), ranks in JS as before.
@@ -80,10 +82,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     (`scripts/realdata/`), 56,093 clean apartments (build/, gitignored) and a 1,000-row `Listing` sample;
     prices ×2.2 from a one-off divar-mcp calibration (18 calls, owner OK). Not wired into the app yet.
 - **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
-- **Blocked:** (1) Production DB: owner creates a free Neon DB (Vercel → Storage → Create → Neon → connect
-  to the homerob project; `DATABASE_URL` is added automatically), then either runs the 3 commands in
-  `data/real/README.md` or adds `DATABASE_URL` to this Claude environment's variables so the agent loads it.
-  Until then Production keeps working on the bundled Mashhad sample. (2) Live Divar scraper: requests to
+- **Blocked:** (2) Live Divar scraper: requests to
   Divar's API were refused by this session's permission policy; the owner decides (allow it, or run a scraper
   themselves). AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -201,7 +200,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
       (`db/schema.sql`, `scripts/realdata/load_db.py`, `src/lib/store/`), per-city catalog with dynamic
       neighborhoods / adjacency / centers (`src/lib/catalog.ts`), city from query or location, bundled real
       Mashhad sample as fallback, synthetic data kept only as a test fixture. 63 tests.
-- [ ] Owner: create the free Postgres (Vercel → Storage → Neon) and load it (see Status → Blocked)
+- [x] Free Postgres: owner created Neon (Vercel integration, prefix `DATABASE`); agent loaded it over HTTPS
+      (210,840 rows, 183 MB, 2026-09-26). `channel_binding` stripped from the URL for the `postgres` client.
 - [ ] Live Divar scraper (owner asked) — blocked: this session's permission policy refused requests to
       Divar's API; needs the owner's decision (see Status)
 

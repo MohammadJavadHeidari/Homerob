@@ -24,7 +24,8 @@ python3 ../../scripts/realdata/normalize.py   # raw/ → build/rent_normalized.p
 python3 ../../scripts/realdata/clean.py       # → build/listings_iran.parquet + src/data/listings.json
 cd ../.. && DATABASE_URL=postgres://… python3 scripts/realdata/load_db.py   # schema + COPY + stats (~10 s)
 ```
-The database takes ~190 MB (fits the Neon / Supabase free tiers). Schema: `db/schema.sql`
+Where port 5432 is blocked (e.g. Claude's cloud sandbox), `scripts/realdata/load_db_http.py` does the same
+over Neon's HTTPS `/sql` endpoint (~1 min). The database takes ~185 MB (fits the Neon / Supabase free tiers). Schema: `db/schema.sql`
 (`listings` table + `hood_stats` / `city_stats` materialized views used for ranking and the map).
 
 ## Cleanup (`clean.py`)
