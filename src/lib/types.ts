@@ -41,4 +41,6 @@ export interface Listing {
   /** ISO date-time. */
   postedAt: string;
   imageUrl?: string;
+  /** Original ad on Divar/Sheypoor (scraped listings only). */
+  url?: string;
 }

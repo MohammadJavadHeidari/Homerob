@@ -54,7 +54,13 @@ export function ListingCard({
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
-            <SourceBadge source={l.source} />
+            {l.url ? (
+              <a href={l.url} target="_blank" rel="noopener noreferrer" title="دیدن آگهی اصلی" className="hover:opacity-80">
+                <SourceBadge source={l.source} />
+              </a>
+            ) : (
+              <SourceBadge source={l.source} />
+            )}
             {isSharedHousing(l) && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
@@ -71,7 +77,7 @@ export function ListingCard({
           <h3 className="text-base leading-7 font-bold">{l.title}</h3>
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <MapPin className="size-3.5 shrink-0" />
-            {l.neighborhood}، {l.street}
+            {l.street ? `${l.neighborhood}، ${l.street}` : l.neighborhood}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-center gap-2">

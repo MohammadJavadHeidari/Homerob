@@ -313,7 +313,7 @@ export default function ListingMap(props: ListingMapProps) {
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p className="truncate text-sm font-bold">{selected.listing.title}</p>
                 <p className="text-muted-foreground truncate text-xs">
-                  {selected.listing.neighborhood}، {selected.listing.street}
+                  {selected.listing.street ? `${selected.listing.neighborhood}، ${selected.listing.street}` : selected.listing.neighborhood}
                 </p>
               </div>
               <span className="bg-primary/10 text-primary shrink-0 rounded-lg px-2 py-1 text-xs font-extrabold">

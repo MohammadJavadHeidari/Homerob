@@ -72,3 +72,7 @@
   hard stop is removed from `CLAUDE.md`; supersedes the "no live scraping" parts of the Data and
   divar-mcp entries above. Owner chose option (c): scrape with **Ultimate Web Scraper** (ultimatewebscraper.com, Panda Tech).
   The seeded dataset stays the current source until real scraped data is imported.
+- 2026-09-26 — **Scraping route: free Chrome extension (owner chose option a of 2).** Owner exports CSVs
+  from Divar/Sheypoor pages with the extension into `data/raw/`; the agent's importer turns them into
+  listings. No cloud account, credits or MCP connector (the "no paid services" hard stop still applies).
+  Search shows scraped listings merged with the seeded sample.
