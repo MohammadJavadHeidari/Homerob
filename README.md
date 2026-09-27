@@ -48,6 +48,13 @@ Homerob is a **meta-search / AI-normalization layer** on top of existing listing
  POST /api/explain   (async — cards render first, AI text swaps in)
    one batched Gemini call for the top 10, grounded in computed pros/cons;
    any sentence with a number not in the facts is rejected → rule-based explanation
+        │
+        ▼
+ GET /api/nearby?id=…   (when a listing is opened or picked on the map)
+   «مزیت‌های محله»: real places within walking distance — Neshan (/v1/nearby + /v3/search, live,
+   NESHAN_API_KEY) + OpenStreetMap (baked by scripts/build-nearby.mjs, also the fallback) → only advantages (metro, supermarket, 24h pharmacy, clinic, gym, park,
+   mosque, bus stops) → Gemini writes a catchy title + one line per place; every name/minute is
+   checked against the data → rule-based text on failure. The map draws each place + a 5-min ring.
 ```
 
 Resilience: the Gemini free tier is flaky, so models are **raced** (next model after 1.5 s, 5 s deadline) and every AI step has a deterministic fallback — search never breaks. Empty results come with a one-click suggestion («با ماهی ۶ میلیون، ۲ آگهی پیدا می‌شه — نشونم بده»).
@@ -55,6 +62,9 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 ## Core Features
 
 - 🔎 **Natural-language Persian search** — e.g. *«سوئیت یا یک‌خوابه تو سجاد، ماهی حداکثر ۸ تومن»*
+- 🏘️ **Neighborhood advantages** — «اطراف این خونه چی داره؟»: the real metro station, supermarket,
+  24-hour pharmacy, clinic, gym and park around a home, with walking minutes, written up by the AI and
+  drawn on the map. What a local would tell you, without calling an agent.
 - 🏷️ **"What the AI understood" chips** — remove any chip to refine instantly (no re-typing, no extra AI call)
 - 💰 **Rahn ↔ Ejare normalization** — full-deposit equivalent, price per m², and the split *you* would pay
 - 📊 **Fair-price signal** — cheaper/pricier than the neighborhood median per m²
@@ -115,4 +125,5 @@ Built as part of Torob's AI Product Engineer challenge.
 [MIT](LICENSE)
 
 Map data on the home page: Iran provinces from [geoBoundaries](https://www.geoboundaries.org/) (CC BY 4.0);
-Mashhad roads © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).
+Mashhad roads and the places behind "neighborhood advantages" (`src/data/pois.json`) ©
+[OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).

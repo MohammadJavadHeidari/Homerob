@@ -110,8 +110,29 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     category + price chips, filter panel hides rooms for offices/shops and the rahn/ejare switch outside
     rentals, per-model slider steps. Empty state «هنوز آگهی «X» در Y نداریم» + one click back to a category with
     results. Home page unchanged. 88 tests. Research: `docs/research/categories.md`. Checked at 390 and 1280 px.
-- **Next:** owner answers "real data source" (Open questions) → build the importer (**all six categories**:
-  set `category`, `price` / `nightlyPrice`, see `docs/DATA.md`), replace the sample set.
+  - Owner request (2026-09-27) — **neighborhood advantages** («مزیت‌های محله»): `scripts/build-nearby.mjs`
+    bakes 3.5k real OSM places around Mashhad's neighborhoods (Overpass mirror; cleaned: vets, fruit stands,
+    doctors' offices, mis-tagged stations dropped) → `src/data/pois.json` (server-only). `src/lib/nearby/facts.ts`
+    (pure, tested): nearest per category within a walking cap, 24/7 preferred, bus stops counted, top 6.
+    `src/lib/nearby/index.ts` + `GET /api/nearby?id=`: Gemini writes a catchy title, one-sentence summary and
+    one line per place; strict grounding (every number must be that place's own) → rules fallback; cached per
+    id. UI: card section «اطراف این خونه چی داره؟» (collapsed; opens itself when the pin is picked on the map),
+    map card shows the top 4 + icons for each place, dashed lines and a 5-min walk ring; map refits above the
+    card. Checked at 390 and 1440 px (`docs/screenshots/*nearby*.png`). 75 tests. AI text not verified
+    locally (no key in the sandbox) → check on Production.
+  - Owner request (2026-09-27) — **Neshan for nearby places** (spec captured by the owner with Claude in Chrome:
+    `docs/research/neshan-api.md`): `src/lib/nearby/neshan.ts` calls `/v1/nearby` (layers metro_entrance, bus_station,
+    clinic, gym, park, mosque; radius 1300 m) + `/v3/search` (pharmacy, supermarket, bakery — no layer), in parallel,
+    3.5 s timeout, with Referer/Origin `homerob.vercel.app` (the key is domain-whitelisted). Hits are cleaned (no
+    streets, `category=place`), merged with the baked OSM places (closest real place per category wins), source in
+    the footer. Key/config errors (480/483/484/485) pause Neshan for 10 min; `/api/nearby` returns `places`
+    (`neshan+osm` | `osm`) and `neshan` (`ok` | `off` | `error 485`…) for checking Production. ≈1,000 toman per
+    opened listing (6 × 160 + 3 × 40), cached per listing. 80 tests. Sandbox can't reach api.neshan.org →
+    untested against the live API.
+- **Next:** owner: Neshan ticket (enable Search + Nearby on `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel
+  (Open questions) → check `/api/nearby?id=dv-0901` on Production says `"neshan":"ok"`. Owner answers "real data
+  source" (Open questions) → build the importer (**all six categories**: set `category`, `price` / `nightlyPrice`,
+  see `docs/DATA.md`), replace the sample set; re-bake `pois.json` for every new city (`scripts/build-nearby.mjs`).
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -139,6 +160,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **نشان برای مکان‌های اطراف (هزینه دارد):** کلید سرویس `homerob-server` ساخته شده، ولی Search و Nearby روش فعال
+  نیست (۴۸۵) و فقط با تیکت فعال می‌شن؛ اعتبار حساب صفره. هزینه‌ی تقریبی: حدود ۱٬۰۰۰ تومان برای هر آگهی‌ای که باز
+  می‌شه (بعدش کش می‌شه). (الف) **پیشنهاد من:** تیکت بزن، کوچک‌ترین بسته‌ی اعتبار رو بخر، `NESHAN_API_KEY` رو در
+  Vercel بذار؛ کد آماده‌ست. (ب) فقط OpenStreetMap بمونه: رایگان، ولی مکان‌های کمتر. تا جواب: OSM خودکار استفاده می‌شه.
 - **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
   (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
   (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.
@@ -239,6 +264,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
 - [x] Know where the user is looking from the prompt (city / neighborhood / landmark, ask when unclear) (2026-09-27)
 - [x] Real-estate categories in search + filters (Divar's six; tabs on results, AI detects the category) (2026-09-27)
+- [x] Neighborhood advantages: real nearby places (OSM) + AI-written, grounded section on the card and map (2026-09-27)
+- [x] Neshan search API for nearby places (live, merged with OSM; needs `NESHAN_API_KEY`) (2026-09-27)
 - [x] Torob light-theme patterns on the results page (owner's second capture): ink for selected controls, borderless
       cards, white header band with attached search, outlined chips, neutral AI box (`docs/BRAND.md`)
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
