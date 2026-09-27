@@ -92,8 +92,8 @@ export function NearbyAdvantages({
   if (loading) {
     return (
       <div className="flex flex-col gap-2" aria-busy>
-        <p className="text-primary flex items-center gap-1.5 text-xs font-bold">
-          <Sparkles className="size-3.5 animate-pulse" />
+        <p className="text-foreground flex items-center gap-1.5 text-xs font-bold">
+          <Sparkles className="text-primary size-3.5 animate-pulse" />
           ترب داره محله رو برات می‌گرده…
         </p>
         {[0, 1, 2].map((i) => (
@@ -110,10 +110,10 @@ export function NearbyAdvantages({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-1">
-        <p className="text-primary flex items-center gap-1.5 text-[11px] font-bold">
-          <Sparkles className="size-3.5" />
+        <p className="text-foreground flex items-center gap-1.5 text-[11px] font-bold">
+          <Sparkles className="text-primary size-3.5" />
           مزیت‌های محله
-          {data.source === "ai" && <span className="bg-primary/15 ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>}
+          {data.source === "ai" && <span className="bg-brand-soft text-brand-ink ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>}
         </p>
         <p className={cn("leading-7 font-extrabold", compact ? "text-sm" : "text-base")}>{data.title}</p>
         {data.summary && !compact && <p className="text-muted-foreground text-sm leading-6">{data.summary}</p>}

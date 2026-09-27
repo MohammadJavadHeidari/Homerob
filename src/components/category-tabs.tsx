@@ -51,10 +51,10 @@ export function CategoryTabs({
                   aria-current={on ? "true" : undefined}
                   className={cn(
                     "relative flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors disabled:opacity-60",
-                    on ? "text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    on ? "text-background" : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
-                  {on && <motion.span layoutId="category-pill" transition={SPRING} className="bg-primary absolute inset-0 rounded-full shadow-sm" />}
+                  {on && <motion.span layoutId="category-pill" transition={SPRING} className="bg-foreground absolute inset-0 rounded-full" />}
                   <Icon className="relative size-4" />
                   <span className="relative">{CATEGORIES[k].label}</span>
                 </button>

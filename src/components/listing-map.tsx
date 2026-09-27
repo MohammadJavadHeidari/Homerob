@@ -386,8 +386,8 @@ export default function ListingMap(props: ListingMapProps) {
               </button>
             </div>
             <p className="text-sm font-medium">{priceLineFa(selected.listing)}</p>
-            {selectedWhy && <p className="bg-brand-soft line-clamp-2 rounded-lg px-2.5 py-1.5 text-xs leading-6">{selectedWhy}</p>}
-            <div className="bg-muted/40 rounded-xl border p-2.5">
+            {selectedWhy && <p className="bg-secondary line-clamp-2 rounded-lg border px-2.5 py-1.5 text-xs leading-6">{selectedWhy}</p>}
+            <div className="bg-muted/40 rounded-lg border p-2.5">
               <NearbyAdvantages id={selected.listing.id} compact onHoverItem={setHotPoi} />
             </div>
             <button

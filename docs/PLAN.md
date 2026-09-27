@@ -266,6 +266,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Real-estate categories in search + filters (Divar's six; tabs on results, AI detects the category) (2026-09-27)
 - [x] Neighborhood advantages: real nearby places (OSM) + AI-written, grounded section on the card and map (2026-09-27)
 - [x] Neshan search API for nearby places (live, merged with OSM; needs `NESHAN_API_KEY`) (2026-09-27)
+- [x] Torob light-theme patterns on the results page (owner's second capture): ink for selected controls, borderless
+      cards, white header band with attached search, outlined chips, neutral AI box (`docs/BRAND.md`)
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 
