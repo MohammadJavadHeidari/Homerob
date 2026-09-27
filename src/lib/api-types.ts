@@ -32,6 +32,8 @@ export interface NearbyApiResponse {
   title: string;
   summary: string;
   items: (NearbyItem & { text: string })[];
+  /** Where the places came from: Neshan live search + baked OSM, or OSM only (no key / Neshan down). */
+  places: "neshan+osm" | "osm";
   source: "ai" | "rules";
   ms: number;
 }

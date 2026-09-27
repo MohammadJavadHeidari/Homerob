@@ -22,13 +22,17 @@ export const POI_CATS = [
 ] as const;
 export type PoiCat = (typeof POI_CATS)[number];
 
-/** One baked place: category, position, optional name, open 24/7. */
+/** Where a place comes from: Neshan's live search, or OpenStreetMap (baked). */
+export type PoiSource = "neshan" | "osm";
+
+/** One place: category, position, optional name, open 24/7, source (baked OSM places omit it). */
 export interface Poi {
   c: PoiCat;
   lat: number;
   lng: number;
   n?: string;
   h24?: 1;
+  s?: PoiSource;
 }
 
 export interface NearbyItem {
@@ -36,8 +40,9 @@ export interface NearbyItem {
   key: PoiCat;
   /** Generic Persian label, e.g. «داروخانه شبانه‌روزی». */
   label: string;
-  /** Real name from OpenStreetMap, when it has one. */
+  /** Real name (Neshan / OpenStreetMap), when it has one. */
   name: string | null;
+  source: PoiSource;
   /** Walking minutes (straight line × detour, 80 m/min). */
   minutes: number;
   meters: number;
@@ -70,6 +75,37 @@ const CAT: Record<PoiCat, { label: string; maxMin: number; weight: number; kind:
   school: { label: "مدرسه", maxMin: 8, weight: 0.7, kind: /مدرسه|دبستان|دبیرستان|هنرستان|آموزشگاه/ },
   bus: { label: "ایستگاه اتوبوس", maxMin: BUS_MINUTES, weight: 1.3, kind: /ایستگاه/ },
 };
+/**
+ * Does a search hit's title really name a place of this kind? Text search for «مسجد» also
+ * returns «خیابان مسجد», for «ایستگاه مترو» also bus stops.
+ */
+const ACCEPT: Record<PoiCat, RegExp> = {
+  rail: /مترو|قطار ?شهری/,
+  bus: /ایستگاه|پایانه/,
+  supermarket: CAT.supermarket.kind,
+  bakery: /نان|نانوایی/,
+  pharmacy: CAT.pharmacy.kind,
+  clinic: /درمانگاه|کلینیک|پلی ?کلینیک|مرکز (بهداشت|درمان|خدمات جامع سلامت)/,
+  hospital: CAT.hospital.kind,
+  gym: /باشگاه|بدنسازی|فیتنس|استخر|مجموعه ورزشی|سالن ورزش/,
+  park: CAT.park.kind,
+  mosque: CAT.mosque.kind,
+  school: CAT.school.kind,
+};
+const REJECT: Partial<Record<PoiCat, RegExp>> = {
+  rail: /اتوبوس|تاکسی/,
+  bus: /مترو|قطار|تاکسی|راه ?آهن/,
+  clinic: /دامپزشک|حیوان/,
+  hospital: /دامپزشک|حیوان/,
+  supermarket: /میوه|تره ?بار|آنلاین/,
+};
+const ROAD = /^(خیابان|بلوار|کوچه|میدان|بزرگراه|اتوبان|محله|شهرک|کوی|پل|تقاطع|چهارراه|سه ?راه|جاده|بن ?بست)/;
+
+export function acceptsName(cat: PoiCat, name: string): boolean {
+  const t = name.trim();
+  return ACCEPT[cat].test(t) && !ROAD.test(t) && !(REJECT[cat]?.test(t) ?? false);
+}
+
 /** A 24/7 place wins over a slightly closer one (a night pharmacy is what people remember). */
 const H24_BONUS_MIN = 6;
 
@@ -101,6 +137,7 @@ export function nearbyItems(home: LatLng, pois: Poi[]): NearbyItem[] {
       minutes: walkMinutes(pick.m),
       meters: pick.m,
       h24: isH24,
+      source: pick.p.s ?? "osm",
       ...(cat === "bus" ? { count: list.length } : {}),
       lat: pick.p.lat,
       lng: pick.p.lng,

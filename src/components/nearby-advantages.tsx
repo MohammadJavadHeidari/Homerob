@@ -35,6 +35,9 @@ export const NEARBY_ICON: Record<PoiCat, { icon: LucideIcon; color: string }> = 
   school: { icon: School, color: "#9333ea" },
 };
 
+const sourcesFa = (items: NearbyApiResponse["items"]) =>
+  [...new Set(items.map((i) => i.source))].map((s) => (s === "neshan" ? "نقشهٔ نشان" : "OpenStreetMap")).join("، ");
+
 // one request per listing, shared by the card and the map
 const cache = new Map<string, NearbyApiResponse | null>();
 const inFlight = new Map<string, Promise<NearbyApiResponse | null>>();
@@ -134,7 +137,7 @@ export function NearbyAdvantages({
         })}
       </ul>
       <p className="text-muted-foreground text-[10px]">
-        مکان‌ها واقعی‌اند (OpenStreetMap)؛ زمان‌ها پیاده و تقریبی.
+        مکان‌ها واقعی‌اند ({sourcesFa(data.items)})؛ زمان‌ها پیاده و تقریبی.
       </p>
     </div>
   );

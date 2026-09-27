@@ -8,6 +8,7 @@ import { activeProvider, chatJson } from "@/lib/ai/client";
 import type { NearbyApiResponse } from "@/lib/api-types";
 import { listingLatLng } from "@/lib/geo";
 import { BUS_MINUTES, itemText, nearbyItems, ruleSummary, ruleTitle, type Poi } from "@/lib/nearby/facts";
+import { neshanPois } from "@/lib/nearby/neshan";
 import { toEnDigits, toFaDigits } from "@/lib/persian";
 
 /** `title`: catchy one-liner; `summary`: one sentence like a friend who lives there (may be empty). */
@@ -16,7 +17,7 @@ export type NearbyAdvantages = NearbyApiResponse;
 const POIS = (pois as { cities: Record<string, Poi[]> }).cities;
 
 const SYSTEM_PROMPT = `You are Torob's rental assistant. A user is looking at a home for rent. You get the REAL places within
-walking distance of it (from OpenStreetMap). Write the "neighborhood advantages" section in Persian, like a friend
+walking distance of it (from Neshan / OpenStreetMap map data). Write the "neighborhood advantages" section in Persian, like a friend
 who has lived in that neighborhood for years.
 
 Rules:
@@ -46,16 +47,22 @@ export async function nearbyAdvantages(id: string): Promise<NearbyAdvantages | n
   if (!listing) return null;
 
   const started = Date.now();
-  const items = nearbyItems(listingLatLng(listing), POIS[listing.city] ?? []);
+  const home = listingLatLng(listing);
+  // Neshan (live, richest for Iran) + baked OSM places; the closest real place per category wins
+  const live = await neshanPois(home);
+  const items = nearbyItems(home, [...(live ?? []), ...(POIS[listing.city] ?? [])]);
   const rules: NearbyAdvantages = {
     id,
     title: items.length ? ruleTitle(items) : "",
     summary: ruleSummary(items),
     items: items.map((i) => ({ ...i, text: itemText(i) })),
+    places: live ? "neshan+osm" : "osm",
     source: "rules",
     ms: 0,
   };
-  if (!items.length || activeProvider() === "mock") return remember({ ...rules, ms: Date.now() - started });
+  // a failed Neshan call isn't cached either: the next open tries again
+  const keep = (a: NearbyAdvantages) => (live || !process.env.NESHAN_API_KEY ? remember(a) : a);
+  if (!items.length || activeProvider() === "mock") return keep({ ...rules, ms: Date.now() - started });
 
   try {
     const facts = items.map((i) => ({
@@ -77,7 +84,7 @@ export async function nearbyAdvantages(id: string): Promise<NearbyAdvantages | n
     const all = JSON.stringify(facts);
     // numbers and "24h" must come from the facts the text is about
     const ok = (text: string, own: string) => grounded(text, numbersIn(own)) && (!/شبانه/.test(text) || /شبانه|"h24":true/.test(own));
-    return remember({
+    return keep({
       ...rules,
       title: ok(out.title, all) ? out.title.trim() : rules.title,
       summary: ok(out.summary, all) ? out.summary.trim() : rules.summary,

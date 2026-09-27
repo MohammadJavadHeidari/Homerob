@@ -103,7 +103,15 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     map card shows the top 4 + icons for each place, dashed lines and a 5-min walk ring; map refits above the
     card. Checked at 390 and 1440 px (`docs/screenshots/*nearby*.png`). 75 tests. AI text not verified
     locally (no key in the sandbox) → check on Production.
-- **Next:** owner answers "real data source" (Open questions) → build the importer, replace the sample set.
+  - Owner request (2026-09-27) — **Neshan search for nearby places:** `src/lib/nearby/neshan.ts` queries
+    `GET api.neshan.org/v1/search?term&lat&lng` (header `Api-Key`) once per category (11 terms, parallel, 3.5 s
+    timeout) around each opened listing; hits filtered by title (`acceptsName`: no «خیابان مسجد», metro ≠ bus)
+    and walking distance, merged with the baked OSM places (closest real place wins), source shown in the
+    footer («نقشهٔ نشان»). No `NESHAN_API_KEY` or Neshan down → OSM only (verified locally with a fake key).
+    Response field `places` = `neshan+osm` | `osm` for checking Production. 79 tests. Sandbox can't reach
+    api.neshan.org → **untested against the real API** until the owner adds the service key.
+- **Next:** owner adds `NESHAN_API_KEY` (Open questions) → check `/api/nearby?id=dv-0901` on Production says
+  `"places":"neshan+osm"`. Then owner answers "real data source" (Open questions) → build the importer, replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -131,6 +139,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **کلید سرویس نشان برای جستجوی مکان‌های اطراف:** کلید فعلی (`web.`) فقط برای نقشه‌ست و Search API کلید
+  نوع «سرویس» می‌خواد. (الف) **پیشنهاد من:** توی پنل نشان یه API Key از نوع سرویس با دسترسی «جستجو» بساز و
+  در Vercel به اسم `NESHAN_API_KEY` بذار (فقط سمت سرور، رایگان در سقف پلن). (ب) فعلاً فقط OpenStreetMap:
+  بدون کار اضافه، ولی مکان‌های کمتری داره. تا جواب: OSM به‌طور خودکار استفاده می‌شه.
 - **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
   (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
   (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.
@@ -230,6 +242,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
 - [x] Neighborhood advantages: real nearby places (OSM) + AI-written, grounded section on the card and map (2026-09-27)
+- [x] Neshan search API for nearby places (live, merged with OSM; needs `NESHAN_API_KEY`) (2026-09-27)
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 
