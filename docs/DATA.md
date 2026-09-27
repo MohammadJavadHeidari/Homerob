@@ -35,5 +35,8 @@ prices («توافقی», ۱٬۰۰۰ تومان) are fine — `src/lib/quality.t
    AI prompt, location ("near me") and the home map pick it up.
 2. Add its listings to `src/data/listings.json`. `npm test` checks every listing's city and
    neighborhood are registered.
-3. Optional: its province name in `PROVINCE_OF` (`src/components/hero-map/hero-map.tsx`) and baked
+3. Re-bake the nearby places for "neighborhood advantages": `node scripts/build-nearby.mjs [cacheDir]`
+   (Overpass API / OpenStreetMap; writes `src/data/pois.json`, server-side only). Without it, listings
+   in the new city show «هنوز اطلاعات کافی از اطراف این خونه نداریم».
+4. Optional: its province name in `PROVINCE_OF` (`src/components/hero-map/hero-map.tsx`) and baked
    roads (`scripts/build-hero-map.mjs`, needs Overpass access).

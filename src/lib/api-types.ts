@@ -1,4 +1,5 @@
 import type { SearchIntent } from "@/lib/intent/schema";
+import type { NearbyItem } from "@/lib/nearby/facts";
 import type { SearchResult } from "@/lib/search";
 import type { Suggestion } from "@/lib/search/suggest";
 
@@ -23,5 +24,14 @@ export interface ExplainApiResponse {
   byId: Record<string, string>;
   source: "ai" | "rules";
   model: string | null;
+  ms: number;
+}
+
+export interface NearbyApiResponse {
+  id: string;
+  title: string;
+  summary: string;
+  items: (NearbyItem & { text: string })[];
+  source: "ai" | "rules";
   ms: number;
 }

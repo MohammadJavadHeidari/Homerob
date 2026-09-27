@@ -217,6 +217,7 @@ export function ResultsView({
                       comparing={compareIds.includes(id)}
                       compareDisabled={compareIds.length >= compareMax}
                       onToggleCompare={() => onToggleCompare(id)}
+                      selected={selectedId === id}
                     />
                   </motion.li>
                 );

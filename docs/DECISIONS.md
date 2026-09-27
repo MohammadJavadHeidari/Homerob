@@ -90,3 +90,9 @@
   newest real titles once real data lands.
 - 2026-09-26 — Findings of the owner's call with Mohammad (2026-09-25) are kept in
   `docs/research/call-2026-09-25-mohammad.md` (Persian) for future reference.
+- 2026-09-27 — **Neighborhood advantages** (owner request, from the call findings: "main competitive
+  advantage"). Each listing gets «اطراف این خونه چی داره؟» → a catchy AI title + only advantages
+  (metro, supermarket, 24h pharmacy, clinic, gym, park, mosque, bus-stop count) with walking minutes.
+  Places are **real** (OpenStreetMap via Overpass, baked into `src/data/pois.json`, ODbL), never
+  generated; the AI only words them and every number/"24h" is checked against the data. Walking time =
+  straight line × 1.3 at 80 m/min, labeled approximate. Lazy: one call per opened/selected listing.

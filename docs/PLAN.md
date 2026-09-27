@@ -93,6 +93,16 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
   - PR #13 (nationwide scale + real-data rule + Iran-only landing) merged 2026-09-26; Production live
     (title «… در ایران», `/api/geo` gone, Tehran query → «در مشهد ۹۴ آگهی هست»).
+  - Owner request (2026-09-27) — **neighborhood advantages** («مزیت‌های محله»): `scripts/build-nearby.mjs`
+    bakes 3.5k real OSM places around Mashhad's neighborhoods (Overpass mirror; cleaned: vets, fruit stands,
+    doctors' offices, mis-tagged stations dropped) → `src/data/pois.json` (server-only). `src/lib/nearby/facts.ts`
+    (pure, tested): nearest per category within a walking cap, 24/7 preferred, bus stops counted, top 6.
+    `src/lib/nearby/index.ts` + `GET /api/nearby?id=`: Gemini writes a catchy title, one-sentence summary and
+    one line per place; strict grounding (every number must be that place's own) → rules fallback; cached per
+    id. UI: card section «اطراف این خونه چی داره؟» (collapsed; opens itself when the pin is picked on the map),
+    map card shows the top 4 + icons for each place, dashed lines and a 5-min walk ring; map refits above the
+    card. Checked at 390 and 1440 px (`docs/screenshots/*nearby*.png`). 75 tests. AI text not verified
+    locally (no key in the sandbox) → check on Production.
 - **Next:** owner answers "real data source" (Open questions) → build the importer, replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
@@ -219,6 +229,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
 - [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
+- [x] Neighborhood advantages: real nearby places (OSM) + AI-written, grounded section on the card and map (2026-09-27)
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 

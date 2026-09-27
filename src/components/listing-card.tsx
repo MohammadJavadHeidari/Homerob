@@ -7,16 +7,22 @@ import {
   CalendarClock,
   Car,
   Check,
+  ChevronDown,
   Clock,
   ExternalLink,
   GitCompareArrows,
   MapPin,
+  MapPinned,
   Package,
   Ruler,
   Sparkles,
   X,
 } from "lucide-react";
 
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+
+import { NearbyAdvantages } from "@/components/nearby-advantages";
 import type { SearchResult } from "@/lib/api-types";
 import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
@@ -34,6 +40,7 @@ export function ListingCard({
   comparing,
   compareDisabled,
   onToggleCompare,
+  selected = false,
 }: {
   result: SearchResult;
   explanation: string;
@@ -43,7 +50,11 @@ export function ListingCard({
   comparing: boolean;
   compareDisabled: boolean;
   onToggleCompare: () => void;
+  /** Picked on the map: the neighborhood advantages open by themselves. */
+  selected?: boolean;
 }) {
+  const [nearbyOpen, setNearbyOpen] = useState(false);
+  const showNearby = nearbyOpen || selected;
   const { listing: l, budget, fullDeposit, score, alsoOn, highlights } = result;
   const cons = highlights.filter((h) => h.kind === "con").slice(0, 2);
   const pros = highlights.filter((h) => h.kind === "pro").slice(0, 2);
@@ -166,6 +177,36 @@ export function ListingCard({
             ))}
           </ul>
         )}
+      </div>
+
+      {/* neighborhood advantages (lazy: one AI call per opened listing) */}
+      <div className="-mt-1 rounded-xl border border-dashed">
+        <button
+          type="button"
+          onClick={() => setNearbyOpen(!showNearby)}
+          aria-expanded={showNearby}
+          className="hover:text-primary flex w-full items-center gap-2 px-3 py-2.5 text-sm font-bold transition-colors"
+        >
+          <MapPinned className="text-primary size-4" />
+          اطراف این خونه چی داره؟
+          <span className="text-muted-foreground text-xs font-normal">مترو، خرید، درمانگاه…</span>
+          <ChevronDown className={cn("text-muted-foreground ms-auto size-4 transition-transform", showNearby && "rotate-180")} />
+        </button>
+        <AnimatePresence initial={false}>
+          {showNearby && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3">
+                <NearbyAdvantages id={l.id} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </article>
   );
