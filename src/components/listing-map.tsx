@@ -334,7 +334,7 @@ export default function ListingMap(props: ListingMapProps) {
                 " · رهن کامل"
               )}
             </p>
-            {selectedWhy && <p className="bg-brand-soft line-clamp-2 rounded-lg px-2.5 py-1.5 text-xs leading-6">{selectedWhy}</p>}
+            {selectedWhy && <p className="bg-secondary line-clamp-2 rounded-lg border px-2.5 py-1.5 text-xs leading-6">{selectedWhy}</p>}
             <button
               type="button"
               onClick={() => onShowInList(selected.listing.id)}

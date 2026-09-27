@@ -88,11 +88,11 @@ function roomsLabel({ minRooms: min, maxRooms: max }: SearchIntent) {
 }
 
 const TONES: Record<Chip["tone"], string> = {
-  // One brand style for everything the AI understood (docs/BRAND.md: no chip rainbow).
-  budget: "bg-brand-soft text-brand-ink border-primary/20",
-  place: "bg-brand-soft text-brand-ink border-primary/20",
-  home: "bg-brand-soft text-brand-ink border-primary/20",
-  must: "bg-brand-soft text-brand-ink border-primary/20",
+  // One style for everything the AI understood: torob.com's outlined chip (docs/BRAND.md).
+  budget: "bg-secondary text-foreground border-input",
+  place: "bg-secondary text-foreground border-input",
+  home: "bg-secondary text-foreground border-input",
+  must: "bg-secondary text-foreground border-input",
   nice: "bg-muted text-muted-foreground border-border",
   note: "bg-muted text-muted-foreground border-border",
 };

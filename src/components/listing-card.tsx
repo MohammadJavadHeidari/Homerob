@@ -48,7 +48,7 @@ export function ListingCard({
   const pros = highlights.filter((h) => h.kind === "pro").slice(0, 2);
 
   return (
-    <article className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl border p-4 shadow-xs sm:p-5">
+    <article className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl p-4 sm:rounded-lg sm:p-5">
       {/* header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
@@ -83,7 +83,7 @@ export function ListingCard({
             aria-pressed={comparing}
             className={cn(
               "flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-40",
-              comparing ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-primary",
+              comparing ? "border-foreground bg-foreground text-background" : "text-muted-foreground hover:border-foreground/40 hover:text-foreground",
             )}
           >
             {comparing ? <Check className="size-3" /> : <GitCompareArrows className="size-3" />}
@@ -102,7 +102,7 @@ export function ListingCard({
           هر متر {formatToman(Math.round(fullDeposit / l.areaM2))}
         </p>
         {budget.converted && (
-          <p className="bg-primary/10 text-primary col-span-2 rounded-lg px-2.5 py-1.5 text-xs font-medium">
+          <p className="bg-secondary text-foreground col-span-2 rounded-lg px-2.5 py-1.5 text-xs font-medium">
             با بودجهٔ تو: رهن {formatToman(Math.round(budget.deposit / 1e6) * 1e6)}
             {budget.monthlyRent > 0
               ? ` + اجاره ${formatToman(Math.round(budget.monthlyRent / 5e5) * 5e5)}`
@@ -137,15 +137,15 @@ export function ListingCard({
       {/* AI explanation */}
       <div
         className={cn(
-          "border-primary/20 bg-brand-soft relative rounded-xl border p-3 transition-colors",
+          "bg-secondary relative rounded-lg border p-3 transition-colors",
           explaining && "animate-pulse",
         )}
       >
-        <p className="text-primary mb-1 flex items-center gap-1.5 text-xs font-bold">
-          <Sparkles className="size-3.5" />
+        <p className="text-foreground mb-1 flex items-center gap-1.5 text-xs font-bold">
+          <Sparkles className="text-primary size-3.5" />
           {explaining ? "ترب داره توضیح می‌نویسه…" : "چرا این آگهی؟"}
           {aiExplained && !explaining && (
-            <span className="bg-primary/15 ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>
+            <span className="bg-brand-soft text-brand-ink ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>
           )}
         </p>
         <p className={cn("text-sm leading-7", explaining && "text-muted-foreground")}>{explanation}</p>
