@@ -100,6 +100,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     that write the city into the query; results page asks when no city / ambiguous. Server: text city beats the
     LLM, landmarks fill a missed city, unknown cities kept (Kish used to return Mashhad listings). 79 tests.
     Research + design: `docs/research/location-intent.md`; screenshots `docs/screenshots/where-*.png`.
+    PR #16 merged 2026-09-27 (with PR #15 categories); Production live (Kish → «هنوز آگهی‌ای از کیش نداریم»,
+    الهیه → ambiguous, سعادت‌آباد → تهران).
   - Owner request (2026-09-27) — **real-estate categories** (Divar's six: residential rent/sale, office &
     commercial rent/sale, short-term, construction projects). `src/lib/categories.ts` (registry, price model
     per category, `comparablePrice`, keyword `detectCategory`). `Listing.category` / `price` / `nightlyPrice`,
