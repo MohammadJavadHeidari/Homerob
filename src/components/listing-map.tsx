@@ -148,9 +148,15 @@ export default function ListingMap(props: ListingMapProps) {
     return () => {
       ro.disconnect();
       clearTimeout(timer);
-      markerMap.forEach(({ marker }) => marker.remove());
+      // a throw here runs during React's unmount (e.g. the logo → home) and takes the whole page down;
+      // the map is going away anyway, so a failing teardown is only logged
+      try {
+        markerMap.forEach(({ marker }) => marker.remove());
+        map.remove();
+      } catch (e) {
+        console.error("map teardown failed", e);
+      }
       markerMap.clear();
-      map.remove();
       mapRef.current = null;
       setReady(false);
     };
@@ -252,7 +258,11 @@ export default function ListingMap(props: ListingMapProps) {
     map.fitBounds(b, { padding: { top: 56, bottom, left: 56, right: 56 }, maxZoom: 16, duration: 900 });
     const els = poiMarkers.current;
     return () => {
-      added.forEach((m) => m.remove());
+      try {
+        added.forEach((m) => m.remove());
+      } catch (e) {
+        console.error("nearby markers teardown failed", e);
+      }
       els.clear();
     };
   }, [nearby, selected, ready]);

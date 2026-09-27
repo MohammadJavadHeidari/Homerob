@@ -268,6 +268,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Neshan search API for nearby places (live, merged with OSM; needs `NESHAN_API_KEY`) (2026-09-27)
 - [x] Torob light-theme patterns on the results page (owner's second capture): ink for selected controls, borderless
       cards, white header band with attached search, outlined chips, neutral AI box (`docs/BRAND.md`)
+- [x] Logo on results → "This page couldn't load" (owner, 2026-09-27): not reproducible in the sandbox (Neshan tiles
+      unreachable, every other path clean). Added `src/app/error.tsx` (Persian fallback, full-load "home" button,
+      shows the error message) and guarded the map teardown (the Neshan-only unmount path). If it happens again, the
+      fallback's small grey line is the root cause → fix it properly.
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 
