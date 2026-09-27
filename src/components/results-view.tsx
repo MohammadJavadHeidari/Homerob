@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AMENITIES } from "@/lib/amenities";
 import type { ExplainApiResponse, SearchApiResponse, SearchIntent } from "@/lib/api-types";
+import { PRICE_LABEL, priceModelOf, type PriceModel } from "@/lib/categories";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { activeCount, applyRefine, domains as domainsOf, EMPTY_REFINE, SORTS, type Refine, type SortKey } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,8 @@ export function ResultsView({
   const [listHover, setListHover] = useState<string | null>(null);
   const [mapHover, setMapHover] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const domains = useMemo(() => domainsOf(data.results), [data.results]);
+  const model = priceModelOf(data.intent.category);
+  const domains = useMemo(() => domainsOf(data.results, model), [data.results, model]);
   const refined = useMemo(() => applyRefine(data.results, refine), [data.results, refine]);
   const visible = refined.slice(0, pages * PAGE);
   const nActive = activeCount(refine);
@@ -119,7 +121,7 @@ export function ResultsView({
       )}
     >
       {/* desktop sidebar (start side = right in RTL) */}
-      <aside className="bg-card sticky top-4 hidden max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl border shadow-xs lg:flex">
+      <aside className="bg-card sticky top-4 hidden max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg lg:flex">
         <PanelHeader count={nActive} onClear={() => change({ ...EMPTY_REFINE, sort: refine.sort })} />
         <div className="overflow-y-auto overscroll-contain px-4 [scrollbar-width:thin]">{panel}</div>
       </aside>
@@ -137,7 +139,7 @@ export function ResultsView({
               </span>
             </h2>
             <div className="flex items-center gap-2">
-            <Button variant={showMap ? "default" : "outline"} className="h-9 rounded-full" onClick={() => {
+            <Button variant="outline" className={cn("h-9 rounded-full", showMap && "bg-foreground text-background hover:bg-foreground/90 hover:text-background")} onClick={() => {
                 setMapPref(!showMap);
                 // small screens: the map replaces the list, bring it into view
                 if (!showMap && !wide) requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("results-map")?.scrollIntoView({ block: "start" })));
@@ -155,7 +157,7 @@ export function ResultsView({
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     transition={SPRING}
-                    className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-[11px] font-bold"
+                    className="bg-foreground text-background flex size-5 items-center justify-center rounded-full text-[11px] font-bold"
                   >
                     {toFaDigits(nActive)}
                   </motion.span>
@@ -167,7 +169,7 @@ export function ResultsView({
           <SortBar value={refine.sort} onChange={(sort) => change({ ...refine, sort })} />
         </div>
 
-        <ActiveFilters refine={refine} onChange={change} />
+        <ActiveFilters refine={refine} model={model} onChange={change} />
 
         {showMap && !wide ? (
           <div id="results-map" className="h-[calc(100dvh-8.5rem)] scroll-mt-32 overflow-hidden rounded-2xl">
@@ -200,8 +202,8 @@ export function ResultsView({
                     onMouseEnter={() => setListHover(id)}
                     onMouseLeave={() => setListHover(null)}
                     className={cn(
-                      "rounded-2xl ring-offset-4 ring-offset-background transition-shadow duration-300",
-                      (mapHover === id || selectedId === id) && "ring-primary ring-2",
+                      "rounded-2xl sm:rounded-lg ring-offset-4 ring-offset-background transition-shadow duration-300",
+                      (mapHover === id || selectedId === id) && "ring-foreground ring-2",
                     )}
                     initial={{ opacity: 0, scale: 0.96, y: 12 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -217,6 +219,7 @@ export function ResultsView({
                       comparing={compareIds.includes(id)}
                       compareDisabled={compareIds.length >= compareMax}
                       onToggleCompare={() => onToggleCompare(id)}
+                      selected={selectedId === id}
                     />
                   </motion.li>
                 );
@@ -238,7 +241,7 @@ export function ResultsView({
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={SPRING}
-          className="sticky top-4 hidden h-[calc(100dvh-2rem)] overflow-hidden rounded-2xl border shadow-xs xl:block"
+          className="sticky top-4 hidden h-[calc(100dvh-2rem)] overflow-hidden rounded-lg xl:block"
         >
           {map}
         </motion.div>
@@ -246,13 +249,13 @@ export function ResultsView({
 
       {/* mobile bottom sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" showCloseButton={false} className="max-h-[88dvh] gap-0 rounded-t-3xl lg:hidden">
+        <SheetContent side="bottom" showCloseButton={false} className="max-h-[88dvh] gap-0 rounded-t-2xl lg:hidden">
           <div className="bg-muted-foreground/30 mx-auto mt-2.5 h-1.5 w-12 rounded-full" />
           <SheetTitle className="sr-only">فیلترها</SheetTitle>
           <PanelHeader count={nActive} onClear={() => change({ ...EMPTY_REFINE, sort: refine.sort })} onClose={() => setSheetOpen(false)} />
           <div className="overflow-y-auto overscroll-contain px-4">{panel}</div>
           <div className="bg-popover border-t p-3">
-            <Button className="h-12 w-full rounded-xl text-base" onClick={() => setSheetOpen(false)}>
+            <Button className="bg-foreground text-background hover:bg-foreground/90 h-12 w-full rounded-lg text-base font-bold" onClick={() => setSheetOpen(false)}>
               نمایش <AnimatedNumber value={refined.length} /> آگهی
             </Button>
           </div>
@@ -275,7 +278,7 @@ function PanelHeader({ count, onClear, onClose }: { count: number; onClear: () =
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={SPRING}
-            className="bg-primary/10 text-primary rounded-full px-2 text-xs font-bold"
+            className="bg-input text-foreground rounded-md px-2 text-xs font-bold"
           >
             {toFaDigits(count)}
           </motion.span>
@@ -319,10 +322,10 @@ function SortBar({ value, onChange }: { value: SortKey; onChange: (s: SortKey) =
               aria-pressed={on}
               className={cn(
                 "relative shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                on ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                on ? "text-background" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {on && <motion.span layoutId="sort-pill" transition={SPRING} className="bg-primary absolute inset-0 rounded-full shadow-sm" />}
+              {on && <motion.span layoutId="sort-pill" transition={SPRING} className="bg-foreground absolute inset-0 rounded-full" />}
               <span className="relative">{SORTS[k]}</span>
             </button>
           );
@@ -333,10 +336,10 @@ function SortBar({ value, onChange }: { value: SortKey; onChange: (s: SortKey) =
 }
 
 /** Removable summary of the hand-set filters (separate from the AI chips above). */
-function ActiveFilters({ refine, onChange }: { refine: Refine; onChange: (r: Refine) => void }) {
+function ActiveFilters({ refine, model, onChange }: { refine: Refine; model: PriceModel; onChange: (r: Refine) => void }) {
   const chips: { id: string; label: string; next: Refine }[] = [];
   const range = (r: [number, number], f: (v: number) => string) => `${f(r[0])} تا ${f(r[1])}`;
-  if (refine.price) chips.push({ id: "price", label: `رهن کامل ${range(refine.price, formatToman)}`, next: { ...refine, price: null } });
+  if (refine.price) chips.push({ id: "price", label: `${model === "rent" ? "رهن کامل" : PRICE_LABEL[model].price} ${range(refine.price, formatToman)}`, next: { ...refine, price: null } });
   if (refine.area) chips.push({ id: "area", label: `${range(refine.area, toFaDigits)} متر`, next: { ...refine, area: null } });
   if (refine.ppm) chips.push({ id: "ppm", label: `هر متر ${range(refine.ppm, formatToman)}`, next: { ...refine, ppm: null } });
   for (const n of refine.neighborhoods)
@@ -348,8 +351,6 @@ function ActiveFilters({ refine, onChange }: { refine: Refine; onChange: (r: Ref
   if (refine.maxAge !== null)
     chips.push({ id: "age", label: refine.maxAge === 0 ? "کلیدنخورده" : `تا ${toFaDigits(refine.maxAge)} سال ساخت`, next: { ...refine, maxAge: null } });
   if (refine.bbox) chips.push({ id: "bbox", label: "محدودهٔ نقشه", next: { ...refine, bbox: null } });
-  for (const s of refine.sources)
-    chips.push({ id: `s-${s}`, label: s === "divar" ? "فقط دیوار" : "فقط شیپور", next: { ...refine, sources: refine.sources.filter((x) => x !== s) } });
 
   return (
     <AnimatePresence initial={false}>

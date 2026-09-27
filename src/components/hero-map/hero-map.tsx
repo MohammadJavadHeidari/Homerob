@@ -3,10 +3,12 @@
 import { MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { cityInfo } from "@/lib/places";
 import { cn } from "@/lib/utils";
+import type { PlaceGuess } from "@/lib/where";
 
 import { clamp01, easeOutCubic, fitBox } from "./camera";
-import { CITIES, IRAN_BOX, PROVINCES } from "./iran-data";
+import { CITIES, IRAN_BOX, PROJ, PROVINCES } from "./iran-data";
 
 // Timeline (ms from mount).
 const STAGGER = 38;
@@ -50,6 +52,25 @@ interface Drop {
   city: string;
 }
 
+/** Map point (SVG user units) of a city, or null when we don't know where it is. */
+function cityPoint(fa: string) {
+  const c = cityInfo(fa)?.center;
+  return c ? { x: (c.lng - PROJ.lon0) * PROJ.k * PROJ.cos, y: (PROJ.lat0 - c.lat) * PROJ.k } : null;
+}
+
+/** Pins for the place the query points to (one city, or every candidate when it's ambiguous). */
+function focusPins(focus: PlaceGuess | undefined) {
+  if (!focus || focus.status === "none") return [];
+  const pins =
+    focus.status === "found"
+      ? [{ city: focus.city, label: focus.area ? `${focus.area}، ${focus.city}` : focus.city }]
+      : focus.cities.map((c) => ({ city: c, label: `${c}؟` }));
+  return pins.flatMap((p) => {
+    const pt = cityPoint(p.city);
+    return pt ? [{ ...p, ...pt }] : [];
+  });
+}
+
 /** The intro plays once per page load; coming back from results skips the line drawing. */
 let played = false;
 
@@ -58,7 +79,7 @@ let played = false;
  * dropping across the country with the title of a "new" ad. Pure SVG + a rAF camera (viewBox),
  * no map library, no location request.
  */
-export function HeroMap({ className }: { className?: string }) {
+export function HeroMap({ className, focus }: { className?: string; focus?: PlaceGuess }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   /** Last camera, to place new drops on screen and away from the logo and the search box. */
@@ -87,8 +108,9 @@ export function HeroMap({ className }: { className?: string }) {
       const u = w / vw;
       const h = vh * u;
       const vx = cx - w / 2 + Math.sin(s / 11) * w * 0.006;
-      // phones: Iran sits a bit lower, below the logo and the search box
-      const vy = cy - h / 2 - (narrow ? vh * 0.1 * u : 0) + Math.sin(s / 13 + 1) * w * 0.004;
+      // phones: Iran sits lower, below the logo, the search box and the "where?" line (its north —
+      // Tehran, Mashhad — is where place pins show up most)
+      const vy = cy - h / 2 - (narrow ? vh * 0.2 * u : 0) + Math.sin(s / 13 + 1) * w * 0.004;
       svg.setAttribute("viewBox", `${vx} ${vy} ${w} ${h}`);
       svg.style.setProperty("--u", String(u));
       view.current = { vx, vy, u, vw, vh };
@@ -144,8 +166,15 @@ export function HeroMap({ className }: { className?: string }) {
     return () => window.clearTimeout(id);
   }, [drops]);
 
+  const pins = focusPins(focus);
+
   return (
-    <div ref={rootRef} aria-hidden className={cn("hero-map pointer-events-none fixed inset-0 overflow-hidden", className)}>
+    <div
+      ref={rootRef}
+      aria-hidden
+      data-focused={pins.length ? "" : undefined}
+      className={cn("hero-map pointer-events-none fixed inset-0 overflow-hidden", className)}
+    >
       <div className="hero-map-grid absolute inset-0" />
       <svg ref={svgRef} className="hm-lines absolute inset-0 size-full" preserveAspectRatio="none">
         <g className="hm-provinces">
@@ -173,6 +202,19 @@ export function HeroMap({ className }: { className?: string }) {
               <span className="hm-drop-ring" />
               <MapPin className="hm-drop-pin" />
               <span className="hm-drop-title">{d.title}</span>
+            </span>
+          </span>
+        ))}
+      </div>
+
+      {/* Where the query points to, live while typing (keyed by label so a new place pops in). */}
+      <div className="hm-layer">
+        {pins.map((p) => (
+          <span key={p.label} data-x={p.x} data-y={p.y} className="hm-anchor">
+            <span className="hm-focus">
+              <span className="hm-drop-ring hm-focus-ring" />
+              <MapPin className="hm-drop-pin hm-focus-pin" />
+              <span className="hm-drop-title hm-focus-title">{p.label}</span>
             </span>
           </span>
         ))}

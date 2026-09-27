@@ -1,3 +1,4 @@
+import { categoryOf, comparablePrice, priceModelOf } from "./categories";
 import { normalizeFa } from "./text";
 import type { Listing } from "./types";
 
@@ -5,9 +6,15 @@ import type { Listing } from "./types";
  * Sellers who don't want to state a price type a dummy number ("۱٬۰۰۰ تومان", "۱۱۱۱۱۱۱").
  * Such listings are kept out of ranking and neighborhood medians — never treated as a bargain.
  */
-export function isPlaceholderPrice(l: Pick<Listing, "deposit" | "monthlyRent">): boolean {
-  const tiny = l.deposit < 5e6 && l.monthlyRent < 5e5;
+export function isPlaceholderPrice(l: Pick<Listing, "category" | "deposit" | "monthlyRent" | "price" | "nightlyPrice">): boolean {
   const repeated = (n: number) => n >= 1e5 && /^(\d)\1+$/.test(String(Math.round(n)));
+  const model = priceModelOf(categoryOf(l));
+  if (model !== "rent") {
+    // no price ("توافقی"), a dummy number, or one no sale / night could cost
+    const p = comparablePrice(l);
+    return p < (model === "sale" ? 50e6 : 1e5) || repeated(p);
+  }
+  const tiny = l.deposit < 5e6 && l.monthlyRent < 5e5;
   return tiny || repeated(l.deposit) || repeated(l.monthlyRent);
 }
 

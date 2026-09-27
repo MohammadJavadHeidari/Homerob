@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26)
+- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26; categories — 2026-09-27)
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -93,6 +93,54 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
   - PR #13 (nationwide scale + real-data rule + Iran-only landing) merged 2026-09-26; Production live
     (title «… در ایران», `/api/geo` gone, Tehran query → «در مشهد ۹۴ آگهی هست»).
+  - Owner request (2026-09-27) — **"where is the user looking?"**: `src/lib/where.ts` (`detectPlace`: city →
+    neighborhood/landmark → ambiguous/none; hand list of well-known Tehran/Mashhad/Isfahan/Shiraz/Karaj/Tabriz
+    areas), ~80 cities (Kish, Qeshm, north coast, satellite cities, Finglish), «،» no longer breaks city matching,
+    moving "از X به Y" → Y. Live line under the search box + focus pin(s) on the home map; one-tap city chips
+    that write the city into the query; results page asks when no city / ambiguous. Server: text city beats the
+    LLM, landmarks fill a missed city, unknown cities kept (Kish used to return Mashhad listings). 79 tests.
+    Research + design: `docs/research/location-intent.md`; screenshots `docs/screenshots/where-*.png`.
+  - Owner request (2026-09-27) — **real-estate categories** (Divar's six: residential rent/sale, office &
+    commercial rent/sale, short-term, construction projects). `src/lib/categories.ts` (registry, price model
+    per category, `comparablePrice`, keyword `detectCategory`). `Listing.category` / `price` / `nightlyPrice`,
+    intent `category` + `maxPrice` (rules + LLM prompt with 3 new examples; `settleBudget` / `withCategory` in
+    `src/lib/intent/category.ts`). Search hard-filters by category; budget, medians, dedup key, placeholder
+    prices, highlights, explanations, compare rows, map pins and card price block follow the category's price
+    model. Results page: `category-tabs.tsx` (scrollable row; switching re-searches with the same request),
+    category + price chips, filter panel hides rooms for offices/shops and the rahn/ejare switch outside
+    rentals, per-model slider steps. Empty state «هنوز آگهی «X» در Y نداریم» + one click back to a category with
+    results. Home page unchanged. 88 tests. Research: `docs/research/categories.md`. Checked at 390 and 1280 px.
+  - Owner request (2026-09-27) — **neighborhood advantages** («مزیت‌های محله»): `scripts/build-nearby.mjs`
+    bakes 3.5k real OSM places around Mashhad's neighborhoods (Overpass mirror; cleaned: vets, fruit stands,
+    doctors' offices, mis-tagged stations dropped) → `src/data/pois.json` (server-only). `src/lib/nearby/facts.ts`
+    (pure, tested): nearest per category within a walking cap, 24/7 preferred, bus stops counted, top 6.
+    `src/lib/nearby/index.ts` + `GET /api/nearby?id=`: Gemini writes a catchy title, one-sentence summary and
+    one line per place; strict grounding (every number must be that place's own) → rules fallback; cached per
+    id. UI: card section «اطراف این خونه چی داره؟» (collapsed; opens itself when the pin is picked on the map),
+    map card shows the top 4 + icons for each place, dashed lines and a 5-min walk ring; map refits above the
+    card. Checked at 390 and 1440 px (`docs/screenshots/*nearby*.png`). 75 tests. AI text not verified
+    locally (no key in the sandbox) → check on Production.
+  - Owner request (2026-09-27) — **Neshan for nearby places** (spec captured by the owner with Claude in Chrome:
+    `docs/research/neshan-api.md`): `src/lib/nearby/neshan.ts` calls `/v1/nearby` (layers metro_entrance, bus_station,
+    clinic, gym, park, mosque; radius 1300 m) + `/v3/search` (pharmacy, supermarket, bakery — no layer), in parallel,
+    3.5 s timeout, with Referer/Origin `homerob.vercel.app` (the key is domain-whitelisted). Hits are cleaned (no
+    streets, `category=place`), merged with the baked OSM places (closest real place per category wins), source in
+    the footer. Key/config errors (480/483/484/485) pause Neshan for 10 min; `/api/nearby` returns `places`
+    (`neshan+osm` | `osm`) and `neshan` (`ok` | `off` | `error 485`…) for checking Production. ≈1,000 toman per
+    opened listing (6 × 160 + 3 × 40), cached per listing. 80 tests. Sandbox can't reach api.neshan.org →
+    untested against the live API.
+  - Owner request (2026-09-27) — **mobile home research** (Torob's mobile home as reference): `docs/research/mobile-home.md`
+    + interactive mockup https://claude.ai/artifact/EVasBzUqdWVC3t8SdiJeay. Proposal: search first, then scrollable rails
+    («پیشنهاد برای تو» from on-device saves/views with a reason line, «ادامهٔ جستجو», «زیر قیمت محله», «تازه‌ترین‌ها»,
+    «اخیراً دیدی»), ♥ saves, bottom nav. Owner chose option A → **built** (phones only, < 640px; desktop unchanged):
+    `src/lib/feed.ts` (pure, tested: taste profile from saves ×3 / opened ×1 → `SearchIntent` → existing scorer,
+    ±35% price band, max 2 per neighborhood in the first 5, rule-based reason chip per card; deals = ≥10% under the
+    neighborhood median with ≥5 samples; continue = last typed search, «N جدید» for ads newer than it),
+    `POST /api/feed`, `src/lib/taste-store.ts` (localStorage, no account), `home-feed.tsx` (light sheet peeking over the
+    map, recent-search chips, assistant banner, rails with a peek + «نمایش همه» → search with that intent/sort, detail
+    and saved bottom sheets, bottom nav خانه · دستیار هوشمند · ذخیره‌شده‌ها), `save-button.tsx` (♥ also on result cards). Rail cards show no ad source (PR #19).
+    All tests passing. Checked at 390 px (first visit → ♥ → picks; detail; saved; see-all) and 1440 px (unchanged), no page errors; re-checked after merging PRs #17–#19 (detail sheet now includes «اطراف این خونه چی داره؟»). 119 tests.
+    Screenshots `docs/screenshots/mobile-home-feed-*.png`. Cards have no photos until real data lands.
   - **Real-data importer (2026-09-27):** owner exported a Divar search (169 ads, وکیل‌آباد) with a
     table-scraper extension. `scripts/import-divar.ts` (`npm run import:divar -- <html> --captured <date>`,
     raw exports in gitignored `data/raw/`) → `src/data/divar.json`: **13 real residential rentals** (82 sales,
@@ -117,7 +165,17 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     «دوخوابه مفتح…», Q2 «دوخوابه وکیل‌آباد ۵۰۰…», Q3 «خونه ویلایی پورسینا…» + remove the neighborhood chip),
     `demo-queries.ts` + a test that every demo query returns results, README screenshots retaken. The
     «مادرم تنها زندگی می‌کند» ad now counts as shared housing (it topped Q3 as «۹۰٪ ارزان‌تر»).
-- **Next:** record the video (owner). More rent-residential exports → `npm run import:divar`. Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
+  - **Merged with PRs #15–#20 (2026-09-27):** optional rooms/floor/age flow through categories, compare,
+    explanations and the mobile feed (`tasteOf` ignores ads without rooms); `pois.json` re-baked via the
+    maps.mail.ru Overpass mirror to cover east Mashhad (3.5k → 4.9k places; 4 پورسینا ads still have nothing in
+    walking range → honest «هنوز اطلاعات کافی…»); feed tests use real ids; footer/demo script say "real ads"
+    without naming the site (PR #19).
+- **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
+  `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
+  Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
+  re-bake `pois.json` with `scripts/build-nearby.mjs`). Importer for the other five categories (`price` /
+  `nightlyPrice`) — the first export's 82 sales and 62 nightly rentals are waiting in `data/raw/`.
+  Filter panel + Neshan map live on Production; owner eyeballs the map on homerob.vercel.app (sandbox can't view tiles).
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -143,6 +201,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **نشان برای مکان‌های اطراف (هزینه دارد):** کلید سرویس `homerob-server` ساخته شده، ولی Search و Nearby روش فعال
+  نیست (۴۸۵) و فقط با تیکت فعال می‌شن؛ اعتبار حساب صفره. هزینه‌ی تقریبی: حدود ۱٬۰۰۰ تومان برای هر آگهی‌ای که باز
+  می‌شه (بعدش کش می‌شه). (الف) **پیشنهاد من:** تیکت بزن، کوچک‌ترین بسته‌ی اعتبار رو بخر، `NESHAN_API_KEY` رو در
+  Vercel بذار؛ کد آماده‌ست. (ب) فقط OpenStreetMap بمونه: رایگان، ولی مکان‌های کمتر. تا جواب: OSM خودکار استفاده می‌شه.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -231,11 +293,21 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
 - [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
+- [x] Know where the user is looking from the prompt (city / neighborhood / landmark, ask when unclear) (2026-09-27)
+- [x] Real-estate categories in search + filters (Divar's six; tabs on results, AI detects the category) (2026-09-27)
+- [x] Neighborhood advantages: real nearby places (OSM) + AI-written, grounded section on the card and map (2026-09-27)
+- [x] Neshan search API for nearby places (live, merged with OSM; needs `NESHAN_API_KEY`) (2026-09-27)
+- [x] Torob light-theme patterns on the results page (owner's second capture): ink for selected controls, borderless
+      cards, white header band with attached search, outlined chips, neutral AI box (`docs/BRAND.md`)
+- [x] No sign of where an ad comes from on the results page (owner): no Divar/Sheypoor badge, "also on" tag,
+      original-ad link, source filter, compare-row source, or site names in footer/empty-state copy (2026-09-27).
+      The /api/search JSON still carries `source`, `url`, `alsoOn` and `dv-`/`sp-` ids (not shown in the UI).
 - [x] Real-data importer (`scripts/import-divar.ts`) + first real batch (13 وکیل‌آباد rentals from the owner's export)
 - [x] Replace the Mashhad sample set — removed (owner chose (b)); only real ads served
 - [ ] More real ads: rent-residential exports for other neighborhoods / cities (owner exports, I import)
-- [ ] Show the Divar thumbnail (`imageUrl`) on real cards — propose to the owner with the next batch
+- [ ] Show the ad's thumbnail (`imageUrl`) on real cards — propose to the owner with the next batch
 - [x] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data
+- [ ] Importer for the other categories (sales, short-term, commercial, projects) from the same exports
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

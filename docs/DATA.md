@@ -1,6 +1,6 @@
 # Listing data (real listings only)
 
-Since 2026-09-26 Homerob uses **real** rental ads only (see `docs/DECISIONS.md`).
+Since 2026-09-26 Homerob uses **real** ads only (see `docs/DECISIONS.md`).
 
 `src/data/divar.json` holds **real** Divar ads, written by the importer below — 50 so far, all Mashhad:
 
@@ -10,8 +10,8 @@ Since 2026-09-26 Homerob uses **real** rental ads only (see `docs/DECISIONS.md`)
 | `divar-mashhad-mofatteh-2026-09-27.rtf` | `2026-09-27T22:00` | 45 (rent-residential) | 36 |
 
 Rebuild from scratch: delete `divar.json`, then import each export in the order above.
-; `src/data/listings.ts` serves it. The generated sample set was removed on
-2026-09-27 (owner). Unit tests use hand-written fixtures (`src/test/fixtures.ts`), never served.
+`src/data/listings.ts` serves it. The generated sample set was removed on 2026-09-27 (owner). Unit tests
+use hand-written fixtures (`src/test/fixtures.ts`), never served.
 
 ## Importing a Divar export
 
@@ -35,7 +35,9 @@ npm run import:divar -- data/raw/<export>.html --captured 2026-09-27        # or
   title / description or the ad is skipped (6 Mofatteh apartments).
 
 `scripts/import-divar.ts` joins cards and ad pages on the ad token, keeps only whole-unit residential
-rentals (ودیعه/اجاره), and skips sales, nightly villa rentals («تا N نفر»), commercial units, ads with
+rentals (ودیعه/اجاره; `category` unset = `residential-rent`), and skips sales, nightly villa rentals
+(«تا N نفر») and commercial units — the other categories exist in the app since 2026-09-27 but the
+importer doesn't fill them yet (their `price` / `nightlyPrice` models) — plus ads with
 no area, and ads whose Divar district isn't registered in `HOODS` (unless the title/description names a
 registered neighborhood). It prints what it skipped and why. Re-running merges into `divar.json` by id.
 
@@ -56,14 +58,17 @@ Best export for the next batch: the **rent-residential** category of one neighbo
 |---|---|---|
 | `id` | `"dv-QZx7abc"` | unique; prefix `dv-` Divar, `sp-` Sheypoor + the site's own token |
 | `source` | `"divar"` | `divar` \| `sheypoor` |
+| `category` | `"residential-sale"` | one of `residential-rent`, `residential-sale`, `commercial-rent`, `commercial-sale`, `short-term`, `projects` (Divar's «املاک» split, `src/lib/categories.ts`); missing = `residential-rent` |
 | `url` | `"https://divar.ir/v/…"` | link to the original ad (shown on the card) |
 | `title` | `"آپارتمان ۹۵ متری دوخوابه"` | as posted |
 | `city` | `"تهران"` | Persian name from `CITIES` in `src/lib/places.ts` |
 | `neighborhood` | `"پونک"` | canonical name; must exist in `HOODS` for that city |
 | `street` | `"بلوار عدل"` | optional detail, `""` if none |
-| `deposit` / `monthlyRent` | `500000000` / `18000000` | rahn / ejare; `monthlyRent: 0` = full rahn |
+| `deposit` / `monthlyRent` | `500000000` / `18000000` | rentals (`*-rent`): rahn / ejare; `monthlyRent: 0` = full rahn. Other categories: `0` / `0` |
+| `price` | `4800000000` | sales and `projects`: total asking price; omit or `0` if «توافقی» |
+| `nightlyPrice` | `2500000` | `short-term`: price per night |
 | `areaM2` | `95` | required (built area when the ad gives one) |
-| `rooms`, `floor`, `totalFloors`, `buildingAge` | `2, 3, 5, 6` | optional (unset = not stated); `rooms: 0` = سوئیت; `floor: 0` = همکف |
+| `rooms`, `floor`, `totalFloors`, `buildingAge` | `2, 3, 5, 6` | optional (unset = not stated); `rooms: 0` = سوئیت (or none, for offices / shops / land); `floor: 0` = همکف |
 | `elevator`, `parking`, `storage` | booleans | optional (unset = not stated) |
 | `convertible` | boolean | «قابل تبدیل» |
 | `tags` | `["بالکن", "مبله"]` | extra amenities in Persian |
@@ -83,5 +88,8 @@ prices («توافقی», ۱٬۰۰۰ تومان) are fine — `src/lib/quality.t
    AI prompt, location ("near me") and the home map pick it up.
 2. Import its listings (above) into `src/data/divar.json`. `npm test` checks every listing's city and
    neighborhood are registered.
-3. Optional: its province name in `PROVINCE_OF` (`src/components/hero-map/hero-map.tsx`) and baked
+3. Re-bake the nearby places for "neighborhood advantages": `node scripts/build-nearby.mjs [cacheDir]`
+   (Overpass API / OpenStreetMap; writes `src/data/pois.json`, server-side only). Without it, listings
+   in the new city show «هنوز اطلاعات کافی از اطراف این خونه نداریم».
+4. Optional: its province name in `PROVINCE_OF` (`src/components/hero-map/hero-map.tsx`) and baked
    roads (`scripts/build-hero-map.mjs`, needs Overpass access).

@@ -15,8 +15,8 @@ Live: https://homerob.vercel.app
   avoids Gemini free-tier slowness). Wait ~1 min after warm-up so the rate limit resets.
 - Check the explanation box shows the small **AI** badge. If it doesn't (Gemini busy), wait a minute
   and re-run — the rule-based text is fine, but the AI one tells the story better.
-- Every card links to the real Divar ad (دیوار ↗). Ads expire — re-run the queries on recording day and
-  adjust the card numbers below if an ad is gone.
+- The ads are real (imported Divar ads; the UI shows no source — PR #19). Ads expire — re-run the queries on
+  recording day and adjust the card numbers below if an ad is gone.
 - Direct links (paste instead of typing if needed):
   - Q1: https://homerob.vercel.app/?q=دوخوابه%20مفتح%20رهن%20کامل%20تا%20۱.۵%20میلیارد
   - Q2: https://homerob.vercel.app/?q=دوخوابه%20وکیل‌آباد%20با%20۵۰۰%20میلیون%20رهن
@@ -50,7 +50,7 @@ Live: https://homerob.vercel.app
 *On screen: home page — a few "new ad" pins drop across Iran; point at the search box.*
 
 > این «ترب برای خونه»ه. همون کاری که ترب برای قیمت کالا کرده — جمع کردن، ساختار دادن، مقایسه
-> کردن — این‌بار برای اجاره‌ی خونه. آگهی‌ها واقعی‌ان، از دیوار، و هر کارت به آگهی اصلی لینک داره.
+> کردن — این‌بار برای خونه. آگهی‌ها واقعی‌ان؛ هیچ‌کدوم ساختگی نیست.
 > اینجا فیلتر و فرم نداریم؛ فقط می‌نویسی چی می‌خوای، به زبان خودت، و هوش مصنوعی بقیه‌ش رو انجام می‌ده.
 
 ### 1:05 — سؤال ۱: ساده (≈ ۶۵ ثانیه)
@@ -69,8 +69,8 @@ Live: https://homerob.vercel.app
 3. *Point at card #3 (گلشور، ۱۱۵ متر، رهن کامل ۸۰۰ میلیون)* and its AI box:
    > و این یکی صادقانه می‌گه: ۲۰٪ ارزون‌تر از میانه‌ی ۷ آگهی گلشوره — ولی گلشوره، نه ایثار. تصمیم
    > با منه.
-4. *Click «دیوار ↗» on card #1* (opens the real ad), come back.
-   > و این آگهی واقعیه؛ یه کلیک تا خود آگهی تو دیوار.
+4. *(optional)* Open «اطراف این خونه چی داره؟» on card #1:
+   > و مهم‌تر از قیمت: اطراف این خونه چی هست — مترو، سوپرمارکت، داروخانه — با چند دقیقه پیاده‌روی.
 5. *(≈ 10 s, optional)* Tick «مقایسه» on cards #1–#3 → «مقایسه» in the bottom bar.
    > می‌تونم دو سه تا رو کنار هم بذارم؛ فقط چیزهایی که فرق دارن نشون داده می‌شن و بهترینِ هر ردیف
    > سبزه. چیزی که آگهی نگفته «نامشخص» می‌مونه؛ هومراب حدس نمی‌زنه.
@@ -82,7 +82,7 @@ Live: https://homerob.vercel.app
 1. *Chips:* رهن تا ۵۰۰ میلیون · وکیل‌آباد · ۲ خواب یا بیشتر
 2. *Top results:* three 1-bedrooms in وکیل‌آباد (۵۰ متری ۲۵۰ + ۳ میلیون، ویلایی ۱۰۰ متری ۴۰۰ + ۱۴ میلیون,
    سوئیت ۴۰ متری), each with the con «۱ خوابه است، نه ۲ خوابه»; #4 is a 2-bedroom villa in گلشور.
-   > دوخوابه‌های وکیل‌آباد تو دیوار الان از یک میلیارد رهن کامل شروع می‌شن. هومراب به جای اینکه
+   > دوخوابه‌های وکیل‌آباد الان از یک میلیارد رهن کامل شروع می‌شن. هومراب به جای اینکه
    > نتیجه‌ی بد رو خوب جلوه بده، صاف می‌گه: «۱ خوابه است، نه ۲ خوابه». بده‌بستان رو جلوی چشمم
    > می‌ذاره: یا تو وکیل‌آباد یه‌خوابه، یا دوخوابه ولی تو یه محله‌ی دیگه.
 3. *(optional)* Open «فیلترها» → price histogram:
@@ -113,7 +113,7 @@ Live: https://homerob.vercel.app
 
 ### 4:35 — قدم بعدی (≈ ۲۵ ثانیه)
 
-> این نسخه با ۵۰ آگهی واقعی دیوار از مشهد کار می‌کنه و معماری‌ش منبع داده رو جدا نگه داشته. قدم بعدی
+> این نسخه با ۵۰ آگهی واقعی از مشهد کار می‌کنه و معماری‌ش منبع داده رو جدا نگه داشته. قدم بعدی
 > وصل شدن به یه منبع زنده و فقط‌خواندنیه — مثلاً یه سرور MCP روی آگهی‌های عمومی، یا داده‌ای که
 > خود پلتفرم‌ها رسماً در اختیار می‌ذارن — و بعد تشخیص تکراری هوشمندتر بین سایت‌ها و شهرهای بیشتر.
 > هدف رقابت با دیوار نیست؛ هدف لایه‌ی هوشمندیه که به آگهی‌های موجود معنی می‌ده. ممنون که دیدید.

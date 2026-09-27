@@ -1,20 +1,27 @@
 "use client";
 
 import { GitCompareArrows, Info, LoaderCircle, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CategoryTabs } from "@/components/category-tabs";
 import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
+import { HomeFeed, useIsPhone } from "@/components/home-feed";
 import { IntentChips } from "@/components/intent-chips";
+import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
+import { CATEGORIES, DEFAULT_CATEGORY, priceModelOf } from "@/lib/categories";
+import { withCategory } from "@/lib/intent/category";
 import { toFaDigits } from "@/lib/persian";
 import { isCovered } from "@/lib/places";
-import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
+import { clampRanges, domains, EMPTY_REFINE, type Refine, type SortKey } from "@/lib/search/refine";
+import { rememberSearch } from "@/lib/taste-store";
 import { cn } from "@/lib/utils";
+import { detectPlace } from "@/lib/where";
 
 const COMPARE_MAX = 3;
 
@@ -28,8 +35,12 @@ export function SearchApp() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const phone = useIsPhone();
+  // hand-set price ranges only make sense within one price model (rahn, a sale price, a night)
+  const priceModel = useRef(priceModelOf(null));
 
-  const run = useCallback(async (q: string, intent?: SearchIntent) => {
+  const run = useCallback(async (q: string, intent?: SearchIntent, sort?: SortKey) => {
     const text = q.trim();
     if (text.length < 2) return;
     const id = ++requestId.current;
@@ -46,9 +57,19 @@ export function SearchApp() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
       if (id !== requestId.current) return; // a newer search started
+      rememberCity(json.intent.city);
+      // typed searches feed the phone home's recent chips and «ادامهٔ جستجو» rail
+      if (!intent) rememberSearch({ query: json.query, intent: json.intent, at: Date.now() });
       setData(json);
       // a new query starts clean; editing the AI intent keeps the hand-set filters that still apply
-      setRefine((prev) => (intent ? clampRanges(prev, domains(json.results)) : EMPTY_REFINE));
+      const model = priceModelOf(json.intent.category);
+      const sameModel = model === priceModel.current;
+      priceModel.current = model;
+      setRefine((prev) => {
+        const next =
+          intent && sameModel ? clampRanges(prev, domains(json.results, model)) : intent ? { ...EMPTY_REFINE, sort: prev.sort } : EMPTY_REFINE;
+        return sort ? { ...next, sort } : next;
+      });
       setStatus("done");
     } catch {
       if (id === requestId.current) setStatus("error");
@@ -81,72 +102,129 @@ export function SearchApp() {
 
   const compact = status !== "idle";
 
+  // phone home: a rail's «نمایش همه» / a recent chip runs its search; the assistant focuses the box
+  const runFromHome = (q: string, intent?: SearchIntent, sort?: SortKey) => {
+    setQuery(q);
+    window.scrollTo({ top: 0 });
+    void run(q, intent, sort);
+  };
+  const ask = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    inputRef.current?.focus({ preventScroll: true });
+  };
+  // Where the text in the box points to — instant, offline, recomputed on every keystroke.
+  const guess = useMemo(() => detectPlace(query), [query]);
+  // Show it while writing a new query (not under the one the results are already for).
+  const typing = status === "idle" || query.trim() !== data?.query;
+
+  const addCity = (city: string) => {
+    const next = withCity(query, city);
+    setQuery(next);
+    // on the home page let them keep writing; on results, search again right away
+    if (compact) void run(next);
+  };
+
   return (
     <>
-      {!compact && <HeroMap className="z-0" />}
+      {!compact && <HeroMap className="z-0" focus={query.trim().length >= 3 ? guess : undefined} />}
       <div
         className={cn(
           "relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
           status === "done" && data?.total ? "max-w-7xl" : "max-w-5xl",
           compareIds.length ? "pb-28" : "pb-16",
           !compact && "dark text-foreground pt-16 sm:pt-16",
+          // phone home: the first screen is logo + search; the feed sheet peeks in below it
+          !compact && phone && "min-h-[72svh] flex-none",
         )}
       >
-        <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
-          <button
-            type="button"
-            onClick={reset}
-            data-hero-block
-            className={cn("flex", compact ? "items-center gap-3" : "flex-col items-center")}
-            aria-label="صفحهٔ اول"
-          >
-            {compact ? (
-              // torob.com's header: the mark with a 24px/700 «ترب» in the logo red
-              <span className="flex items-center gap-1.5">
-                <TorobLogo className="size-9" />
-                <span className="text-2xl font-bold text-(--logo-color-1)">ترب</span>
-              </span>
-            ) : (
-              // torob.com's home: the 88px mark sits right on top of a 40px bold «ترب» (monochrome in dark).
-              <>
-                <TorobLogo className="size-18 sm:size-22" />
-                <span className="text-[40px] leading-[1.6] font-bold">ترب</span>
-              </>
-            )}
-          </button>
-        </header>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit(query);
-          }}
-          data-hero-block
-          className={cn("flex w-full flex-col gap-2 sm:flex-row", !compact && "mx-auto max-w-2xl")}
+        {/* results: torob.com's white header band (full-bleed via shadow + clip-path, no horizontal scroll) */}
+        <div
+          className={cn(
+            "flex flex-col gap-6",
+            compact && "bg-card -mt-6 pt-6 pb-5 shadow-[0_0_0_100vmax_var(--color-card)] [clip-path:inset(0_-100vmax)] sm:-mt-10 sm:pt-10",
+          )}
         >
-          {/* torob.com's search box: 48px, 8px radius, 1px border, search icon inside at the start */}
-          <div className="relative sm:flex-1">
-            <Search className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
-              className="border-input focus-visible:border-ring focus-visible:ring-ring/40 bg-card h-12 w-full rounded-lg border ps-12 pe-4 text-base outline-none focus-visible:ring-3"
-              aria-label="چی می‌خوای؟"
-              maxLength={300}
+          <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
+            <button
+              type="button"
+              onClick={reset}
+              data-hero-block
+              className={cn("flex", compact ? "items-center gap-3" : "flex-col items-center")}
+              aria-label="صفحهٔ اول"
+            >
+              {compact ? (
+                // torob.com's header: the mark with a 24px/700 «ترب» in the logo red
+                <span className="flex items-center gap-1.5">
+                  <TorobLogo className="size-9" />
+                  <span className="text-2xl font-bold text-(--logo-color-1)">ترب</span>
+                </span>
+              ) : (
+                // torob.com's home: the 88px mark sits right on top of a 40px bold «ترب» (monochrome in dark).
+                <>
+                  <TorobLogo className="size-18 sm:size-22" />
+                  <span className="text-[40px] leading-[1.6] font-bold">ترب</span>
+                </>
+              )}
+            </button>
+          </header>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit(query);
+            }}
+            data-hero-block
+            className={cn("flex w-full flex-col gap-2 sm:flex-row sm:gap-0", !compact && "mx-auto max-w-2xl")}
+          >
+            {/* torob.com's search box: 48px, 8px radius, 1px border, search icon inside at the start; on wider
+                screens the red submit is attached to it (input rounded on the start side, button on the end) */}
+            <div className="relative sm:flex-1">
+              <Search className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2" />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
+                className={cn(
+                  "border-input focus-visible:border-ring focus-visible:ring-ring/40 h-12 w-full rounded-lg border ps-12 pe-4 text-base outline-none focus-visible:ring-3 sm:rounded-e-none sm:border-e-0",
+                  compact ? "bg-secondary" : "bg-card",
+                )}
+                aria-label="چی می‌خوای؟"
+                maxLength={300}
+              />
+            </div>
+            <Button type="submit" size="lg" className="h-12 rounded-lg px-6 text-base font-bold sm:rounded-s-none" disabled={status === "loading"}>
+              {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
+              جستجو
+            </Button>
+          </form>
+          {typing && (
+            <PlaceLine
+              query={query}
+              guess={guess}
+              onAddCity={addCity}
+              className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
             />
-          </div>
-          <Button type="submit" size="lg" className="h-12 rounded-lg px-6 text-base font-bold" disabled={status === "loading"}>
-            {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
-            جستجو
-          </Button>
-        </form>
+          )}
+        </div>
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
         {status === "done" && data && (
           <section className="flex flex-col gap-5">
+            <CategoryTabs
+              value={data.intent.category ?? DEFAULT_CATEGORY}
+              onChange={(k) => run(data.query, withCategory(data.intent, k))}
+            />
             <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+            <PlaceQuestion
+              data={data}
+              onAddCity={(city) => {
+                const next = withCity(data.query, city);
+                setQuery(next);
+                void run(next);
+              }}
+            />
             <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
             {data.total === 0 ? (
               <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
@@ -196,13 +274,14 @@ export function SearchApp() {
             lives here on the results page and in the README. */}
         {compact && (
           <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
-            این یک نسخهٔ نمایشی است با آگهی‌های واقعی دیوار (فعلاً چند محلهٔ مشهد)؛ هر کارت به آگهی اصلی لینک دارد.
+            این یک نسخهٔ نمایشی است با آگهی‌های واقعی (فعلاً چند محلهٔ مشهد).
             هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
             تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
             <span className="block opacity-60">نقشهٔ صفحهٔ اول: geoBoundaries (CC BY 4.0)</span>
           </footer>
         )}
       </div>
+      {!compact && phone && <HomeFeed onRun={runFromHome} onAsk={ask} />}
     </>
   );
 }
@@ -263,12 +342,18 @@ function LoadingState() {
 }
 
 function EmptyState({ data, onApply }: { data: SearchApiResponse; onApply: (i: SearchIntent) => void }) {
-  const hasBudget = data.intent.maxDeposit !== null || data.intent.maxRent !== null;
+  const hasBudget = data.intent.maxDeposit !== null || data.intent.maxRent !== null || data.intent.maxPrice !== null;
   const newCity = data.intent.city && !isCovered(data.intent.city) ? data.intent.city : null;
-  const [title, hint] = newCity
+  const category = CATEGORIES[data.intent.category ?? DEFAULT_CATEGORY];
+  const [title, hint] = !data.categoryCount && data.intent.category && data.intent.category !== DEFAULT_CATEGORY
+    ? [
+        `هنوز آگهی «${category.label}»${data.intent.city ? ` در ${data.intent.city}` : ""} نداریم`,
+        `ترب دسته‌به‌دسته آگهی‌های واقعی رو اضافه می‌کنه (${category.types.join("، ")}).`,
+      ]
+    : newCity
     ? [`هنوز آگهی‌ای از ${newCity} نداریم`, "ترب شهربه‌شهر آگهی‌های واقعی رو اضافه می‌کنه."]
     : hasBudget
-      ? ["هیچ آگهی‌ای با این بودجه نیست", "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره."]
+      ? ["هیچ آگهی‌ای با این بودجه نیست", category.priceModel === "rent" ? "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره." : "قیمت‌ها از بودجه‌ات بالاترن."]
       : ["آگهی‌ای پیدا نشد", "فیلترها رو کمتر کن یا جور دیگه‌ای بنویس."];
   return (
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed px-6 py-12 text-center">

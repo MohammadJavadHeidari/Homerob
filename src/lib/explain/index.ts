@@ -3,11 +3,13 @@ import "server-only";
 import { z } from "zod";
 
 import { activeProvider, chatJson } from "@/lib/ai/client";
+import { CATEGORIES, categoryOf } from "@/lib/categories";
+import { priceLineFa } from "@/lib/format";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { formatToman, toEnDigits, toFaDigits } from "@/lib/persian";
 import type { SearchResult } from "@/lib/search";
 
-const SYSTEM_PROMPT = `You are Homerob, a friendly Persian rental assistant for Iranian cities. For each listing, write ONE short
+const SYSTEM_PROMPT = `You are Homerob, a friendly Persian real-estate assistant for Iranian cities (rentals, sales, offices/shops, short stays, construction projects). For each listing, write ONE short
 Persian explanation (1–2 sentences, max ~200 characters) of how well it fits THIS user's request.
 
 Rules:
@@ -78,6 +80,8 @@ export async function explainResults(
 
 function summarizeIntent(i: SearchIntent) {
   return {
+    category: i.category ? CATEGORIES[i.category].label : null,
+    maxPrice: i.maxPrice === null ? null : formatToman(i.maxPrice),
     maxDeposit: i.maxDeposit === null ? null : formatToman(i.maxDeposit),
     maxRent: i.maxRent === null ? null : formatToman(i.maxRent),
     city: i.city,
@@ -96,11 +100,18 @@ function facts(r: SearchResult) {
   const l = r.listing;
   return {
     id: l.id,
+    category: CATEGORIES[categoryOf(l)].label,
     city: l.city,
     neighborhood: l.neighborhood,
-    rooms: l.rooms === undefined ? "در آگهی نیامده" : l.rooms === 0 ? "سوئیت" : `${toFaDigits(l.rooms)} خوابه`,
+    rooms: !CATEGORIES[categoryOf(l)].residential
+      ? null
+      : l.rooms === undefined
+        ? "در آگهی نیامده"
+        : l.rooms === 0
+          ? "سوئیت"
+          : `${toFaDigits(l.rooms)} خوابه`,
     area: `${toFaDigits(l.areaM2)} متر`,
-    listedPrice: `رهن ${formatToman(l.deposit)}${l.monthlyRent ? ` + اجاره ${formatToman(l.monthlyRent)}` : " (رهن کامل)"}`,
+    listedPrice: priceLineFa(l),
     userWouldPay: r.budget.converted
       ? `رهن ${formatToman(r.budget.deposit)} + اجاره ${formatToman(r.budget.monthlyRent)}`
       : null,

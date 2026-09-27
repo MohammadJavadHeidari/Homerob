@@ -1,9 +1,9 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
 import { AMENITIES, amenityKnown, amenityNo, amenityUnstated, amenityYes, type AmenityKey } from "@/lib/amenities";
+import { categoryOf, priceModelOf, unitPrice } from "@/lib/categories";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { adjacentHoods } from "@/lib/places";
-import { pricePerM2 } from "@/lib/pricing";
 import { isComparable } from "@/lib/quality";
 import type { Listing } from "@/lib/types";
 
@@ -39,17 +39,20 @@ function median(xs: number[]) {
 
 const COMPARABLE = ALL_LISTINGS.filter(isComparable);
 
-/** Neighborhood names repeat across cities, so stats are keyed by city + neighborhood. */
-export const hoodKey = (l: Pick<Listing, "city" | "neighborhood">) => `${l.city}/${l.neighborhood}`;
+/**
+ * Neighborhood names repeat across cities, and a shop's price says nothing about a flat's, so stats
+ * are keyed by category + city + neighborhood.
+ */
+export const hoodKey = (l: Pick<Listing, "category" | "city" | "neighborhood">) => `${categoryOf(l)}/${l.city}/${l.neighborhood}`;
 const HOODS = [...new Set(COMPARABLE.map(hoodKey))];
 
-/** Median full-deposit price per m² in each neighborhood (placeholder prices and shared rooms excluded). */
+/** Median comparable price per m² in each neighborhood (placeholder prices and shared rooms excluded). */
 export const HOOD_MEDIAN_PPM: Record<string, number> = Object.fromEntries(
-  HOODS.map((h) => [h, median(COMPARABLE.filter((l) => hoodKey(l) === h).map((l) => pricePerM2(l)))]),
+  HOODS.map((h) => [h, median(COMPARABLE.filter((l) => hoodKey(l) === h).map(unitPrice))]),
 );
 
 /** Fewer comparable listings than this → no "cheaper/pricier than the neighborhood" verdict. */
-const MIN_SAMPLE = 5;
+export const MIN_SAMPLE = 5;
 
 /** How many listings each median is based on — shown to the user, like any honest price verdict. */
 export const HOOD_SAMPLE_SIZE: Record<string, number> = Object.fromEntries(
@@ -111,7 +114,7 @@ function fraction(keys: AmenityKey[], l: Listing, empty: number) {
 function valueScore(l: Listing) {
   const med = (HOOD_SAMPLE_SIZE[hoodKey(l)] ?? 0) >= MIN_SAMPLE ? HOOD_MEDIAN_PPM[hoodKey(l)] : 0;
   if (!med) return 0.5;
-  const ratio = pricePerM2(l) / med;
+  const ratio = unitPrice(l) / med;
   return clamp01(0.5 + (1 - ratio) * 2.5);
 }
 
@@ -122,7 +125,14 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   const add = (kind: Highlight["kind"], text: string, weight: number) => out.push({ kind, text, weight });
 
   // budget — phrase savings on the side the user talked about
-  const { maxDeposit: D, maxRent: R } = intent;
+  const { maxDeposit: D, maxRent: R, maxPrice: P } = intent;
+  if (P !== null && fit.headroom !== null) {
+    // sale / short stay: one price
+    const perNight = priceModelOf(categoryOf(l)) === "nightly";
+    const slack = fit.headroom;
+    if (slack >= (perNight ? 2e5 : 100e6)) add("pro", `${formatToman(perNight ? roundK(slack) : roundM(slack))} ${perNight ? "در شب " : ""}زیر بودجه‌ات`, 7);
+    else add("info", "درست در حد بودجه‌ات", 3);
+  }
   if (fit.converted) {
     add(
       "info",
@@ -179,13 +189,14 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
 
   // value vs neighborhood
   const med = (HOOD_SAMPLE_SIZE[hoodKey(l)] ?? 0) >= MIN_SAMPLE ? HOOD_MEDIAN_PPM[hoodKey(l)] : 0;
-  const ratio = med ? pricePerM2(l) / med : 1;
+  const ratio = med ? unitPrice(l) / med : 1;
   const sample = `میانهٔ ${toFaDigits(HOOD_SAMPLE_SIZE[hoodKey(l)] ?? 0)} آگهی ${l.neighborhood}`;
   if (ratio <= 0.9) add("pro", `حدود ${toFaDigits(Math.round((1 - ratio) * 100))}٪ ارزان‌تر از ${sample}`, 6);
   else if (ratio >= 1.12) add("con", `حدود ${toFaDigits(Math.round((ratio - 1) * 100))}٪ گران‌تر از ${sample}`, 5);
 
   // notable facts nobody asked about
-  if (!intent.mustHave.includes("parking") && l.parking === false && (l.rooms ?? 0) >= 2) add("con", "پارکینگ ندارد", 4);
+  if (!intent.mustHave.includes("parking") && l.parking === false && (l.rooms ?? 0) >= 2 && categoryOf(l) !== "short-term")
+    add("con", "پارکینگ ندارد", 4);
   if (l.elevator === false && (l.floor ?? 0) >= 3) add("con", `طبقه ${toFaDigits(l.floor ?? 0)} بدون آسانسور`, 4);
   if (l.buildingAge !== undefined && l.buildingAge <= 2 && !intent.mustHave.includes("newBuilding")) add("pro", "نوساز", 2);
   if (REFERENCE_TIME - Date.parse(l.postedAt) < 864e5) add("info", "آگهی امروز", 1);
@@ -204,6 +215,7 @@ export function ruleExplanation(hl: Highlight[]): string {
 }
 
 const roundM = (v: number) => Math.round(v / 1e6) * 1e6;
+const roundK = (v: number) => Math.round(v / 1e5) * 1e5;
 const roundHalfM = (v: number) => Math.round(v / 5e5) * 5e5;
 
 function roomsLabel(n: number) {
