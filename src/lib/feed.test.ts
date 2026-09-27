@@ -34,27 +34,31 @@ describe("buildFeed", () => {
   });
 
   it("one save → «picks» on top, explained by that save, without the saved listing", () => {
-    const f = buildFeed({ ...empty, saved: ["dv-0901"] });
+    const f = buildFeed({ ...empty, saved: ["dv-gayWzpt9"] });
     expect(keys(f)[0]).toBe("picks");
     const picks = f.rails[0];
     expect(picks.subtitle).toBe("چون یه دوخوابه تو وکیل‌آباد ذخیره کردی");
-    expect(picks.items.map((r) => r.listing.id)).not.toContain("dv-0901");
+    expect(picks.items.map((r) => r.listing.id)).not.toContain("dv-gayWzpt9");
     expect(picks.items.every((r) => r.signal?.text)).toBe(true);
     // the first cards are in (or next to) the saved neighborhood
     expect(picks.items[0].signal!.text).toMatch(/همون محله|کنار/);
-    expect(f.saved.map((r) => r.listing.id)).toEqual(["dv-0901"]);
+    expect(f.saved.map((r) => r.listing.id)).toEqual(["dv-gayWzpt9"]);
   });
 
   it("picks vary neighborhoods: at most 2 of one neighborhood in the first 5 unless nothing else fits", () => {
-    const picks = buildFeed({ ...empty, saved: ["dv-0901", "dv-0904"] }).rails[0].items.slice(0, 5);
+    const rail = buildFeed({ ...empty, saved: ["dv-gayWzpt9", "dv-gaYOyE3O"] }).rails[0].items;
+    const picks = rail.slice(0, 5);
     const count = new Map<string, number>();
     for (const r of picks) count.set(r.listing.neighborhood, (count.get(r.listing.neighborhood) ?? 0) + 1);
-    expect(Math.max(...count.values())).toBeLessThanOrEqual(2);
+    // a 3rd from one neighborhood only when every other neighborhood in the rail is already shown
+    if (Math.max(...count.values()) > 2) {
+      for (const r of rail) expect(count.has(r.listing.neighborhood), r.listing.neighborhood).toBe(true);
+    }
   });
 
   it("one opened listing isn't enough for picks, two are", () => {
-    expect(keys(buildFeed({ ...empty, viewed: ["dv-0901"] }))).not.toContain("picks");
-    const f = buildFeed({ ...empty, viewed: ["dv-0901", "dv-0904"] });
+    expect(keys(buildFeed({ ...empty, viewed: ["dv-gayWzpt9"] }))).not.toContain("picks");
+    const f = buildFeed({ ...empty, viewed: ["dv-gayWzpt9", "dv-gaYOyE3O"] });
     expect(keys(f)[0]).toBe("picks");
     expect(f.rails[0].subtitle).toMatch(/دیدی$/);
     expect(keys(f)).toContain("recent");
@@ -84,7 +88,7 @@ describe("buildFeed", () => {
 
 describe("tasteOf", () => {
   it("reads neighborhood, rooms and price from the saves", () => {
-    const t = tasteOf([byId("dv-0901")], [])!;
+    const t = tasteOf([byId("dv-gayWzpt9")], [])!;
     expect(t.intent.neighborhoods[0]).toBe("وکیل‌آباد");
     expect(t.intent.minRooms).toBe(2);
     expect(t.intent.city).toBe("مشهد");

@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw listing exports (may contain agency/seller names) — only the cleaned output is committed
+/data/raw/

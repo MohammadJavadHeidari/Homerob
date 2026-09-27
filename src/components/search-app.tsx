@@ -274,7 +274,7 @@ export function SearchApp() {
             lives here on the results page and in the README. */}
         {compact && (
           <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
-            این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند.
+            این یک نسخهٔ نمایشی است با آگهی‌های واقعی (فعلاً چند محلهٔ مشهد).
             هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
             تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
             <span className="block opacity-60">نقشهٔ صفحهٔ اول: geoBoundaries (CC BY 4.0)</span>

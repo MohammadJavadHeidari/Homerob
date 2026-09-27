@@ -103,7 +103,13 @@ function facts(r: SearchResult) {
     category: CATEGORIES[categoryOf(l)].label,
     city: l.city,
     neighborhood: l.neighborhood,
-    rooms: !CATEGORIES[categoryOf(l)].residential ? null : l.rooms === 0 ? "سوئیت" : `${toFaDigits(l.rooms)} خوابه`,
+    rooms: !CATEGORIES[categoryOf(l)].residential
+      ? null
+      : l.rooms === undefined
+        ? "در آگهی نیامده"
+        : l.rooms === 0
+          ? "سوئیت"
+          : `${toFaDigits(l.rooms)} خوابه`,
     area: `${toFaDigits(l.areaM2)} متر`,
     listedPrice: priceLineFa(l),
     userWouldPay: r.budget.converted

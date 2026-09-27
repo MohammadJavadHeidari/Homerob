@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseIntentWithRules } from "./intent/rules";
 import { resolvePlace, searchCity } from "./intent/place";
 import { EMPTY_INTENT } from "./intent/schema";
-import { canonicalCity, findCity, findNeighborhoods } from "./places";
+import { canonicalCity, findCity, findNeighborhoods, HOODS, hoodInfo } from "./places";
 import { search } from "./search";
 import { suggest } from "./search/suggest";
 import type { Listing } from "./types";
@@ -20,6 +20,23 @@ describe("city names", () => {
   it("only matches neighborhoods of the named city", () => {
     expect(findNeighborhoods("وکیل آباد", "مشهد")).toEqual(["وکیل‌آباد"]);
     expect(findNeighborhoods("وکیل آباد", "تهران")).toEqual([]);
+  });
+});
+
+describe("neighborhood registry", () => {
+  it("has symmetric adjacency between registered neighborhoods of the same city", () => {
+    for (const h of HOODS) {
+      for (const a of h.adjacent) {
+        expect(hoodInfo(a, h.city), `${h.name} → ${a}`).toBeDefined();
+        expect(hoodInfo(a, h.city)!.adjacent, `${a} ↔ ${h.name}`).toContain(h.name);
+      }
+    }
+  });
+
+  it("maps Divar's district spellings", () => {
+    expect(findNeighborhoods("شهرک مهر آباد", "مشهد")).toContain("شهرک مهرآباد");
+    expect(findNeighborhoods("امیر آباد ۳۴", "مشهد")).toEqual(["امیرآباد"]);
+    expect(findNeighborhoods("نزدیک مفتح", "مشهد")).toEqual(["ایثار"]);
   });
 });
 

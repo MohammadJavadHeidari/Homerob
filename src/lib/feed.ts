@@ -119,7 +119,9 @@ export function tasteOf(savedLs: Listing[], viewedLs: Listing[]): Taste | null {
   const hoods = new Map<string, number>();
   for (const [l, w] of here) hoods.set(l.neighborhood, (hoods.get(l.neighborhood) ?? 0) + w);
   const neighborhoods = [...hoods.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n]) => n);
-  const rooms = CATEGORIES[category].residential ? mode(here.map(([l, w]) => [l.rooms, w])) : null;
+  // ads that don't state their rooms don't vote
+  const withRooms = here.filter((e): e is [Listing & { rooms: number }, number] => e[0].rooms !== undefined);
+  const rooms = CATEGORIES[category].residential ? mode(withRooms.map(([l, w]) => [l.rooms, w])) : null;
   const total = here.reduce((s, [, w]) => s + w, 0);
   const niceToHave = (["parking", "elevator", "storage", "balcony"] as AmenityKey[]).filter(
     (k) => here.reduce((s, [l, w]) => s + (AMENITIES[k].has(l) ? w : 0), 0) >= total / 2,
@@ -173,7 +175,7 @@ export function picksFor(taste: Taste, exclude: Set<string>, listings: Listing[]
 
 function because(t: Taste) {
   const l = t.anchor;
-  const what = CATEGORIES[categoryOf(l)].residential ? `یه ${roomsWord(l.rooms)}` : "یه آگهی";
+  const what = CATEGORIES[categoryOf(l)].residential && l.rooms !== undefined ? `یه ${roomsWord(l.rooms)}` : "یه آگهی";
   return `چون ${what} تو ${l.neighborhood} ${t.anchorSaved ? "ذخیره کردی" : "دیدی"}`;
 }
 

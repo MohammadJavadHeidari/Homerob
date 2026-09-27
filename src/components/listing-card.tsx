@@ -24,7 +24,7 @@ import { NearbyAdvantages } from "@/components/nearby-advantages";
 import { SaveButton } from "@/components/save-button";
 import type { SearchResult } from "@/lib/api-types";
 import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
-import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
+import { ageFa, floorFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { isSharedHousing } from "@/lib/quality";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,7 @@ export function ListingCard({
           <h3 className="text-base leading-7 font-bold">{l.title}</h3>
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <MapPin className="size-3.5 shrink-0" />
-            {l.neighborhood}، {l.street}
+            {l.street ? `${l.neighborhood}، ${l.street}` : l.neighborhood}
             <span className="bg-border mx-1 inline-block h-3 w-px" />
             {l.city}
           </p>
@@ -134,12 +134,11 @@ export function ListingCard({
 
       {/* features */}
       <ul className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-2 text-sm">
-        {category.residential && <Feature icon={BedDouble}>{roomsFa(l.rooms)}</Feature>}
+        {/* real ads often leave these out — show only what the ad states */}
+        {category.residential && l.rooms !== undefined && <Feature icon={BedDouble}>{roomsFa(l.rooms)}</Feature>}
         <Feature icon={Ruler}>{toFaDigits(l.areaM2)} متر</Feature>
-        <Feature icon={Building2}>
-          {l.floor === 0 ? "همکف" : `طبقه ${toFaDigits(l.floor)}`} از {toFaDigits(l.totalFloors)}
-        </Feature>
-        <Feature icon={CalendarClock}>{ageFa(l.buildingAge)}</Feature>
+        {l.floor !== undefined && <Feature icon={Building2}>{floorFa(l.floor, l.totalFloors)}</Feature>}
+        {l.buildingAge !== undefined && <Feature icon={CalendarClock}>{ageFa(l.buildingAge)}</Feature>}
       </ul>
       <ul className="flex flex-wrap gap-1.5 text-xs">
         <Amenity ok={l.parking} icon={Car} label="پارکینگ" />
@@ -248,7 +247,8 @@ function Feature({ icon: Icon, children }: { icon: typeof Ruler; children: React
   );
 }
 
-function Amenity({ ok, icon: Icon, label }: { ok: boolean; icon: typeof Ruler; label: string }) {
+function Amenity({ ok, icon: Icon, label }: { ok?: boolean; icon: typeof Ruler; label: string }) {
+  if (ok === undefined) return null; // the ad doesn't say
   return (
     <li
       className={cn(

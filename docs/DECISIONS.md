@@ -118,3 +118,15 @@
   banner, rails «پیشنهاد برای تو» (from on-device saves/views, each card with a true reason), «ادامهٔ جستجو»,
   «زیر قیمت محله», «تازه‌ترین‌ها», «اخیراً دیدی»; ♥ saves; bottom nav خانه · دستیار هوشمند · ذخیره‌شده‌ها.
   No account: history lives in localStorage. No category picker. Research: `docs/research/mobile-home.md`.
+- 2026-09-27 — **Real data source: owner's Divar exports** (option (a) of the open question; no official
+  API, no new account). The owner exports Divar searches with a browser table-scraper extension; the
+  sandbox never calls Divar. `scripts/import-divar.ts` cleans them into `src/data/divar.json`. Raw exports
+  stay out of git (agency/seller names); fields an ad doesn't state stay unset — never guessed.
+- 2026-09-27 — **Sample set removed now** (owner chose option (b) of 3; "export more first" and "keep a
+  mix until the video" were the alternatives). The app serves only the 13 real Divar ads (وکیل‌آباد
+  مشهد); demo queries naming other neighborhoods or a 2-bed at 500M get few/weak results until more real
+  data arrives. Tests use hand-written fixtures (`src/test/fixtures.ts`), never served.
+- 2026-09-27 — **Demo queries approved** (owner chose option (a); "wait for more exports" was the
+  alternative): (1) «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد», (2) «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن»,
+  (3) «خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن» + remove the «پورسینا» chip. Script:
+  `docs/DEMO_SCRIPT.md`. Owner asked to merge and update the live site.

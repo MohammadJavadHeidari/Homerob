@@ -1,6 +1,6 @@
 import type { Listing } from "@/lib/types";
 
-import raw from "./listings.json";
+import divar from "./divar.json";
 
-/** Seeded sample listings (see scripts/generate-listings.mjs). */
-export const listings = raw as Listing[];
+/** Real Divar ads, imported by scripts/import-divar.ts (see docs/DATA.md). */
+export const listings = divar as Listing[];

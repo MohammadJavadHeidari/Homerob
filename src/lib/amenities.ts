@@ -23,20 +23,28 @@ export const AMENITIES: Record<
     label: string;
     aliases: string[];
     has: (l: Listing) => boolean;
+    /** Whether the ad states this at all; when false, "doesn't have it" really means "not mentioned". */
+    known?: (l: Listing) => boolean;
     /** Natural phrases for explanations; default "X دارد" / "X ندارد". */
     yes?: string;
     no?: string;
   }
 > = {
-  parking: { label: "پارکینگ", aliases: ["پارکینگ", "جای پارک", "پارکینگ‌دار"], has: (l) => l.parking },
-  elevator: { label: "آسانسور", aliases: ["آسانسور", "اسانسور"], has: (l) => l.elevator },
-  storage: { label: "انباری", aliases: ["انباری", "انبار"], has: (l) => l.storage },
+  parking: {
+    label: "پارکینگ",
+    aliases: ["پارکینگ", "جای پارک", "پارکینگ‌دار"],
+    has: (l) => l.parking === true,
+    known: (l) => l.parking !== undefined,
+  },
+  elevator: { label: "آسانسور", aliases: ["آسانسور", "اسانسور"], has: (l) => l.elevator === true, known: (l) => l.elevator !== undefined },
+  storage: { label: "انباری", aliases: ["انباری", "انبار"], has: (l) => l.storage === true, known: (l) => l.storage !== undefined },
   balcony: { label: "بالکن", aliases: ["بالکن", "تراس"], has: (l) => l.tags.includes("بالکن") },
   furnished: { label: "مبله", aliases: ["مبله", "مبلمان"], has: (l) => l.tags.includes("مبله"), yes: "مبله است", no: "مبله نیست" },
   newBuilding: {
     label: "نوساز",
     aliases: ["نوساز", "نو ساز", "کلید نخورده", "کلیدنخورده", "تازه ساز"],
-    has: (l) => l.buildingAge <= 3,
+    has: (l) => l.buildingAge !== undefined && l.buildingAge <= 3,
+    known: (l) => l.buildingAge !== undefined,
     yes: "نوساز است",
     no: "نوساز نیست",
   },
@@ -47,12 +55,12 @@ export const AMENITIES: Record<
     yes: "نزدیک قطار شهری است",
     no: "به قطار شهری نزدیک نیست",
   },
-  yard: { label: "حیاط", aliases: ["حیاط", "حیاط‌دار"], has: (l) => l.tags.includes("حیاط اختصاصی") },
-  lobby: { label: "لابی‌من", aliases: ["لابی", "نگهبان", "لابی من"], has: (l) => l.tags.includes("لابی‌من") },
+  yard: { label: "حیاط", aliases: ["حیاط", "حیاط‌دار"], has: (l) => l.tags.some((t) => t.startsWith("حیاط")) },
+  lobby: { label: "لابی‌من", aliases: ["لابی", "نگهبان", "لابی من"], has: (l) => l.tags.some((t) => t.startsWith("لابی")) },
   pool: {
     label: "استخر و سونا",
     aliases: ["استخر", "سونا", "جکوزی"],
-    has: (l) => l.tags.includes("استخر و سونا"),
+    has: (l) => l.tags.some((t) => t.startsWith("استخر")),
   },
   convertible: {
     label: "قابل تبدیل",
@@ -65,4 +73,11 @@ export const AMENITIES: Record<
 
 export const amenityYes = (k: AmenityKey) => AMENITIES[k].yes ?? `${AMENITIES[k].label} دارد`;
 export const amenityNo = (k: AmenityKey) => AMENITIES[k].no ?? `${AMENITIES[k].label} ندارد`;
+
+/**
+ * Does the ad say it lacks this? Real ads (with a `url`) only list what they have, so a missing tag
+ * means "not mentioned"; the sample set lists everything.
+ */
+export const amenityKnown = (k: AmenityKey, l: Listing) => AMENITIES[k].known?.(l) ?? (k === "convertible" || !l.url);
+export const amenityUnstated = (k: AmenityKey) => `آگهی دربارهٔ ${AMENITIES[k].label} چیزی نگفته`;
 

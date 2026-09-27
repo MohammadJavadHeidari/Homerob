@@ -15,11 +15,20 @@ export function timeAgoFa(iso: string, now = Date.now()): string {
   return weeks === 1 ? "یک هفته پیش" : `${toFaDigits(weeks)} هفته پیش`;
 }
 
-export function roomsFa(rooms: number): string {
+export function roomsFa(rooms: number | undefined): string {
+  if (rooms === undefined) return "خواب: نامشخص";
   return rooms === 0 ? "سوئیت" : `${toFaDigits(rooms)} خواب`;
 }
 
-export function ageFa(years: number): string {
+/** "طبقه ۲ از ۵" / "همکف" / "طبقه ۲" — whatever the ad states. */
+export function floorFa(floor: number | undefined, total: number | undefined): string {
+  if (floor === undefined) return "طبقه: نامشخص";
+  const f = floor === 0 ? "همکف" : `طبقه ${toFaDigits(floor)}`;
+  return total ? `${f} از ${toFaDigits(total)}` : f;
+}
+
+export function ageFa(years: number | undefined): string {
+  if (years === undefined) return "سن بنا: نامشخص";
   return years === 0 ? "کلیدنخورده" : years <= 2 ? "نوساز" : `${toFaDigits(years)} سال ساخت`;
 }
 

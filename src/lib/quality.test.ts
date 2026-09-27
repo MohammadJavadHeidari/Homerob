@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { listings } from "@/data/listings";
+import { FIXTURES } from "@/test/fixtures";
 
 import { isPlaceholderPrice, isSharedHousing } from "./quality";
 
@@ -22,11 +22,12 @@ describe("data quality", () => {
   it("flags shared rooms in any spelling", () => {
     expect(isSharedHousing({ title: "اجاره اتاق در واحد دوخوابه", description: "" })).toBe(true);
     expect(isSharedHousing({ title: "هم‌خونه آقا", description: "" })).toBe(true);
+    expect(isSharedHousing({ title: "خانه ۱۶۰متری", description: "مادرم تنها زندگی می‌کند فقط خانم تنها" })).toBe(true);
     expect(isSharedHousing({ title: "آپارتمان ۹۵ متری", description: "مناسب خانواده" })).toBe(false);
   });
 
-  it("finds exactly the seeded data-quality cases", () => {
-    expect(listings.filter(isPlaceholderPrice).map((l) => l.id).sort()).toEqual(["dv-0907", "sp-0908"]);
-    expect(listings.filter(isSharedHousing).map((l) => l.id).sort()).toEqual(["dv-0909", "sp-0910"]);
+  it("finds exactly the planted data-quality cases", () => {
+    expect(FIXTURES.filter(isPlaceholderPrice).map((l) => l.id)).toEqual(["dv-placeholder"]);
+    expect(FIXTURES.filter(isSharedHousing).map((l) => l.id).sort()).toEqual(["dv-shared", "sp-shared"]);
   });
 });
