@@ -1,4 +1,6 @@
-import { toFaDigits } from "./persian";
+import { categoryOf, priceModelOf } from "./categories";
+import { formatToman, toFaDigits } from "./persian";
+import type { Listing } from "./types";
 
 /** "۳ ساعت پیش", "دیروز", "۵ روز پیش". */
 export function timeAgoFa(iso: string, now = Date.now()): string {
@@ -19,4 +21,20 @@ export function roomsFa(rooms: number): string {
 
 export function ageFa(years: number): string {
   return years === 0 ? "کلیدنخورده" : years <= 2 ? "نوساز" : `${toFaDigits(years)} سال ساخت`;
+}
+
+/** Round a price for a short label: ۸۳۰ میلیون, ۴٫۲ میلیارد, ۲٫۵ میلیون (not ۸۳۳٫۳). */
+export function roundPrice(v: number): number {
+  const step = v >= 1e9 ? 1e8 : v >= 1e8 ? 1e7 : v >= 1e6 ? 1e5 : 1e4;
+  return Math.round(v / step) * step;
+}
+
+/** The listed price in one short line, the way the category prices it. */
+export function priceLineFa(l: Listing): string {
+  const model = priceModelOf(categoryOf(l));
+  if (model === "sale") return `قیمت ${formatToman(l.price ?? 0)}`;
+  if (model === "nightly") return `شبی ${formatToman(l.nightlyPrice ?? 0)}`;
+  return l.monthlyRent > 0
+    ? `رهن ${formatToman(l.deposit)} · اجاره ${formatToman(l.monthlyRent)}`
+    : `رهن کامل ${formatToman(l.deposit)}`;
 }

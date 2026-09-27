@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26)
+- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26; categories — 2026-09-27)
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -93,7 +93,18 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
   - PR #13 (nationwide scale + real-data rule + Iran-only landing) merged 2026-09-26; Production live
     (title «… در ایران», `/api/geo` gone, Tehran query → «در مشهد ۹۴ آگهی هست»).
-- **Next:** owner answers "real data source" (Open questions) → build the importer, replace the sample set.
+  - Owner request (2026-09-27) — **real-estate categories** (Divar's six: residential rent/sale, office &
+    commercial rent/sale, short-term, construction projects). `src/lib/categories.ts` (registry, price model
+    per category, `comparablePrice`, keyword `detectCategory`). `Listing.category` / `price` / `nightlyPrice`,
+    intent `category` + `maxPrice` (rules + LLM prompt with 3 new examples; `settleBudget` / `withCategory` in
+    `src/lib/intent/category.ts`). Search hard-filters by category; budget, medians, dedup key, placeholder
+    prices, highlights, explanations, compare rows, map pins and card price block follow the category's price
+    model. Results page: `category-tabs.tsx` (scrollable row; switching re-searches with the same request),
+    category + price chips, filter panel hides rooms for offices/shops and the rahn/ejare switch outside
+    rentals, per-model slider steps. Empty state «هنوز آگهی «X» در Y نداریم» + one click back to a category with
+    results. Home page unchanged. 88 tests. Research: `docs/research/categories.md`. Checked at 390 and 1280 px.
+- **Next:** owner answers "real data source" (Open questions) → build the importer (**all six categories**:
+  set `category`, `price` / `nightlyPrice`, see `docs/DATA.md`), replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -219,6 +230,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
 - [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
+- [x] Real-estate categories in search + filters (Divar's six; tabs on results, AI detects the category) (2026-09-27)
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 

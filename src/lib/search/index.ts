@@ -1,8 +1,8 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
+import { categoryOf, comparablePrice, DEFAULT_CATEGORY } from "@/lib/categories";
 import { areaAround } from "@/lib/geo";
 import { searchCity } from "@/lib/intent/place";
 import type { SearchIntent } from "@/lib/intent/schema";
-import { toFullDeposit } from "@/lib/pricing";
 import { isPlaceholderPrice, isSharedHousing } from "@/lib/quality";
 import type { Listing, ListingSource } from "@/lib/types";
 
@@ -15,8 +15,11 @@ export interface SearchResult {
   /** Other sites the same apartment is posted on. */
   alsoOn: ListingSource[];
   budget: BudgetFit;
-  /** Full-deposit equivalent of the listed price (for fair comparison). */
-  fullDeposit: number;
+  /**
+   * The price listings of the category are compared by (src/lib/categories.ts): full-deposit
+   * equivalent for rentals, total price for sales, price per night for short stays.
+   */
+  price: number;
   /** 0–100 match score. */
   score: number;
   breakdown: ScoreBreakdown;
@@ -41,24 +44,27 @@ export interface SearchResponse {
 const LIMIT = 20;
 
 /**
- * Hard-filter by city and budget, then soft-score and rank. `limit` defaults to the top 20; the API asks
+ * Hard-filter by category, city and budget, then soft-score and rank. `limit` defaults to the top 20; the API asks
  * for everything so the client can refine (filter / re-sort) instantly without a round trip.
  */
 export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS, limit = LIMIT): SearchResponse {
   const results: SearchResult[] = [];
+  const category = intent.category ?? DEFAULT_CATEGORY;
   const city = searchCity(intent);
   const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(intent.nearMe, city) : null;
   const excluded = { placeholderPrice: 0, sharedRoom: 0 };
   const relevant = (l: Listing) =>
     area ? area.includes(l.neighborhood) : !intent.neighborhoods.length || intent.neighborhoods.includes(l.neighborhood);
   for (const { listing, alsoOn } of dedupe(listings)) {
+    if (categoryOf(listing) !== category) continue;
     if (city && listing.city !== city) continue;
     if (area && !area.includes(listing.neighborhood)) continue;
     if (isPlaceholderPrice(listing)) {
       if (relevant(listing)) excluded.placeholderPrice++;
       continue;
     }
-    if (isSharedHousing(listing) !== intent.sharedRoom) {
+    // shared flats are a residential-rental thing («اتاق اجاره» in an office ad is just an office)
+    if (category === DEFAULT_CATEGORY && isSharedHousing(listing) !== intent.sharedRoom) {
       if (!intent.sharedRoom && relevant(listing)) excluded.sharedRoom++;
       continue;
     }
@@ -70,14 +76,14 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
       listing,
       alsoOn,
       budget,
-      fullDeposit: toFullDeposit(listing),
+      price: comparablePrice(listing),
       score,
       breakdown,
       highlights: hl,
       explanation: ruleExplanation(hl),
     });
   }
-  results.sort((a, b) => b.score - a.score || a.fullDeposit - b.fullDeposit);
+  results.sort((a, b) => b.score - a.score || a.price - b.price);
   return { results: results.slice(0, limit), total: results.length, excluded };
 }
 

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AMENITIES } from "@/lib/amenities";
 import type { ExplainApiResponse, SearchApiResponse, SearchIntent } from "@/lib/api-types";
+import { PRICE_LABEL, priceModelOf, type PriceModel } from "@/lib/categories";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { activeCount, applyRefine, domains as domainsOf, EMPTY_REFINE, SORTS, type Refine, type SortKey } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,8 @@ export function ResultsView({
   const [listHover, setListHover] = useState<string | null>(null);
   const [mapHover, setMapHover] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const domains = useMemo(() => domainsOf(data.results), [data.results]);
+  const model = priceModelOf(data.intent.category);
+  const domains = useMemo(() => domainsOf(data.results, model), [data.results, model]);
   const refined = useMemo(() => applyRefine(data.results, refine), [data.results, refine]);
   const visible = refined.slice(0, pages * PAGE);
   const nActive = activeCount(refine);
@@ -167,7 +169,7 @@ export function ResultsView({
           <SortBar value={refine.sort} onChange={(sort) => change({ ...refine, sort })} />
         </div>
 
-        <ActiveFilters refine={refine} onChange={change} />
+        <ActiveFilters refine={refine} model={model} onChange={change} />
 
         {showMap && !wide ? (
           <div id="results-map" className="h-[calc(100dvh-8.5rem)] scroll-mt-32 overflow-hidden rounded-2xl">
@@ -333,10 +335,10 @@ function SortBar({ value, onChange }: { value: SortKey; onChange: (s: SortKey) =
 }
 
 /** Removable summary of the hand-set filters (separate from the AI chips above). */
-function ActiveFilters({ refine, onChange }: { refine: Refine; onChange: (r: Refine) => void }) {
+function ActiveFilters({ refine, model, onChange }: { refine: Refine; model: PriceModel; onChange: (r: Refine) => void }) {
   const chips: { id: string; label: string; next: Refine }[] = [];
   const range = (r: [number, number], f: (v: number) => string) => `${f(r[0])} تا ${f(r[1])}`;
-  if (refine.price) chips.push({ id: "price", label: `رهن کامل ${range(refine.price, formatToman)}`, next: { ...refine, price: null } });
+  if (refine.price) chips.push({ id: "price", label: `${model === "rent" ? "رهن کامل" : PRICE_LABEL[model].price} ${range(refine.price, formatToman)}`, next: { ...refine, price: null } });
   if (refine.area) chips.push({ id: "area", label: `${range(refine.area, toFaDigits)} متر`, next: { ...refine, area: null } });
   if (refine.ppm) chips.push({ id: "ppm", label: `هر متر ${range(refine.ppm, formatToman)}`, next: { ...refine, ppm: null } });
   for (const n of refine.neighborhoods)
