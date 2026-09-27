@@ -141,6 +141,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     and saved bottom sheets, bottom nav خانه · دستیار هوشمند · ذخیره‌شده‌ها), `save-button.tsx` (♥ also on result cards). Rail cards show no ad source (PR #19).
     All tests passing. Checked at 390 px (first visit → ♥ → picks; detail; saved; see-all) and 1440 px (unchanged), no page errors; re-checked after merging PRs #17–#19 (detail sheet now includes «اطراف این خونه چی داره؟»). 119 tests.
     Screenshots `docs/screenshots/mobile-home-feed-*.png`. Cards have no photos until real data lands.
+    PR #20 merged 2026-09-27; Production live (`POST /api/feed` with one save → picks «چون یه دوخوابه تو وکیل‌آباد ذخیره کردی»).
 - **Next:** owner: Neshan ticket (enable Search + Nearby on `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel
   (Open questions) → check `/api/nearby?id=dv-0901` on Production says `"neshan":"ok"`. Owner answers "real data
   source" (Open questions) → build the importer (**all six categories**: set `category`, `price` / `nightlyPrice`,
