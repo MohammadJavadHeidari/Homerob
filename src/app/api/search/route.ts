@@ -5,7 +5,8 @@ import { resolvePlace } from "@/lib/intent/place";
 import { SearchIntentSchema } from "@/lib/intent/schema";
 import { hoodInfo } from "@/lib/places";
 import { search } from "@/lib/search";
-import { suggest } from "@/lib/search/suggest";
+import { DEFAULT_CATEGORY } from "@/lib/categories";
+import { categoryCount, suggest } from "@/lib/search/suggest";
 
 const Body = z.object({
   query: z.string().trim().min(2).max(300),
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
     results,
     total,
     excluded,
+    categoryCount: categoryCount(intent.category ?? DEFAULT_CATEGORY, intent.city),
     suggestion: total === 0 ? suggest(intent) : null,
     meta: {
       intentSource: parsed.source,

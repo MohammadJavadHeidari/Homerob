@@ -10,6 +10,8 @@ export interface SearchApiResponse {
   results: SearchResult[];
   total: number;
   excluded: { placeholderPrice: number; sharedRoom: number };
+  /** Listings in the searched category (in the searched city, if any) before any other filter. */
+  categoryCount: number;
   suggestion: Suggestion | null;
   meta: {
     intentSource: "ai" | "rules" | "edited";

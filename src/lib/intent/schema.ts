@@ -1,9 +1,14 @@
 import { z } from "zod";
 
 import { AMENITY_KEYS } from "@/lib/amenities";
+import { CATEGORY_KEYS } from "@/lib/categories";
 
 /** Structured version of what the user asked for. Money is in Toman. */
 export const SearchIntentSchema = z.object({
+  /** Real-estate category (Divar's split). null = not stated → residential rent. */
+  category: z.enum(CATEGORY_KEYS).nullable().default(null),
+  /** Most the user can pay in a sale (total price) or a short stay (per night). null = not stated. */
+  maxPrice: z.number().nonnegative().nullable().default(null),
   /** Most rahn/deposit the user can pay. null = not stated. */
   maxDeposit: z.number().nonnegative().nullable(),
   /** Most monthly rent the user can pay. null = not stated. */
@@ -33,6 +38,8 @@ export const SearchIntentSchema = z.object({
 export type SearchIntent = z.infer<typeof SearchIntentSchema>;
 
 export const EMPTY_INTENT: SearchIntent = {
+  category: null,
+  maxPrice: null,
   maxDeposit: null,
   maxRent: null,
   flexibleConversion: true,

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import type { SearchResult } from "@/lib/api-types";
+import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
 import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { isSharedHousing } from "@/lib/quality";
@@ -44,7 +45,9 @@ export function ListingCard({
   compareDisabled: boolean;
   onToggleCompare: () => void;
 }) {
-  const { listing: l, budget, fullDeposit, score, alsoOn, highlights } = result;
+  const { listing: l, budget, price, score, alsoOn, highlights } = result;
+  const category = CATEGORIES[categoryOf(l)];
+  const model = category.priceModel;
   const cons = highlights.filter((h) => h.kind === "con").slice(0, 2);
   const pros = highlights.filter((h) => h.kind === "pro").slice(0, 2);
 
@@ -56,7 +59,7 @@ export function ListingCard({
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
             <SourceBadge source={l.source} url={l.url} />
-            {isSharedHousing(l) && (
+            {isSharedHousing(l) && categoryOf(l) === "residential-rent" && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
             {alsoOn.map((s) => (
@@ -97,13 +100,22 @@ export function ListingCard({
 
       {/* price */}
       <div className="bg-muted/50 grid grid-cols-2 gap-3 rounded-xl p-3">
-        <Price label="رهن" value={l.deposit} />
-        <Price label="اجاره ماهانه" value={l.monthlyRent} zero="رهن کامل" />
-        <p className="text-muted-foreground col-span-2 text-xs">
-          معادل رهن کامل: <span className="text-foreground font-medium">{formatToman(fullDeposit)}</span>
-          <span className="bg-border mx-2 inline-block h-3 w-px align-middle" />
-          هر متر {formatToman(Math.round(fullDeposit / l.areaM2))}
-        </p>
+        {model === "rent" ? (
+          <>
+            <Price label="رهن" value={l.deposit} />
+            <Price label="اجاره ماهانه" value={l.monthlyRent} zero="رهن کامل" />
+            <p className="text-muted-foreground col-span-2 text-xs">
+              معادل رهن کامل: <span className="text-foreground font-medium">{formatToman(price)}</span>
+              <span className="bg-border mx-2 inline-block h-3 w-px align-middle" />
+              هر متر {formatToman(Math.round(price / l.areaM2))}
+            </p>
+          </>
+        ) : (
+          <>
+            <Price label={PRICE_LABEL[model].price} value={price} />
+            {model === "sale" && <Price label="قیمت هر متر" value={Math.round(price / l.areaM2)} />}
+          </>
+        )}
         {budget.converted && (
           <p className="bg-primary/10 text-primary col-span-2 rounded-lg px-2.5 py-1.5 text-xs font-medium">
             با بودجهٔ تو: رهن {formatToman(Math.round(budget.deposit / 1e6) * 1e6)}
@@ -116,7 +128,7 @@ export function ListingCard({
 
       {/* features */}
       <ul className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-2 text-sm">
-        <Feature icon={BedDouble}>{roomsFa(l.rooms)}</Feature>
+        {category.residential && <Feature icon={BedDouble}>{roomsFa(l.rooms)}</Feature>}
         <Feature icon={Ruler}>{toFaDigits(l.areaM2)} متر</Feature>
         <Feature icon={Building2}>
           {l.floor === 0 ? "همکف" : `طبقه ${toFaDigits(l.floor)}`} از {toFaDigits(l.totalFloors)}
