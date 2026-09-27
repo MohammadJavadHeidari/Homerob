@@ -102,3 +102,13 @@
   page switches it. No category picker on the home page (landing stays logo + search). Residential
   rent stays the default. Categories without real ads show an honest "not yet" empty state. Listings
   are never invented. Research: `docs/research/categories.md`.
+- 2026-09-27 — **Neighborhood advantages** (owner request, from the call findings: "main competitive
+  advantage"). Each listing gets «اطراف این خونه چی داره؟» → a catchy AI title + only advantages
+  (metro, supermarket, 24h pharmacy, clinic, gym, park, mosque, bus-stop count) with walking minutes.
+  Places are **real** (OpenStreetMap via Overpass, baked into `src/data/pois.json`, ODbL), never
+  generated; the AI only words them and every number/"24h" is checked against the data. Walking time =
+  straight line × 1.3 at 80 m/min, labeled approximate. Lazy: one call per opened/selected listing.
+- 2026-09-27 — **Nearby places also from Neshan** (owner). Server-side `/v1/nearby` (layers) + `/v3/search`
+  (pharmacy, supermarket, bakery) around the listing with the *service* key `homerob-server` in `NESHAN_API_KEY`
+  (Vercel env only, never committed); merged with the baked OSM places, OSM alone as the fallback. Spec:
+  `docs/research/neshan-api.md`. Activation (ticket) and credit are the owner's call (paid service).

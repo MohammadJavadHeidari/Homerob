@@ -110,7 +110,7 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
           )}
           <RangeFilter k="price" model={model} results={results} refine={refine} domain={domains.price} onChange={(r) => set("price", r)} format={priceFmt} />
           {hasBudget && (
-            <p className="bg-brand-soft text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg px-2.5 py-2 text-xs leading-5">
+            <p className="bg-secondary text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border px-2.5 py-2 text-xs leading-5">
               <Sparkles className="text-primary size-3.5 shrink-0" />
               فقط آگهی‌های داخل بودجه‌ات نشون داده می‌شن.
               <button
@@ -153,8 +153,8 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
                     onClick={() => set("rooms", toggle(refine.rooms, r))}
                     aria-pressed={on}
                     className={cn(
-                      "flex h-12 flex-col items-center justify-center rounded-xl border text-sm font-bold transition-colors disabled:opacity-35",
-                      on ? "border-primary bg-primary text-primary-foreground shadow-sm" : "bg-background hover:border-primary/50",
+                      "flex h-12 flex-col items-center justify-center rounded-lg border text-sm font-bold transition-colors disabled:opacity-35",
+                      on ? "border-foreground bg-foreground text-background" : "bg-background hover:border-foreground/40",
                     )}
                   >
                     {ROOM_LABEL(r)}
@@ -229,7 +229,7 @@ function Section({
     <section className={cn("py-4", !last && "border-b")}>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => setOpen((o) => !o)} className="group flex flex-1 items-center gap-2 text-start" aria-expanded={open}>
-          <Icon className="text-muted-foreground group-hover:text-primary size-4 transition-colors" />
+          <Icon className="text-muted-foreground group-hover:text-foreground size-4 transition-colors" />
           <span className="text-sm font-bold">{title}</span>
           {hint && <span className="text-muted-foreground text-xs">{hint}</span>}
           <AnimatePresence>
@@ -239,7 +239,7 @@ function Section({
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 transition={SPRING}
-                className="bg-primary size-2 rounded-full"
+                className="bg-foreground size-2 rounded-full"
               />
             )}
           </AnimatePresence>
@@ -308,7 +308,7 @@ function ToggleChip({
       aria-pressed={selected}
       className={cn(
         "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors disabled:opacity-35",
-        selected ? "border-primary bg-primary text-primary-foreground shadow-sm" : "bg-background hover:border-primary/50 hover:text-primary",
+        selected ? "border-foreground bg-foreground text-background" : "bg-background hover:border-foreground/40",
       )}
     >
       <AnimatePresence initial={false} mode="popLayout">
@@ -325,7 +325,7 @@ function ToggleChip({
         ) : null}
       </AnimatePresence>
       {label}
-      <span className={cn("rounded-full px-1.5 text-[10px] tabular-nums", selected ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground")}>
+      <span className={cn("rounded-full px-1.5 text-[10px] tabular-nums", selected ? "bg-background/20" : "bg-muted text-muted-foreground")}>
         {toFaDigits(count)}
       </span>
     </motion.button>
@@ -416,7 +416,7 @@ function RangeFilter({
           return (
             <motion.div
               key={i}
-              className={cn("flex-1 rounded-t-[3px] transition-colors duration-200", on ? "bg-primary/70" : "bg-muted-foreground/20")}
+              className={cn("flex-1 rounded-t-[3px] transition-colors duration-200", on ? "bg-foreground/70" : "bg-muted-foreground/20")}
               initial={false}
               animate={{ height: n === 0 ? 2 : `${Math.max(8, (n / peak) * 100)}%` }}
               transition={{ ...SPRING, delay: i * 0.008 }}
@@ -441,14 +441,14 @@ function RangeFilter({
         >
           <SliderPrimitive.Control className="relative flex h-6 w-full touch-none items-center select-none">
             <SliderPrimitive.Track className="bg-muted relative h-1.5 w-full rounded-full">
-              <SliderPrimitive.Indicator className="bg-primary rounded-full" />
+              <SliderPrimitive.Indicator className="bg-foreground rounded-full" />
             </SliderPrimitive.Track>
             {[0, 1].map((i) => (
               <SliderPrimitive.Thumb
                 key={i}
                 index={i}
                 aria-label={i === 0 ? "از" : "تا"}
-                className="border-primary bg-background ring-primary/20 block size-5 rounded-full border-2 shadow-md transition-[box-shadow,scale] outline-none hover:ring-6 focus-visible:ring-6 active:scale-110"
+                className="border-foreground bg-background ring-foreground/15 block size-5 rounded-full border-2 shadow-md transition-[box-shadow,scale] outline-none hover:ring-6 focus-visible:ring-6 active:scale-110"
               />
             ))}
           </SliderPrimitive.Control>

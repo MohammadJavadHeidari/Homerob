@@ -116,63 +116,75 @@ export function SearchApp() {
           !compact && "dark text-foreground pt-16 sm:pt-16",
         )}
       >
-        <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
-          <button
-            type="button"
-            onClick={reset}
-            data-hero-block
-            className={cn("flex", compact ? "items-center gap-3" : "flex-col items-center")}
-            aria-label="صفحهٔ اول"
-          >
-            {compact ? (
-              // torob.com's header: the mark with a 24px/700 «ترب» in the logo red
-              <span className="flex items-center gap-1.5">
-                <TorobLogo className="size-9" />
-                <span className="text-2xl font-bold text-(--logo-color-1)">ترب</span>
-              </span>
-            ) : (
-              // torob.com's home: the 88px mark sits right on top of a 40px bold «ترب» (monochrome in dark).
-              <>
-                <TorobLogo className="size-18 sm:size-22" />
-                <span className="text-[40px] leading-[1.6] font-bold">ترب</span>
-              </>
-            )}
-          </button>
-        </header>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit(query);
-          }}
-          data-hero-block
-          className={cn("flex w-full flex-col gap-2 sm:flex-row", !compact && "mx-auto max-w-2xl")}
+        {/* results: torob.com's white header band (full-bleed via shadow + clip-path, no horizontal scroll) */}
+        <div
+          className={cn(
+            "flex flex-col gap-6",
+            compact && "bg-card -mt-6 pt-6 pb-5 shadow-[0_0_0_100vmax_var(--color-card)] [clip-path:inset(0_-100vmax)] sm:-mt-10 sm:pt-10",
+          )}
         >
-          {/* torob.com's search box: 48px, 8px radius, 1px border, search icon inside at the start */}
-          <div className="relative sm:flex-1">
-            <Search className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
-              className="border-input focus-visible:border-ring focus-visible:ring-ring/40 bg-card h-12 w-full rounded-lg border ps-12 pe-4 text-base outline-none focus-visible:ring-3"
-              aria-label="چی می‌خوای؟"
-              maxLength={300}
+          <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
+            <button
+              type="button"
+              onClick={reset}
+              data-hero-block
+              className={cn("flex", compact ? "items-center gap-3" : "flex-col items-center")}
+              aria-label="صفحهٔ اول"
+            >
+              {compact ? (
+                // torob.com's header: the mark with a 24px/700 «ترب» in the logo red
+                <span className="flex items-center gap-1.5">
+                  <TorobLogo className="size-9" />
+                  <span className="text-2xl font-bold text-(--logo-color-1)">ترب</span>
+                </span>
+              ) : (
+                // torob.com's home: the 88px mark sits right on top of a 40px bold «ترب» (monochrome in dark).
+                <>
+                  <TorobLogo className="size-18 sm:size-22" />
+                  <span className="text-[40px] leading-[1.6] font-bold">ترب</span>
+                </>
+              )}
+            </button>
+          </header>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit(query);
+            }}
+            data-hero-block
+            className={cn("flex w-full flex-col gap-2 sm:flex-row sm:gap-0", !compact && "mx-auto max-w-2xl")}
+          >
+            {/* torob.com's search box: 48px, 8px radius, 1px border, search icon inside at the start; on wider
+                screens the red submit is attached to it (input rounded on the start side, button on the end) */}
+            <div className="relative sm:flex-1">
+              <Search className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
+                className={cn(
+                  "border-input focus-visible:border-ring focus-visible:ring-ring/40 h-12 w-full rounded-lg border ps-12 pe-4 text-base outline-none focus-visible:ring-3 sm:rounded-e-none sm:border-e-0",
+                  compact ? "bg-secondary" : "bg-card",
+                )}
+                aria-label="چی می‌خوای؟"
+                maxLength={300}
+              />
+            </div>
+            <Button type="submit" size="lg" className="h-12 rounded-lg px-6 text-base font-bold sm:rounded-s-none" disabled={status === "loading"}>
+              {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
+              جستجو
+            </Button>
+          </form>
+          {typing && (
+            <PlaceLine
+              query={query}
+              guess={guess}
+              onAddCity={addCity}
+              className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
             />
-          </div>
-          <Button type="submit" size="lg" className="h-12 rounded-lg px-6 text-base font-bold" disabled={status === "loading"}>
-            {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
-            جستجو
-          </Button>
-        </form>
-        {typing && (
-          <PlaceLine
-            query={query}
-            guess={guess}
-            onAddCity={addCity}
-            className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
-          />
-        )}
+          )}
+        </div>
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}

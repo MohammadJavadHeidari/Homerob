@@ -6,11 +6,14 @@ import nmp from "@neshan-maps-platform/mapbox-gl";
 import type { GeoJSONSource, Map as MapboxMap, Marker, Style } from "mapbox-gl";
 import { LocateFixed, Minus, Plus, ScanSearch, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
 
-import type { SearchResult } from "@/lib/api-types";
+import { NEARBY_ICON, NearbyAdvantages, useNearby } from "@/components/nearby-advantages";
+import type { NearbyApiResponse, SearchResult } from "@/lib/api-types";
 import { priceLineFa, roundPrice } from "@/lib/format";
 import { listingLatLng, type BBox } from "@/lib/geo";
+import type { PoiCat } from "@/lib/nearby/facts";
 import { hoodCenter } from "@/lib/places";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import type { Neighborhood } from "@/lib/types";
@@ -112,6 +115,22 @@ export default function ListingMap(props: ListingMapProps) {
         source: "focus",
         paint: { "line-color": "#d73948", "line-width": 2, "line-dasharray": [2, 1.5], "line-opacity": 0.7 },
       });
+      // selected home → its nearby advantages: a 5-minute walk ring and a line to each place
+      map.addSource("nearby", { type: "geojson", data: EMPTY_FC });
+      map.addLayer({
+        id: "nearby-ring",
+        type: "fill",
+        source: "nearby",
+        filter: ["==", ["get", "kind"], "ring"],
+        paint: { "fill-color": "#2563eb", "fill-opacity": 0.07 },
+      });
+      map.addLayer({
+        id: "nearby-lines",
+        type: "line",
+        source: "nearby",
+        filter: ["==", ["get", "kind"], "line"],
+        paint: { "line-color": ["get", "color"], "line-width": 2, "line-dasharray": [1, 1.6], "line-opacity": 0.75 },
+      });
       setReady(true);
     });
     map.on("dragstart", () => setMoved(true));
@@ -201,6 +220,46 @@ export default function ListingMap(props: ListingMapProps) {
     const { lat, lng } = listingLatLng(selected.listing);
     map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 14), duration: 700, offset: [0, -40] });
   }, [selected, ready]);
+
+  // ---------- nearby advantages of the selected home ----------
+  const nearby = useNearby(selected?.listing.id ?? null).data;
+  const [hotPoi, setHotPoi] = useState<PoiCat | null>(null);
+  const poiMarkers = useRef(new Map<PoiCat, HTMLElement>());
+  const card = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const src = map?.getSource("nearby") as GeoJSONSource | undefined;
+    if (!map || !ready || !src) return;
+    if (!selected || !nearby || nearby.id !== selected.listing.id) {
+      src.setData(EMPTY_FC);
+      return;
+    }
+    const home = listingLatLng(selected.listing);
+    src.setData(nearbyShapes(home, nearby));
+    const added: Marker[] = [];
+    nearby.items.forEach((item, i) => {
+      const el = poiElement(item, i);
+      poiMarkers.current.set(item.key, el);
+      added.push(new nmp.Marker({ element: el, anchor: "center" }).setLngLat([item.lng, item.lat]).addTo(map));
+    });
+    // show the home with all its places, above the floating card
+    const b = new nmp.LngLatBounds([home.lng, home.lat], [home.lng, home.lat]);
+    nearby.items.forEach((item) => b.extend([item.lng, item.lat]));
+    // the floating card covers the bottom of the map: keep everything above it
+    const h = box.current?.clientHeight ?? 600;
+    const bottom = Math.min((card.current?.offsetHeight ?? 280) + 36, h - 160);
+    map.fitBounds(b, { padding: { top: 56, bottom, left: 56, right: 56 }, maxZoom: 16, duration: 900 });
+    const els = poiMarkers.current;
+    return () => {
+      added.forEach((m) => m.remove());
+      els.clear();
+    };
+  }, [nearby, selected, ready]);
+
+  useEffect(() => {
+    for (const [key, el] of poiMarkers.current) el.classList.toggle("is-hot", key === hotPoi);
+  }, [hotPoi, nearby]);
 
   // ---------- focus outline ----------
   useEffect(() => {
@@ -304,12 +363,13 @@ export default function ListingMap(props: ListingMapProps) {
       <AnimatePresence>
         {selected && (
           <motion.div
+            ref={card}
             key={selected.listing.id}
             initial={{ opacity: 0, y: 30, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.97 }}
             transition={SPRING}
-            className="bg-card absolute inset-x-3 bottom-3 mx-auto flex max-w-md flex-col gap-2 rounded-2xl border p-3.5 shadow-xl"
+            className="bg-card absolute inset-x-3 bottom-3 mx-auto flex max-h-[62%] max-w-md flex-col gap-2 overflow-y-auto *:shrink-0 overscroll-contain rounded-2xl border p-3.5 shadow-xl [scrollbar-width:thin]"
           >
             <div className="flex items-start gap-3">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -326,7 +386,10 @@ export default function ListingMap(props: ListingMapProps) {
               </button>
             </div>
             <p className="text-sm font-medium">{priceLineFa(selected.listing)}</p>
-            {selectedWhy && <p className="bg-brand-soft line-clamp-2 rounded-lg px-2.5 py-1.5 text-xs leading-6">{selectedWhy}</p>}
+            {selectedWhy && <p className="bg-secondary line-clamp-2 rounded-lg border px-2.5 py-1.5 text-xs leading-6">{selectedWhy}</p>}
+            <div className="bg-muted/40 rounded-lg border p-2.5">
+              <NearbyAdvantages id={selected.listing.id} compact onHoverItem={setHotPoi} />
+            </div>
             <button
               type="button"
               onClick={() => onShowInList(selected.listing.id)}
@@ -376,6 +439,47 @@ function pinElement(r: SearchResult, i: number): HTMLElement {
   body.append(dot, label);
   pin.append(body);
   el.append(pin);
+  return el;
+}
+
+const EMPTY_FC = { type: "FeatureCollection" as const, features: [] };
+/** 5 minutes' walk, as the crow flies (see walkMeters in src/lib/nearby/facts.ts). */
+const WALK_RING_M = 310;
+
+function nearbyShapes(home: { lat: number; lng: number }, n: NearbyApiResponse) {
+  const k = Math.cos((home.lat * Math.PI) / 180);
+  const r = WALK_RING_M / 111_320;
+  const ring = Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * 2 * Math.PI;
+    return [home.lng + (r * Math.cos(a)) / k, home.lat + r * Math.sin(a)];
+  });
+  return {
+    type: "FeatureCollection" as const,
+    features: [
+      { type: "Feature" as const, properties: { kind: "ring" }, geometry: { type: "Polygon" as const, coordinates: [ring] } },
+      ...n.items.map((i) => ({
+        type: "Feature" as const,
+        properties: { kind: "line", color: NEARBY_ICON[i.key].color },
+        geometry: { type: "LineString" as const, coordinates: [[home.lng, home.lat], [i.lng, i.lat]] },
+      })),
+    ],
+  };
+}
+
+/** Round icon marker for a nearby place; the name shows on hover or when its row is hovered. */
+function poiElement(item: NearbyApiResponse["items"][number], i: number): HTMLElement {
+  const el = document.createElement("div");
+  el.className = "hr-poi";
+  el.style.setProperty("--poi", NEARBY_ICON[item.key].color);
+  el.style.setProperty("--d", `${120 + i * 90}ms`);
+  el.setAttribute("title", item.text);
+  const dot = document.createElement("span");
+  dot.className = "hr-poi__dot";
+  createRoot(dot).render(createElement(NEARBY_ICON[item.key].icon, { size: 14, strokeWidth: 2.4 }));
+  const label = document.createElement("span");
+  label.className = "hr-poi__label";
+  label.textContent = item.name ?? item.label;
+  el.append(dot, label);
   return el;
 }
 

@@ -38,6 +38,18 @@ torob.com uses IRANYekan (a commercial Fontiran font, not ours to ship) → we k
 close in feel. Torob sizes: base 14px, search 16px, wordmark 40/700, card title 14/700, price 14–16/700 in
 ink (prices are never red), store count 12px muted.
 
+## Light-theme patterns (torob.com, captured 2026-09-27: `docs/research/torob-light-theme.md`)
+- **Red is for the one main action**, the logo and text links. **Every selected / "on" control is ink
+  `#1E293B`**: filter chips, room tiles, sort pill, slider, histogram in range, compare toggle, map-view
+  toggle, the mobile sheet's apply button (Torob's «اعمال فیلتر» is ink with `#F8FAFC` text).
+- Cards: white on the `#F1F5F9` page, **no border, no shadow**; radius 16 on phones, 8 on desktop.
+- Results header: white full-width band; search input `#F8FAFC` with 1px `#CBD5E1`, the red submit attached to it
+  on ≥640px (input rounded on the start side, button on the end); phones keep a full-width button below.
+- Chips: Torob's outlined chip — `#F8FAFC`, 1px `#CBD5E1`, ink text (all "what the AI understood" chips).
+- AI explanation box: neutral `#F8FAFC` panel with a red sparkle, like Torob's AI (تربچت) card; not a red tint.
+- Count pills: `#CBD5E1` bg, ink text, small radius. Bottom sheet: 16px top radius.
+- Kept on purpose, unlike Torob: visible focus rings (Torob removes them) and our loading skeletons.
+
 ## Rules (from Torob's patterns)
 - Search box: 48px, 8px radius, 1px `--input` border, search icon inside at the start, tagline right under it.
 - Prices in bold ink, not brand red; red is for actions (buttons, active sort pill) and the logo.
