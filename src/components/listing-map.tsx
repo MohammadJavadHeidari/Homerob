@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { SearchResult } from "@/lib/api-types";
+import { priceLineFa, roundPrice } from "@/lib/format";
 import { listingLatLng, type BBox } from "@/lib/geo";
 import { hoodCenter } from "@/lib/places";
 import { formatToman, toFaDigits } from "@/lib/persian";
@@ -324,17 +325,7 @@ export default function ListingMap(props: ListingMapProps) {
                 <X className="size-4" />
               </button>
             </div>
-            <p className="text-sm">
-              رهن <b>{formatToman(selected.listing.deposit)}</b>
-              {selected.listing.monthlyRent > 0 ? (
-                <>
-                  {" "}
-                  · اجاره <b>{formatToman(selected.listing.monthlyRent)}</b>
-                </>
-              ) : (
-                " · رهن کامل"
-              )}
-            </p>
+            <p className="text-sm font-medium">{priceLineFa(selected.listing)}</p>
             {selectedWhy && <p className="bg-brand-soft line-clamp-2 rounded-lg px-2.5 py-1.5 text-xs leading-6">{selectedWhy}</p>}
             <button
               type="button"
@@ -374,14 +365,14 @@ function pinElement(r: SearchResult, i: number): HTMLElement {
   pin.className = "hr-pin";
   pin.style.setProperty("--pin", tone(r.score));
   pin.style.setProperty("--d", `${Math.min(i, 30) * 18}ms`);
-  pin.setAttribute("aria-label", `${r.listing.title}، ${formatToman(r.fullDeposit)}`);
+  pin.setAttribute("aria-label", `${r.listing.title}، ${formatToman(r.price)}`);
   const body = document.createElement("span");
   body.className = "hr-pin__body";
   const dot = document.createElement("span");
   dot.className = "hr-pin__dot";
   const label = document.createElement("span");
   label.className = "hr-pin__label";
-  label.textContent = formatToman(Math.round(r.fullDeposit / 1e7) * 1e7); // ۸۳۰ میلیون, not ۸۳۳٫۳
+  label.textContent = formatToman(roundPrice(r.price)); // ۸۳۰ میلیون, not ۸۳۳٫۳
   body.append(dot, label);
   pin.append(body);
   el.append(pin);

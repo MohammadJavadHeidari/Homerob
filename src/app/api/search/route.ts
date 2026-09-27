@@ -4,8 +4,9 @@ import { parseIntent } from "@/lib/intent";
 import { applyPlace, resolvePlace } from "@/lib/intent/place";
 import { SearchIntentSchema } from "@/lib/intent/schema";
 import { hoodInfo } from "@/lib/places";
+import { DEFAULT_CATEGORY } from "@/lib/categories";
 import { search } from "@/lib/search";
-import { suggest } from "@/lib/search/suggest";
+import { categoryCount, suggest } from "@/lib/search/suggest";
 import { detectPlace } from "@/lib/where";
 
 const Body = z.object({
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
     total,
     excluded,
     where,
+    categoryCount: categoryCount(intent.category ?? DEFAULT_CATEGORY, intent.city),
     suggestion: total === 0 ? suggest(intent) : null,
     meta: {
       intentSource: parsed.source,

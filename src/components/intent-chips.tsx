@@ -1,9 +1,10 @@
 "use client";
 
-import { MapPin, Sparkles, X, type LucideIcon } from "lucide-react";
+import { MapPin, Sparkles, Tag, X, type LucideIcon } from "lucide-react";
 
 import { AMENITIES } from "@/lib/amenities";
 import type { SearchIntent } from "@/lib/api-types";
+import { CATEGORIES, priceModelOf } from "@/lib/categories";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 
@@ -12,12 +13,23 @@ interface Chip {
   label: string;
   tone: "budget" | "place" | "home" | "must" | "nice" | "note";
   icon?: LucideIcon;
-  remove: (i: SearchIntent) => SearchIntent;
+  /** Missing = can't be removed here (the category is switched with the tabs). */
+  remove?: (i: SearchIntent) => SearchIntent;
 }
 
 /** Turn the parsed intent into human-readable, individually removable chips. */
 export function intentToChips(intent: SearchIntent): Chip[] {
   const chips: Chip[] = [];
+  if (intent.category) chips.push({ id: "category", label: CATEGORIES[intent.category].label, tone: "home", icon: Tag });
+  if (intent.maxPrice !== null) {
+    const nightly = priceModelOf(intent.category) === "nightly";
+    chips.push({
+      id: "price",
+      label: `${nightly ? "شبی" : "قیمت"} تا ${formatToman(intent.maxPrice)}`,
+      tone: "budget",
+      remove: (i) => ({ ...i, maxPrice: null }),
+    });
+  }
   if (intent.maxDeposit !== null) {
     chips.push({
       id: "deposit",
@@ -139,15 +151,19 @@ export function IntentChips({
               >
                 {chip.icon && <chip.icon className="size-3.5" />}
                 {chip.label}
-                <button
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => onChange(chip.remove(intent))}
-                  className="hover:bg-foreground/10 inline-flex size-6 items-center justify-center rounded-full transition-colors disabled:opacity-50"
-                  aria-label={`حذف ${chip.label}`}
-                >
-                  <X className="size-3.5" />
-                </button>
+                {chip.remove ? (
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onChange(chip.remove!(intent))}
+                    className="hover:bg-foreground/10 inline-flex size-6 items-center justify-center rounded-full transition-colors disabled:opacity-50"
+                    aria-label={`حذف ${chip.label}`}
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : (
+                  <span className="w-2" />
+                )}
               </span>
             </li>
           ))}

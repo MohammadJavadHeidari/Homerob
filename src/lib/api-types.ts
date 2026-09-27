@@ -13,6 +13,8 @@ export interface SearchApiResponse {
   excluded: { placeholderPrice: number; sharedRoom: number };
   /** Where the query text says they're looking; the UI asks when it's unclear. */
   where: PlaceGuess;
+  /** Listings in the searched category (in the searched city, if any) before any other filter. */
+  categoryCount: number;
   suggestion: Suggestion | null;
   meta: {
     intentSource: "ai" | "rules" | "edited";
