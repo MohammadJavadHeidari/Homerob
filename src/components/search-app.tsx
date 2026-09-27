@@ -1,28 +1,31 @@
 "use client";
 
 import { GitCompareArrows, Info, LoaderCircle, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CategoryTabs } from "@/components/category-tabs";
 import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
 import { IntentChips } from "@/components/intent-chips";
+import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
-import { readStoredPlace, useUserPlace } from "@/components/use-user-place";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
-import type { UserPlace } from "@/lib/geo";
-import type { HoodStat } from "@/lib/hood-stats";
+import { CATEGORIES, DEFAULT_CATEGORY, priceModelOf } from "@/lib/categories";
+import { withCategory } from "@/lib/intent/category";
 import { toFaDigits } from "@/lib/persian";
+import { isCovered } from "@/lib/places";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
+import { detectPlace } from "@/lib/where";
 
 const COMPARE_MAX = 3;
 
 type Status = "idle" | "loading" | "done" | "error";
 
-export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: HoodStat[] } }) {
+export function SearchApp() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<SearchApiResponse | null>(null);
@@ -30,11 +33,8 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
-  const { status: placeStatus, place } = useUserPlace();
-  const near = useRef<UserPlace["neighborhood"]>(null);
-  useEffect(() => {
-    near.current = place?.neighborhood ?? null;
-  }, [place]);
+  // hand-set price ranges only make sense within one price model (rahn, a sale price, a night)
+  const priceModel = useRef(priceModelOf(null));
 
   const run = useCallback(async (q: string, intent?: SearchIntent) => {
     const text = q.trim();
@@ -48,14 +48,20 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: text, intent, near: near.current ?? undefined }),
+        body: JSON.stringify({ query: text, intent }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
       if (id !== requestId.current) return; // a newer search started
+      rememberCity(json.intent.city);
       setData(json);
       // a new query starts clean; editing the AI intent keeps the hand-set filters that still apply
-      setRefine((prev) => (intent ? clampRanges(prev, domains(json.results)) : EMPTY_REFINE));
+      const model = priceModelOf(json.intent.category);
+      const sameModel = model === priceModel.current;
+      priceModel.current = model;
+      setRefine((prev) =>
+        intent && sameModel ? clampRanges(prev, domains(json.results, model)) : intent ? { ...EMPTY_REFINE, sort: prev.sort } : EMPTY_REFINE,
+      );
       setStatus("done");
     } catch {
       if (id === requestId.current) setStatus("error");
@@ -66,7 +72,6 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q) {
-      near.current = readStoredPlace()?.neighborhood ?? null;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the input with the URL once on mount
       setQuery(q);
       void run(q);
@@ -88,11 +93,21 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
   };
 
   const compact = status !== "idle";
-  // Listings exist only for Mashhad; elsewhere the title stays on Mashhad and the pill says so.
+  // Where the text in the box points to — instant, offline, recomputed on every keystroke.
+  const guess = useMemo(() => detectPlace(query), [query]);
+  // Show it while writing a new query (not under the one the results are already for).
+  const typing = status === "idle" || query.trim() !== data?.query;
+
+  const addCity = (city: string) => {
+    const next = withCity(query, city);
+    setQuery(next);
+    // on the home page let them keep writing; on results, search again right away
+    if (compact) void run(next);
+  };
 
   return (
     <>
-      {!compact && <HeroMap stats={hoodStats} placeStatus={placeStatus} place={place} className="z-0" />}
+      {!compact && <HeroMap className="z-0" focus={query.trim().length >= 3 ? guess : undefined} />}
       <div
         className={cn(
           "relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
@@ -161,13 +176,33 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
               جستجو
             </Button>
           </form>
+          {typing && (
+            <PlaceLine
+              query={query}
+              guess={guess}
+              onAddCity={addCity}
+              className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
+            />
+          )}
         </div>
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
         {status === "done" && data && (
           <section className="flex flex-col gap-5">
+            <CategoryTabs
+              value={data.intent.category ?? DEFAULT_CATEGORY}
+              onChange={(k) => run(data.query, withCategory(data.intent, k))}
+            />
             <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+            <PlaceQuestion
+              data={data}
+              onAddCity={(city) => {
+                const next = withCity(data.query, city);
+                setQuery(next);
+                void run(next);
+              }}
+            />
             <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
             {data.total === 0 ? (
               <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
@@ -213,18 +248,16 @@ export function SearchApp({ hoodStats }: { hoodStats: { total: number; hoods: Ho
           </>
         )}
 
-        <footer data-hero-block className={cn("text-muted-foreground mt-auto text-center text-xs leading-6", compact ? "border-t pt-6" : "pt-4")}>
-          {compact ? (
-            <>
-              این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
-              هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
-              تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
-            </>
-          ) : (
-            // map credit only: OSM's license (ODbL) requires it wherever the map is shown
-            <span className="opacity-60">نقشه: © OpenStreetMap و geoBoundaries</span>
-          )}
-        </footer>
+        {/* Home page: logo + search box only (owner). The home map's credit (geoBoundaries, CC BY 4.0)
+            lives here on the results page and in the README. */}
+        {compact && (
+          <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
+            این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+            هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
+            تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
+            <span className="block opacity-60">نقشهٔ صفحهٔ اول: geoBoundaries (CC BY 4.0)</span>
+          </footer>
+        )}
       </div>
     </>
   );
@@ -286,15 +319,25 @@ function LoadingState() {
 }
 
 function EmptyState({ data, onApply }: { data: SearchApiResponse; onApply: (i: SearchIntent) => void }) {
-  const hasBudget = data.intent.maxDeposit !== null || data.intent.maxRent !== null;
+  const hasBudget = data.intent.maxDeposit !== null || data.intent.maxRent !== null || data.intent.maxPrice !== null;
+  const newCity = data.intent.city && !isCovered(data.intent.city) ? data.intent.city : null;
+  const category = CATEGORIES[data.intent.category ?? DEFAULT_CATEGORY];
+  const [title, hint] = !data.categoryCount && data.intent.category && data.intent.category !== DEFAULT_CATEGORY
+    ? [
+        `هنوز آگهی «${category.label}»${data.intent.city ? ` در ${data.intent.city}` : ""} نداریم`,
+        `ترب دسته‌به‌دسته آگهی‌های واقعی دیوار و شیپور رو اضافه می‌کنه (${category.types.join("، ")}).`,
+      ]
+    : newCity
+    ? [`هنوز آگهی‌ای از ${newCity} نداریم`, "ترب شهربه‌شهر آگهی‌های واقعی رو اضافه می‌کنه."]
+    : hasBudget
+      ? ["هیچ آگهی‌ای با این بودجه نیست", category.priceModel === "rent" ? "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره." : "قیمت‌ها از بودجه‌ات بالاترن."]
+      : ["آگهی‌ای پیدا نشد", "فیلترها رو کمتر کن یا جور دیگه‌ای بنویس."];
   return (
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed px-6 py-12 text-center">
       <SearchX className="text-muted-foreground size-10" />
       <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-bold">{hasBudget ? "هیچ آگهی‌ای با این بودجه نیست" : "آگهی‌ای پیدا نشد"}</h2>
-        <p className="text-muted-foreground text-sm">
-          {hasBudget ? "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره." : "فیلترها رو کمتر کن یا جور دیگه‌ای بنویس."}
-        </p>
+        <h2 className="text-lg font-bold">{title}</h2>
+        <p className="text-muted-foreground text-sm">{hint}</p>
       </div>
       {data.suggestion && (
         <Button variant="outline" className="h-auto rounded-xl px-4 py-2.5 text-sm whitespace-normal" onClick={() => onApply(data.suggestion!.intent)}>

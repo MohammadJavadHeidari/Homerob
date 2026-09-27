@@ -1,4 +1,6 @@
 // Generates src/data/listings.json — realistic, deterministic sample rental listings for Mashhad.
+// TEMPORARY: the project now uses real listings only (docs/DECISIONS.md, 2026-09-26). This sample set
+// stays until real data replaces it; don't extend it with more generated listings or cities.
 // Run: node scripts/generate-listings.mjs
 // Prices are Toman (2026 levels). Seeded RNG → same output every run.
 
@@ -7,6 +9,7 @@ import { writeFileSync } from "node:fs";
 const RATE = 0.03; // keep in sync with MONTHLY_RATE in src/lib/pricing.ts
 const NOW = new Date("2026-09-24T12:00:00+03:30");
 const PER_NEIGHBORHOOD = 15;
+const CITY = "مشهد";
 
 // ---------- seeded RNG ----------
 let seed = 20260924;
@@ -294,6 +297,7 @@ for (const hood of Object.keys(HOODS)) {
   for (let i = 0; i < PER_NEIGHBORHOOD; i++) listings.push(makeListing(hood, idx++));
 }
 listings.sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+const out = listings.map(({ id, source, title, ...rest }) => ({ id, source, title, city: CITY, ...rest }));
 
-writeFileSync(new URL("../src/data/listings.json", import.meta.url), JSON.stringify(listings, null, 2) + "\n");
+writeFileSync(new URL("../src/data/listings.json", import.meta.url), JSON.stringify(out, null, 2) + "\n");
 console.log(`wrote ${listings.length} listings`);

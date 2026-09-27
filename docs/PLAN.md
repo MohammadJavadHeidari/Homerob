@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 6
+- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26; categories — 2026-09-27)
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -75,7 +75,44 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     one screen at 390 and 1440 px), one brand chip style, neutral source badges, new icon + `og.png`.
     Fixed: Neshan CSS `:root { --primary }` turned the brand color blue on desktop results (tokens now
     on `html:root`). Rule parser reads "۵۰۰ رهن" (number before keyword). 59 tests.
-- **Next:** owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
+  - Owner request (2026-09-26) — **scale to all of Iran:** `src/lib/places.ts` (city list + neighborhood
+    registry with centers/aliases/adjacency; replaces `NEIGHBORHOODS` / `neighborhoods.ts`), `Listing.city`
+    (+ optional `lat`/`lng`/`url` for real ads), intent `city` (rule parser `findCity`, LLM prompt lists
+    covered cities), `resolvePlace` (city implied by a neighborhood, neighborhoods of other cities dropped),
+    hard city filter in search, stats keyed city+neighborhood (no price verdict under 5 listings), city chip,
+    empty state «هنوز آگهی‌ای از X نداریم» + «در مشهد N آگهی هست», city on cards/compare, link to the
+    original ad when `url` is set, filter panel lists only neighborhoods in the results, home map flies to
+    the visitor's covered city (else the city with the most listings; roads only baked for Mashhad), titles +
+    `og.png` say «ایران». 69 tests. Rules: CLAUDE.md hard stop "no live scraping" replaced by **real data only**.
+  - Owner request (2026-09-26) — **landing for all of Iran:** no location request on entry
+    (`use-user-place.ts`, `/api/geo`, `hood-stats.ts` removed), the map stays on Iran (Mashhad roads /
+    neighborhood pins / panel / status pill removed; `build-hero-map.mjs` builds only Iran), illustrative
+    "new ad" place pins drop across Iran every ~2s with only a generic title (weighted by city size, never
+    under the logo/search, max 4, no duplicate titles), home shows only logo + search (credit moved to the
+    results footer). Checked at 390 and 1440 px: 0 geolocation calls, no page errors.
+    Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
+  - PR #13 (nationwide scale + real-data rule + Iran-only landing) merged 2026-09-26; Production live
+    (title «… در ایران», `/api/geo` gone, Tehran query → «در مشهد ۹۴ آگهی هست»).
+  - Owner request (2026-09-27) — **"where is the user looking?"**: `src/lib/where.ts` (`detectPlace`: city →
+    neighborhood/landmark → ambiguous/none; hand list of well-known Tehran/Mashhad/Isfahan/Shiraz/Karaj/Tabriz
+    areas), ~80 cities (Kish, Qeshm, north coast, satellite cities, Finglish), «،» no longer breaks city matching,
+    moving "از X به Y" → Y. Live line under the search box + focus pin(s) on the home map; one-tap city chips
+    that write the city into the query; results page asks when no city / ambiguous. Server: text city beats the
+    LLM, landmarks fill a missed city, unknown cities kept (Kish used to return Mashhad listings). 79 tests.
+    Research + design: `docs/research/location-intent.md`; screenshots `docs/screenshots/where-*.png`.
+  - Owner request (2026-09-27) — **real-estate categories** (Divar's six: residential rent/sale, office &
+    commercial rent/sale, short-term, construction projects). `src/lib/categories.ts` (registry, price model
+    per category, `comparablePrice`, keyword `detectCategory`). `Listing.category` / `price` / `nightlyPrice`,
+    intent `category` + `maxPrice` (rules + LLM prompt with 3 new examples; `settleBudget` / `withCategory` in
+    `src/lib/intent/category.ts`). Search hard-filters by category; budget, medians, dedup key, placeholder
+    prices, highlights, explanations, compare rows, map pins and card price block follow the category's price
+    model. Results page: `category-tabs.tsx` (scrollable row; switching re-searches with the same request),
+    category + price chips, filter panel hides rooms for offices/shops and the rahn/ejare switch outside
+    rentals, per-model slider steps. Empty state «هنوز آگهی «X» در Y نداریم» + one click back to a category with
+    results. Home page unchanged. 88 tests. Research: `docs/research/categories.md`. Checked at 390 and 1280 px.
+- **Next:** owner answers "real data source" (Open questions) → build the importer (**all six categories**:
+  set `category`, `price` / `nightlyPrice`, see `docs/DATA.md`), replace the sample set.
+  Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -102,6 +139,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
+  (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
+  (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.
+  سریع، بدون حساب جدید. (ب) API رسمی دیوار (کنار): تمیزتر، ولی حساب و کلید می‌خواد و زمان‌بره.
+  (ج) جمع‌آوری دستی در CSV / Google Sheet: ساده ولی کند. فرمت لازم: `docs/DATA.md`.
+  تا جواب: داده‌ی نمونه‌ی مشهد موقتاً می‌مونه (در فوتر نتایج هم نوشته شده).
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -190,8 +233,16 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Torob everywhere the user sees it (owner: yes): results header, tab icon, apple icon, og.png, title, copy;
       home-page demo line removed (map credit kept, ODbL)
 - [x] Home map: gold lines (Iran, arc, roads) blurred, dots/pins sharp — focus on the search box (owner request)
+- [x] Scale to all of Iran: city-aware data model, intent, search, UI, home map (2026-09-26)
+- [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
+- [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
+- [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
+- [x] Know where the user is looking from the prompt (city / neighborhood / landmark, ask when unclear) (2026-09-27)
+- [x] Real-estate categories in search + filters (Divar's six; tabs on results, AI detects the category) (2026-09-27)
 - [x] Torob light-theme patterns on the results page (owner's second capture): ink for selected controls, borderless
       cards, white header band with attached search, outlined chips, neutral AI box (`docs/BRAND.md`)
+- [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
+- [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

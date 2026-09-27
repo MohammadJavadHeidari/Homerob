@@ -1,3 +1,4 @@
+import { categoryOf, comparablePrice, priceModelOf } from "@/lib/categories";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { MONTHLY_RATE, depositAtRent, rentAtDeposit, toFullDeposit } from "@/lib/pricing";
 import type { Listing } from "@/lib/types";
@@ -22,12 +23,20 @@ export interface BudgetFit {
   monthlyRent: number;
   /** True when the price split was changed to fit the budget. */
   converted: boolean;
-  /** How far under the tightest stated limit (Toman, full-deposit equivalent). Negative = over. */
+  /** How far under the tightest stated limit (Toman, comparable price: full-deposit equivalent for rentals). Negative = over. */
   headroom: number | null;
 }
 
-/** Hard budget check with rahn ↔ ejare conversion when the user and landlord both allow it. */
+/**
+ * Hard budget check. Rentals: rahn ↔ ejare conversion when the user and landlord both allow it.
+ * Sales and short stays: one price against `maxPrice`.
+ */
 export function fitBudget(l: Listing, intent: SearchIntent, rate = MONTHLY_RATE): BudgetFit {
+  if (priceModelOf(categoryOf(l)) !== "rent") {
+    const price = comparablePrice(l);
+    const P = intent.maxPrice;
+    return { fits: P === null || price <= P, deposit: l.deposit, monthlyRent: l.monthlyRent, converted: false, headroom: P === null ? null : P - price };
+  }
   const { maxDeposit: D, maxRent: R } = intent;
   const asListed = { deposit: l.deposit, monthlyRent: l.monthlyRent };
   const canConvert = intent.flexibleConversion && l.convertible;

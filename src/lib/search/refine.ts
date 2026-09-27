@@ -1,7 +1,8 @@
 import { AMENITIES, type AmenityKey } from "@/lib/amenities";
+import type { PriceModel } from "@/lib/categories";
 import { inBBox, listingLatLng, type BBox } from "@/lib/geo";
 import { MONTHLY_RATE } from "@/lib/pricing";
-import { NEIGHBORHOODS, type ListingSource, type Neighborhood } from "@/lib/types";
+import type { ListingSource, Neighborhood } from "@/lib/types";
 
 import type { SearchResult } from "./index";
 
@@ -75,9 +76,9 @@ export type FilterKey = Exclude<keyof Refine, "sort">;
 
 // ---------- accessors ----------
 
-export const priceOf = (r: SearchResult) => r.fullDeposit;
+export const priceOf = (r: SearchResult) => r.price;
 export const areaOf = (r: SearchResult) => r.listing.areaM2;
-export const ppmOf = (r: SearchResult) => Math.round(r.fullDeposit / r.listing.areaM2);
+export const ppmOf = (r: SearchResult) => Math.round(r.price / Math.max(1, r.listing.areaM2));
 /** Full-deposit Toman → equivalent monthly rent with no deposit. */
 export const toMonthly = (fullDeposit: number) => Math.round(fullDeposit * MONTHLY_RATE);
 
@@ -117,6 +118,13 @@ export function withoutFilter(results: SearchResult[], f: Refine, skip: FilterKe
 
 // ---------- facets ----------
 
+/** Neighborhoods present in the results, most listings first (the filter's options). */
+export function neighborhoodsOf(results: SearchResult[]): Neighborhood[] {
+  const n = new Map<string, number>();
+  for (const r of results) n.set(r.listing.neighborhood, (n.get(r.listing.neighborhood) ?? 0) + 1);
+  return [...n].sort((a, b) => b[1] - a[1]).map(([k]) => k);
+}
+
 export interface Facets {
   rooms: Record<number, number>;
   neighborhoods: Record<string, number>;
@@ -134,7 +142,7 @@ export function facets(results: SearchResult[], f: Refine): Facets {
   const ages = AGE_OPTIONS.map((a) => String(a));
   return {
     rooms: count("rooms", ROOM_OPTIONS, (r, k) => Math.min(r.listing.rooms, 4) === k),
-    neighborhoods: count("neighborhoods", NEIGHBORHOODS, (r, k) => r.listing.neighborhood === k),
+    neighborhoods: count("neighborhoods", neighborhoodsOf(results), (r, k) => r.listing.neighborhood === k),
     // amenities combine with AND, so each count also includes the already-selected ones
     amenities: count("amenities", FILTER_AMENITIES, (r, k) =>
       [...f.amenities, k].every((a) => AMENITIES[a].has(r.listing)),
@@ -194,17 +202,31 @@ export function clampRanges(f: Refine, domains: Record<"price" | "area" | "ppm",
 
 export type RangeKey = "price" | "area" | "ppm";
 
-/** Slider step and bound rounding per range filter. */
-export const RANGE_STEPS: Record<RangeKey, { step: number; round: number }> = {
-  price: { step: 10_000_000, round: 50_000_000 },
-  area: { step: 5, round: 10 },
-  ppm: { step: 100_000, round: 1_000_000 },
+type Steps = Record<RangeKey, { step: number; round: number }>;
+
+/** Slider step and bound rounding per range filter, per price model (billions to buy, millions a night). */
+export const RANGE_STEPS: Record<PriceModel, Steps> = {
+  rent: {
+    price: { step: 10_000_000, round: 50_000_000 },
+    area: { step: 5, round: 10 },
+    ppm: { step: 100_000, round: 1_000_000 },
+  },
+  sale: {
+    price: { step: 100_000_000, round: 500_000_000 },
+    area: { step: 5, round: 10 },
+    ppm: { step: 1_000_000, round: 10_000_000 },
+  },
+  nightly: {
+    price: { step: 100_000, round: 500_000 },
+    area: { step: 5, round: 10 },
+    ppm: { step: 1_000, round: 10_000 },
+  },
 };
 
 export const RANGE_VALUE: Record<RangeKey, (r: SearchResult) => number> = { price: priceOf, area: areaOf, ppm: ppmOf };
 
 /** Stable slider domains, from the full (unfiltered) result set. */
-export function domains(results: SearchResult[]): Record<RangeKey, Range> {
-  const d = (k: RangeKey) => bounds(results.map(RANGE_VALUE[k]), RANGE_STEPS[k].round);
+export function domains(results: SearchResult[], model: PriceModel = "rent"): Record<RangeKey, Range> {
+  const d = (k: RangeKey) => bounds(results.map(RANGE_VALUE[k]), RANGE_STEPS[model][k].round);
   return { price: d("price"), area: d("area"), ppm: d("ppm") };
 }

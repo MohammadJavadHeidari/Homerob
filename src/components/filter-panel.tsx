@@ -29,12 +29,14 @@ import { useEffect, useId, useMemo, useState } from "react";
 
 import { AMENITIES, type AmenityKey } from "@/lib/amenities";
 import type { SearchIntent, SearchResult } from "@/lib/api-types";
+import { CATEGORIES, DEFAULT_CATEGORY, PRICE_LABEL, type PriceModel } from "@/lib/categories";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import {
   AGE_OPTIONS,
   facets,
   FILTER_AMENITIES,
   histogram,
+  neighborhoodsOf,
   RANGE_STEPS,
   RANGE_VALUE,
   ROOM_OPTIONS,
@@ -46,7 +48,7 @@ import {
   type RangeKey,
   type Refine,
 } from "@/lib/search/refine";
-import { NEIGHBORHOODS, type ListingSource } from "@/lib/types";
+import type { ListingSource } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
@@ -90,31 +92,36 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
   const fc: Facets = useMemo(() => facets(results, refine), [results, refine]);
   const set = <K extends keyof Refine>(key: K, value: Refine[K]) => onChange({ ...refine, [key]: value });
   const [unit, setUnit] = useState<"deposit" | "rent">("deposit");
-  const hasBudget = intent.maxDeposit !== null || intent.maxRent !== null;
+  const category = CATEGORIES[intent.category ?? DEFAULT_CATEGORY];
+  const model = category.priceModel;
+  const hasBudget = intent.maxDeposit !== null || intent.maxRent !== null || intent.maxPrice !== null;
 
-  const priceFmt = (v: number) => formatToman(unit === "rent" ? toMonthly(v) : v);
+  const priceFmt = (v: number) => formatToman(model === "rent" && unit === "rent" ? toMonthly(v) : v);
+  const priceHint = model !== "rent" ? `(${PRICE_LABEL[model].price})` : unit === "rent" ? "(اجارهٔ ماهانه، بدون رهن)" : "(معادل رهن کامل)";
 
   return (
     <LayoutGroup id={group}>
       <div className={cn("flex flex-col", className)}>
-        <Section title="قیمت" hint={unit === "rent" ? "(اجارهٔ ماهانه، بدون رهن)" : "(معادل رهن کامل)"} icon={Wallet} active={!!refine.price} onClear={() => set("price", null)}>
-          <Segmented
-            layoutId="unit"
-            value={unit}
-            onChange={setUnit}
-            options={[
-              { value: "deposit", label: "رهن کامل" },
-              { value: "rent", label: "اجارهٔ کامل" },
-            ]}
-          />
-          <RangeFilter k="price" results={results} refine={refine} domain={domains.price} onChange={(r) => set("price", r)} format={priceFmt} />
+        <Section title="قیمت" hint={priceHint} icon={Wallet} active={!!refine.price} onClear={() => set("price", null)}>
+          {model === "rent" && (
+            <Segmented
+              layoutId="unit"
+              value={unit}
+              onChange={setUnit}
+              options={[
+                { value: "deposit", label: "رهن کامل" },
+                { value: "rent", label: "اجارهٔ کامل" },
+              ]}
+            />
+          )}
+          <RangeFilter k="price" model={model} results={results} refine={refine} domain={domains.price} onChange={(r) => set("price", r)} format={priceFmt} />
           {hasBudget && (
             <p className="bg-secondary text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border px-2.5 py-2 text-xs leading-5">
               <Sparkles className="text-primary size-3.5 shrink-0" />
               فقط آگهی‌های داخل بودجه‌ات نشون داده می‌شن.
               <button
                 type="button"
-                onClick={() => onIntentChange({ ...intent, maxDeposit: null, maxRent: null, flexibleConversion: true })}
+                onClick={() => onIntentChange({ ...intent, maxDeposit: null, maxRent: null, maxPrice: null, flexibleConversion: true })}
                 className="text-primary font-bold underline-offset-4 hover:underline"
               >
                 برداشتن سقف بودجه
@@ -125,7 +132,7 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
 
         <Section title="محله" icon={MapPin} active={refine.neighborhoods.length > 0} onClear={() => set("neighborhoods", [])}>
           <div className="flex flex-wrap gap-1.5">
-            {NEIGHBORHOODS.map((n) => (
+            {neighborhoodsOf(results).map((n) => (
               <ToggleChip
                 key={n}
                 label={n}
@@ -137,43 +144,45 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
           </div>
         </Section>
 
-        <Section title="تعداد خواب" icon={BedDouble} active={refine.rooms.length > 0} onClear={() => set("rooms", [])}>
-          <div className="grid grid-cols-5 gap-1.5">
-            {ROOM_OPTIONS.map((r) => {
-              const on = refine.rooms.includes(r);
-              const n = fc.rooms[r];
-              return (
-                <motion.button
-                  key={r}
-                  type="button"
-                  whileTap={{ scale: 0.92 }}
-                  disabled={!on && n === 0}
-                  onClick={() => set("rooms", toggle(refine.rooms, r))}
-                  aria-pressed={on}
-                  className={cn(
-                    "flex h-12 flex-col items-center justify-center rounded-lg border text-sm font-bold transition-colors disabled:opacity-35",
-                    on ? "border-foreground bg-foreground text-background" : "bg-background hover:border-foreground/40",
-                  )}
-                >
-                  {ROOM_LABEL(r)}
-                  <span className={cn("text-[10px] font-medium", on ? "opacity-80" : "text-muted-foreground")}>{toFaDigits(n)}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </Section>
+        {category.residential && (
+          <Section title="تعداد خواب" icon={BedDouble} active={refine.rooms.length > 0} onClear={() => set("rooms", [])}>
+            <div className="grid grid-cols-5 gap-1.5">
+              {ROOM_OPTIONS.map((r) => {
+                const on = refine.rooms.includes(r);
+                const n = fc.rooms[r];
+                return (
+                  <motion.button
+                    key={r}
+                    type="button"
+                    whileTap={{ scale: 0.92 }}
+                    disabled={!on && n === 0}
+                    onClick={() => set("rooms", toggle(refine.rooms, r))}
+                    aria-pressed={on}
+                    className={cn(
+                      "flex h-12 flex-col items-center justify-center rounded-lg border text-sm font-bold transition-colors disabled:opacity-35",
+                      on ? "border-foreground bg-foreground text-background" : "bg-background hover:border-foreground/40",
+                    )}
+                  >
+                    {ROOM_LABEL(r)}
+                    <span className={cn("text-[10px] font-medium", on ? "opacity-80" : "text-muted-foreground")}>{toFaDigits(n)}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </Section>
+        )}
 
         <Section title="متراژ" hint="(متر)" icon={Ruler} active={!!refine.area} onClear={() => set("area", null)}>
-          <RangeFilter k="area" results={results} refine={refine} domain={domains.area} onChange={(r) => set("area", r)} format={(v) => `${toFaDigits(v)} متر`} />
+          <RangeFilter k="area" model={model} results={results} refine={refine} domain={domains.area} onChange={(r) => set("area", r)} format={(v) => `${toFaDigits(v)} متر`} />
         </Section>
 
-        <Section title="قیمت هر متر" hint="(معادل رهن کامل)" icon={Wallet} active={!!refine.ppm} onClear={() => set("ppm", null)} defaultOpen={false}>
-          <RangeFilter k="ppm" results={results} refine={refine} domain={domains.ppm} onChange={(r) => set("ppm", r)} format={formatToman} />
+        <Section title="قیمت هر متر" hint={`(${PRICE_LABEL[model].price})`} icon={Wallet} active={!!refine.ppm} onClear={() => set("ppm", null)} defaultOpen={false}>
+          <RangeFilter k="ppm" model={model} results={results} refine={refine} domain={domains.ppm} onChange={(r) => set("ppm", r)} format={formatToman} />
         </Section>
 
         <Section title="امکانات" icon={Sparkles} active={refine.amenities.length > 0} onClear={() => set("amenities", [])}>
           <div className="flex flex-wrap gap-1.5">
-            {FILTER_AMENITIES.map((k) => (
+            {FILTER_AMENITIES.filter((k) => model === "rent" || k !== "convertible").map((k) => (
               <ToggleChip
                 key={k}
                 icon={AMENITY_ICONS[k]}
@@ -391,6 +400,7 @@ const BINS = 28;
 
 function RangeFilter({
   k,
+  model,
   results,
   refine,
   domain,
@@ -398,6 +408,7 @@ function RangeFilter({
   format,
 }: {
   k: RangeKey;
+  model: PriceModel;
   results: SearchResult[];
   refine: Refine;
   domain: Range;
@@ -438,7 +449,7 @@ function RangeFilter({
           value={value}
           min={domain[0]}
           max={domain[1]}
-          step={RANGE_STEPS[k].step}
+          step={RANGE_STEPS[model][k].step}
           minStepsBetweenValues={1}
           onValueChange={(v) => setDraft(v as Range)}
           onValueCommitted={(v) => {

@@ -1,7 +1,9 @@
 import { AMENITIES, AMENITY_KEYS, type AmenityKey } from "@/lib/amenities";
-import { findNeighborhoods } from "@/lib/neighborhoods";
+import { detectCategory } from "@/lib/categories";
+import { findCity, findNeighborhoods } from "@/lib/places";
 import { normalizeFa } from "@/lib/text";
 
+import { settleBudget } from "./category";
 import { EMPTY_INTENT, type SearchIntent } from "./schema";
 
 /**
@@ -11,12 +13,14 @@ import { EMPTY_INTENT, type SearchIntent } from "./schema";
 export function parseIntentWithRules(query: string): SearchIntent {
   const text = wordsToDigits(normalizeFa(query));
   const intent: SearchIntent = structuredClone(EMPTY_INTENT);
+  intent.category = detectCategory(text);
 
   parseMoney(text, intent);
   parseRooms(text, intent);
   parseArea(text, intent);
   parseAmenities(text, intent);
-  intent.neighborhoods = findNeighborhoods(text);
+  intent.city = findCity(text);
+  intent.neighborhoods = findNeighborhoods(text, intent.city);
 
   if (/غیر ?قابل تبدیل|فقط رهن کامل|مبلغ ثابت/.test(text)) intent.flexibleConversion = false;
   if (/همخونه|هم خونه|هماتاقی|هم اتاقی|اجاره اتاق/.test(text)) intent.sharedRoom = true;
@@ -32,7 +36,7 @@ export function parseIntentWithRules(query: string): SearchIntent {
     intent.freeTextNotes = "زوج جوان";
   }
 
-  return intent;
+  return settleBudget(intent);
 }
 
 // ---------- numbers ----------

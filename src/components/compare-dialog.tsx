@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SearchResult } from "@/lib/api-types";
+import { CATEGORIES, categoryOf, PRICE_LABEL, type PriceModel } from "@/lib/categories";
 import { ageFa, roomsFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,9 @@ interface Row {
   key: (r: SearchResult) => string | number;
   /** If set, the best numeric key in the row is highlighted. */
   better?: Better;
+  /** Only for categories priced this way / for homes. */
+  model?: PriceModel;
+  residential?: boolean;
 }
 
 const yesNo = (v: boolean) =>
@@ -26,13 +30,17 @@ const yesNo = (v: boolean) =>
 
 const ROWS: Row[] = [
   { label: "تطابق با نیازت", show: (r) => `${toFaDigits(r.score)}٪`, key: (r) => r.score, better: "high" },
+  { label: "شهر", show: (r) => r.listing.city, key: (r) => r.listing.city },
   { label: "محله", show: (r) => r.listing.neighborhood, key: (r) => r.listing.neighborhood },
-  { label: "رهن", show: (r) => formatToman(r.listing.deposit), key: (r) => r.listing.deposit, better: "low" },
+  { label: PRICE_LABEL.sale.price, show: (r) => formatToman(r.price), key: (r) => r.price, better: "low", model: "sale" },
+  { label: PRICE_LABEL.nightly.price, show: (r) => formatToman(r.price), key: (r) => r.price, better: "low", model: "nightly" },
+  { label: "رهن", show: (r) => formatToman(r.listing.deposit), key: (r) => r.listing.deposit, better: "low", model: "rent" },
   {
     label: "اجاره ماهانه",
     show: (r) => (r.listing.monthlyRent ? formatToman(r.listing.monthlyRent) : "رهن کامل"),
     key: (r) => r.listing.monthlyRent,
     better: "low",
+    model: "rent",
   },
   {
     label: "با بودجهٔ تو",
@@ -41,16 +49,17 @@ const ROWS: Row[] = [
         ? `${formatToman(Math.round(r.budget.deposit / 1e6) * 1e6)} + ${formatToman(Math.round(r.budget.monthlyRent / 5e5) * 5e5)}`
         : "همان قیمت آگهی",
     key: (r) => (r.budget.converted ? `${r.budget.deposit}/${r.budget.monthlyRent}` : "same"),
+    model: "rent",
   },
-  { label: "معادل رهن کامل", show: (r) => formatToman(r.fullDeposit), key: (r) => r.fullDeposit, better: "low" },
+  { label: PRICE_LABEL.rent.price, show: (r) => formatToman(r.price), key: (r) => r.price, better: "low", model: "rent" },
   {
     label: "قیمت هر متر",
-    show: (r) => formatToman(Math.round(r.fullDeposit / r.listing.areaM2)),
-    key: (r) => Math.round(r.fullDeposit / r.listing.areaM2),
+    show: (r) => formatToman(Math.round(r.price / r.listing.areaM2)),
+    key: (r) => Math.round(r.price / r.listing.areaM2),
     better: "low",
   },
   { label: "متراژ", show: (r) => `${toFaDigits(r.listing.areaM2)} متر`, key: (r) => r.listing.areaM2, better: "high" },
-  { label: "خواب", show: (r) => roomsFa(r.listing.rooms), key: (r) => r.listing.rooms },
+  { label: "خواب", show: (r) => roomsFa(r.listing.rooms), key: (r) => r.listing.rooms, residential: true },
   {
     label: "طبقه",
     show: (r) => `${r.listing.floor === 0 ? "همکف" : toFaDigits(r.listing.floor)} از ${toFaDigits(r.listing.totalFloors)}`,
@@ -72,7 +81,7 @@ const ROWS: Row[] = [
     key: (r) => Number(r.listing.tags.includes("نزدیک قطار شهری")),
     better: "high",
   },
-  { label: "قابل تبدیل", show: (r) => yesNo(r.listing.convertible), key: (r) => Number(r.listing.convertible), better: "high" },
+  { label: "قابل تبدیل", show: (r) => yesNo(r.listing.convertible), key: (r) => Number(r.listing.convertible), better: "high", model: "rent" },
 ];
 
 export function CompareDialog({
@@ -85,7 +94,11 @@ export function CompareDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [onlyDiff, setOnlyDiff] = useState(true);
-  const rows = ROWS.map((row) => {
+  // compare opens from one search, so all items share a category
+  const category = CATEGORIES[items[0] ? categoryOf(items[0].listing) : "residential-rent"];
+  const rows = ROWS.filter(
+    (row) => (!row.model || row.model === category.priceModel) && (!row.residential || category.residential),
+  ).map((row) => {
     const keys = items.map(row.key);
     const differs = new Set(keys).size > 1;
     let best: (string | number) | null = null;

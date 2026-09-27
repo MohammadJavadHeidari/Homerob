@@ -1,5 +1,9 @@
+import { listings as ALL_LISTINGS } from "@/data/listings";
+import { CATEGORIES, categoryOf, DEFAULT_CATEGORY, type CategoryKey } from "@/lib/categories";
+import { withCategory } from "@/lib/intent/category";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import { COVERED_CITIES, isCovered } from "@/lib/places";
 
 import { search } from "./index";
 
@@ -13,9 +17,51 @@ export interface Suggestion {
 
 const round = (v: number, step: number) => Math.ceil(v / step) * step;
 
+/** Listings in a category, in one city or anywhere (city null). */
+export function categoryCount(category: CategoryKey, city: string | null): number {
+  return ALL_LISTINGS.filter((l) => categoryOf(l) === category && (!city || l.city === city)).length;
+}
+
 /** When nothing fits, find the smallest sensible relaxation that returns results. */
 export function suggest(intent: SearchIntent): Suggestion | null {
-  const { maxDeposit: D, maxRent: R } = intent;
+  const { maxDeposit: D, maxRent: R, maxPrice: P } = intent;
+
+  // A category with no listings yet (here or anywhere): no budget change helps.
+  const category = intent.category ?? DEFAULT_CATEGORY;
+  if (category !== DEFAULT_CATEGORY && !categoryCount(category, intent.city)) {
+    if (intent.city && categoryCount(category, null)) {
+      const relaxed: SearchIntent = { ...intent, city: null, neighborhoods: [], nearMe: null };
+      const { total } = search(relaxed);
+      if (total > 0) return { text: `در شهرهای دیگر ${toFaDigits(total)} آگهی ${CATEGORIES[category].label} هست`, intent: relaxed, count: total };
+    }
+    const relaxed = withCategory(intent, DEFAULT_CATEGORY);
+    const { total } = search(relaxed);
+    const fallback = total ? relaxed : { ...relaxed, city: null, neighborhoods: [], nearMe: null };
+    const count = total || search(fallback).total;
+    return count > 0
+      ? { text: `در «${CATEGORIES[DEFAULT_CATEGORY].label}» ${toFaDigits(count)} آگهی هست`, intent: fallback, count }
+      : null;
+  }
+
+  // A city with no listings yet: no budget change helps, point to the cities that have some.
+  if (intent.city && !isCovered(intent.city)) {
+    const relaxed: SearchIntent = { ...intent, city: null, neighborhoods: [], nearMe: null };
+    const { total } = search(relaxed);
+    const where = COVERED_CITIES.join("، ");
+    return total > 0
+      ? { text: `در ${where} ${toFaDigits(total)} آگهی هست`, intent: relaxed, count: total }
+      : null;
+  }
+
+  if (P !== null) {
+    for (const f of [1.15, 1.3, 1.5, 2]) {
+      const relaxed: SearchIntent = { ...intent, maxPrice: round(P * f, P < 100e6 ? 1e5 : 100e6) };
+      const { total } = search(relaxed);
+      if (total > 0) {
+        return { text: `با ${formatToman(relaxed.maxPrice!)}، ${toFaDigits(total)} آگهی پیدا می‌شه`, intent: relaxed, count: total };
+      }
+    }
+  }
 
   if (D !== null || R !== null) {
     for (const f of [1.15, 1.3, 1.5, 1.75, 2, 2.5]) {
