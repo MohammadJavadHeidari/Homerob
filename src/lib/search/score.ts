@@ -1,5 +1,5 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
-import { AMENITIES, amenityNo, amenityYes, type AmenityKey } from "@/lib/amenities";
+import { AMENITIES, amenityKnown, amenityNo, amenityUnstated, amenityYes, type AmenityKey } from "@/lib/amenities";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { adjacentHoods } from "@/lib/places";
@@ -91,8 +91,10 @@ function neighborhoodScore(l: Listing, intent: SearchIntent) {
   return 0;
 }
 
-function roomsScore(l: Listing, { minRooms: min, maxRooms: max }: SearchIntent) {
+function roomsScore({ rooms }: Listing, { minRooms: min, maxRooms: max }: SearchIntent) {
   if (min === null && max === null) return 1;
+  if (rooms === undefined) return 0.5; // the ad doesn't say
+  const l = { rooms };
   if (min !== null && l.rooms < min) return l.rooms === min - 1 ? 0.3 : 0;
   if (max !== null && l.rooms > max) return l.rooms === max + 1 ? 0.5 : 0.1;
   // in range; with only a minimum, much bigger than asked is slightly less relevant
@@ -154,7 +156,9 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   }
 
   // rooms / area
-  if (intent.minRooms !== null && l.rooms < intent.minRooms) {
+  if (l.rooms === undefined) {
+    if (intent.minRooms !== null || intent.maxRooms !== null) add("info", "تعداد خواب در آگهی نیامده", 5);
+  } else if (intent.minRooms !== null && l.rooms < intent.minRooms) {
     add("con", `${roomsLabel(l.rooms)} است، نه ${roomsLabel(intent.minRooms)}`, 9);
   } else if (intent.maxRooms !== null && l.rooms > intent.maxRooms) {
     add("info", `${roomsLabel(l.rooms)}، بزرگ‌تر از چیزی که گفتی`, 4);
@@ -166,7 +170,8 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   // amenities the user asked for
   for (const k of intent.mustHave) {
     if (AMENITIES[k].has(l)) add("pro", amenityYes(k), 4);
-    else add("con", amenityNo(k), 10);
+    else if (amenityKnown(k, l)) add("con", amenityNo(k), 10);
+    else add("con", amenityUnstated(k), 6);
   }
   for (const k of intent.niceToHave) {
     if (AMENITIES[k].has(l)) add("pro", amenityYes(k), 3);
@@ -180,9 +185,9 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   else if (ratio >= 1.12) add("con", `حدود ${toFaDigits(Math.round((ratio - 1) * 100))}٪ گران‌تر از ${sample}`, 5);
 
   // notable facts nobody asked about
-  if (!intent.mustHave.includes("parking") && !l.parking && l.rooms >= 2) add("con", "پارکینگ ندارد", 4);
-  if (!l.elevator && l.floor >= 3) add("con", `طبقه ${toFaDigits(l.floor)} بدون آسانسور`, 4);
-  if (l.buildingAge <= 2 && !intent.mustHave.includes("newBuilding")) add("pro", "نوساز", 2);
+  if (!intent.mustHave.includes("parking") && l.parking === false && (l.rooms ?? 0) >= 2) add("con", "پارکینگ ندارد", 4);
+  if (l.elevator === false && (l.floor ?? 0) >= 3) add("con", `طبقه ${toFaDigits(l.floor ?? 0)} بدون آسانسور`, 4);
+  if (l.buildingAge !== undefined && l.buildingAge <= 2 && !intent.mustHave.includes("newBuilding")) add("pro", "نوساز", 2);
   if (REFERENCE_TIME - Date.parse(l.postedAt) < 864e5) add("info", "آگهی امروز", 1);
 
   return out.sort((a, b) => b.weight - a.weight);

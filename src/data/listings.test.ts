@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { CITIES, hoodInfo, hoodsIn } from "@/lib/places";
 
-import { listings } from "./listings";
+import { listings, realListings } from "./listings";
 
 describe("listings", () => {
   it("has unique ids", () => {
@@ -32,9 +32,18 @@ describe("listings", () => {
       expect(l.monthlyRent).toBeGreaterThanOrEqual(0);
       expect(l.deposit + l.monthlyRent).toBeGreaterThan(0);
       expect(l.areaM2).toBeGreaterThan(10);
-      expect(l.floor).toBeLessThanOrEqual(l.totalFloors);
+      if (l.floor !== undefined && l.totalFloors !== undefined) expect(l.floor).toBeLessThanOrEqual(l.totalFloors);
       expect(Number.isNaN(Date.parse(l.postedAt))).toBe(false);
       expect(l.title.length).toBeGreaterThan(5);
+    }
+  });
+
+  it("real ads link to the original, carry no phone numbers and are rentals", () => {
+    for (const l of realListings) {
+      expect(l.url).toMatch(/^https:\/\/divar\.ir\/v\/[\w-]+$/);
+      expect(l.id).toBe(`dv-${l.url!.split("/").pop()}`);
+      expect(`${l.title} ${l.description}`).not.toMatch(/(?:09|۰۹)[\d۰-۹]{9}/);
+      expect(l.deposit + l.monthlyRent).toBeGreaterThan(0);
     }
   });
 });

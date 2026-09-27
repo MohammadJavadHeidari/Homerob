@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SearchResult } from "@/lib/api-types";
-import { ageFa, roomsFa } from "@/lib/format";
+import { ageFa, floorFa, roomsFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 
@@ -21,8 +21,12 @@ interface Row {
   better?: Better;
 }
 
-const yesNo = (v: boolean) =>
-  v ? <Check className="text-success mx-auto size-4" /> : <Minus className="text-muted-foreground mx-auto size-4" />;
+const UNKNOWN = <span className="text-muted-foreground text-xs">نامشخص</span>;
+
+const yesNo = (v: boolean | undefined) =>
+  v === undefined ? UNKNOWN : v ? <Check className="text-success mx-auto size-4" /> : <Minus className="text-muted-foreground mx-auto size-4" />;
+
+const flag = (v: boolean | undefined) => (v === undefined ? "?" : Number(v));
 
 const ROWS: Row[] = [
   { label: "تطابق با نیازت", show: (r) => `${toFaDigits(r.score)}٪`, key: (r) => r.score, better: "high" },
@@ -51,16 +55,25 @@ const ROWS: Row[] = [
     better: "low",
   },
   { label: "متراژ", show: (r) => `${toFaDigits(r.listing.areaM2)} متر`, key: (r) => r.listing.areaM2, better: "high" },
-  { label: "خواب", show: (r) => roomsFa(r.listing.rooms), key: (r) => r.listing.rooms },
+  {
+    label: "خواب",
+    show: (r) => (r.listing.rooms === undefined ? UNKNOWN : roomsFa(r.listing.rooms)),
+    key: (r) => r.listing.rooms ?? "?",
+  },
   {
     label: "طبقه",
-    show: (r) => `${r.listing.floor === 0 ? "همکف" : toFaDigits(r.listing.floor)} از ${toFaDigits(r.listing.totalFloors)}`,
+    show: (r) => (r.listing.floor === undefined ? UNKNOWN : floorFa(r.listing.floor, r.listing.totalFloors)),
     key: (r) => `${r.listing.floor}/${r.listing.totalFloors}`,
   },
-  { label: "سن بنا", show: (r) => ageFa(r.listing.buildingAge), key: (r) => r.listing.buildingAge, better: "low" },
-  { label: "پارکینگ", show: (r) => yesNo(r.listing.parking), key: (r) => Number(r.listing.parking), better: "high" },
-  { label: "آسانسور", show: (r) => yesNo(r.listing.elevator), key: (r) => Number(r.listing.elevator), better: "high" },
-  { label: "انباری", show: (r) => yesNo(r.listing.storage), key: (r) => Number(r.listing.storage), better: "high" },
+  {
+    label: "سن بنا",
+    show: (r) => (r.listing.buildingAge === undefined ? UNKNOWN : ageFa(r.listing.buildingAge)),
+    key: (r) => r.listing.buildingAge ?? "?",
+    better: "low",
+  },
+  { label: "پارکینگ", show: (r) => yesNo(r.listing.parking), key: (r) => flag(r.listing.parking), better: "high" },
+  { label: "آسانسور", show: (r) => yesNo(r.listing.elevator), key: (r) => flag(r.listing.elevator), better: "high" },
+  { label: "انباری", show: (r) => yesNo(r.listing.storage), key: (r) => flag(r.listing.storage), better: "high" },
   {
     label: "بالکن",
     show: (r) => yesNo(r.listing.tags.includes("بالکن")),
@@ -91,8 +104,8 @@ export function CompareDialog({
     const differs = new Set(keys).size > 1;
     let best: (string | number) | null = null;
     if (row.better && differs) {
-      const nums = keys as number[];
-      best = row.better === "low" ? Math.min(...nums) : Math.max(...nums);
+      const nums = keys.filter((k): k is number => typeof k === "number"); // "?" = not stated
+      if (nums.length) best = row.better === "low" ? Math.min(...nums) : Math.max(...nums);
     }
     return { row, keys, differs, best };
   });

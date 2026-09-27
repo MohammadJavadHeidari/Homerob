@@ -1,12 +1,41 @@
 # Listing data (real listings only)
 
-Since 2026-09-26 Homerob uses **real** rental ads only (see `docs/DECISIONS.md`). The current
-`src/data/listings.json` (100 generated Mashhad listings) is a temporary leftover until real data
-replaces it.
+Since 2026-09-26 Homerob uses **real** rental ads only (see `docs/DECISIONS.md`).
+
+- `src/data/divar.json` — **real** Divar ads, written by the importer below (13 so far, وکیل‌آباد مشهد,
+  captured 2026-09-27).
+- `src/data/listings.json` — 100 generated Mashhad listings, a temporary leftover until enough real
+  data replaces it (the owner decides when; `docs/PLAN.md` → Open questions).
+
+`src/data/listings.ts` serves both, real first.
+
+## Importing a Divar export
+
+The owner exports a Divar search with a browser table-scraper extension and saves the HTML (one table of
+search-result cards; optionally a second table of the opened ad pages — much better data).
+
+```bash
+# raw exports live in data/raw/ (gitignored: they contain agency names)
+npm run import:divar -- data/raw/<export>.html --captured 2026-09-27
+```
+
+`scripts/import-divar.ts` joins cards and ad pages on the ad token, keeps only whole-unit residential
+rentals (ودیعه/اجاره), and skips sales, nightly villa rentals («تا N نفر»), commercial units, ads with
+no area, and ads whose Divar district isn't registered in `HOODS` (unless the title/description names a
+registered neighborhood). It prints what it skipped and why. Re-running merges into `divar.json` by id.
+
+Nothing is guessed: rooms, floor, building age, elevator/parking/storage stay **unset** when the ad
+doesn't say, and the UI shows only what the ad states («نامشخص» in compare; a missing amenity in a real
+ad reads «آگهی دربارهٔ X چیزی نگفته», never «X ندارد»). Descriptions are the first lines Divar shows on
+the ad page (the export truncates them). Phone numbers, agency and seller names are never copied.
+
+Best export for the next batch: the **rent-residential** category of one neighborhood at a time
+(`divar.ir/s/mashhad/rent-residential?districts=…`), with each ad page opened so the second table has
+متراژ / ساخت / اتاق / طبقه / features.
 
 ## Format
 
-`src/data/listings.json` is an array of `Listing` (`src/lib/types.ts`). Money is **Toman**.
+Both files are arrays of `Listing` (`src/lib/types.ts`). Money is **Toman**.
 
 | field | example | notes |
 |---|---|---|
@@ -18,11 +47,14 @@ replaces it.
 | `neighborhood` | `"پونک"` | canonical name; must exist in `HOODS` for that city |
 | `street` | `"بلوار عدل"` | optional detail, `""` if none |
 | `deposit` / `monthlyRent` | `500000000` / `18000000` | rahn / ejare; `monthlyRent: 0` = full rahn |
-| `areaM2`, `rooms`, `floor`, `totalFloors`, `buildingAge` | `95, 2, 3, 5, 6` | `rooms: 0` = سوئیت; `floor: 0` = همکف |
-| `elevator`, `parking`, `storage`, `convertible` | booleans | `convertible` = «قابل تبدیل» |
+| `areaM2` | `95` | required (built area when the ad gives one) |
+| `rooms`, `floor`, `totalFloors`, `buildingAge` | `2, 3, 5, 6` | optional (unset = not stated); `rooms: 0` = سوئیت; `floor: 0` = همکف |
+| `elevator`, `parking`, `storage` | booleans | optional (unset = not stated) |
+| `convertible` | boolean | «قابل تبدیل» |
 | `tags` | `["بالکن", "مبله"]` | extra amenities in Persian |
 | `description` | text | as posted, **without phone numbers** |
-| `postedAt` | ISO date-time | |
+| `postedAt` | ISO date-time | from Divar's «۳ هفته پیش», relative to the capture date |
+| `imageUrl` | Divar CDN thumbnail | optional; not shown in the UI yet |
 | `lat`, `lng` | `35.76, 51.33` | optional; approximate location when the site shows one |
 
 Rules: no sellers' phone numbers or other personal data; keep the original text; placeholder
@@ -33,7 +65,7 @@ prices («توافقی», ۱٬۰۰۰ تومان) are fine — `src/lib/quality.t
 1. Add its neighborhoods to `HOODS` in `src/lib/places.ts` (name, city, center from OpenStreetMap,
    spelling aliases, adjacent neighborhoods). The city becomes "covered" automatically: search, the
    AI prompt, location ("near me") and the home map pick it up.
-2. Add its listings to `src/data/listings.json`. `npm test` checks every listing's city and
+2. Import its listings (above) into `src/data/divar.json`. `npm test` checks every listing's city and
    neighborhood are registered.
 3. Optional: its province name in `PROVINCE_OF` (`src/components/hero-map/hero-map.tsx`) and baked
    roads (`scripts/build-hero-map.mjs`, needs Overpass access).

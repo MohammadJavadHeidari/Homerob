@@ -88,10 +88,10 @@ function matches(r: SearchResult, f: Refine, skip?: FilterKey): boolean {
   if (skip !== "price" && !inRange(priceOf(r), f.price)) return false;
   if (skip !== "area" && !inRange(areaOf(r), f.area)) return false;
   if (skip !== "ppm" && !inRange(ppmOf(r), f.ppm)) return false;
-  if (skip !== "rooms" && f.rooms.length && !f.rooms.includes(Math.min(l.rooms, 4))) return false;
+  if (skip !== "rooms" && f.rooms.length && (l.rooms === undefined || !f.rooms.includes(Math.min(l.rooms, 4)))) return false;
   if (skip !== "neighborhoods" && f.neighborhoods.length && !f.neighborhoods.includes(l.neighborhood)) return false;
   if (skip !== "amenities" && !f.amenities.every((k) => AMENITIES[k].has(l))) return false;
-  if (skip !== "maxAge" && f.maxAge !== null && l.buildingAge > f.maxAge) return false;
+  if (skip !== "maxAge" && f.maxAge !== null && (l.buildingAge === undefined || l.buildingAge > f.maxAge)) return false;
   if (skip !== "bbox" && f.bbox && !inBBox(listingLatLng(l), f.bbox)) return false;
   if (skip !== "sources" && f.sources.length && ![l.source, ...r.alsoOn].some((s) => f.sources.includes(s))) return false;
   return true;
@@ -140,13 +140,13 @@ export function facets(results: SearchResult[], f: Refine): Facets {
   };
   const ages = AGE_OPTIONS.map((a) => String(a));
   return {
-    rooms: count("rooms", ROOM_OPTIONS, (r, k) => Math.min(r.listing.rooms, 4) === k),
+    rooms: count("rooms", ROOM_OPTIONS, (r, k) => r.listing.rooms !== undefined && Math.min(r.listing.rooms, 4) === k),
     neighborhoods: count("neighborhoods", neighborhoodsOf(results), (r, k) => r.listing.neighborhood === k),
     // amenities combine with AND, so each count also includes the already-selected ones
     amenities: count("amenities", FILTER_AMENITIES, (r, k) =>
       [...f.amenities, k].every((a) => AMENITIES[a].has(r.listing)),
     ),
-    maxAge: count("maxAge", ages, (r, k) => k === "null" || r.listing.buildingAge <= Number(k)),
+    maxAge: count("maxAge", ages, (r, k) => k === "null" || (r.listing.buildingAge ?? Infinity) <= Number(k)),
     sources: count("sources", ["divar", "sheypoor"] as ListingSource[], (r, k) => [r.listing.source, ...r.alsoOn].includes(k)),
   };
 }

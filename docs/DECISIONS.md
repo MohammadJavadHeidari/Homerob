@@ -90,3 +90,7 @@
   newest real titles once real data lands.
 - 2026-09-26 — Findings of the owner's call with Mohammad (2026-09-25) are kept in
   `docs/research/call-2026-09-25-mohammad.md` (Persian) for future reference.
+- 2026-09-27 — **Real data source: owner's Divar exports** (option (a) of the open question; no official
+  API, no new account). The owner exports Divar searches with a browser table-scraper extension; the
+  sandbox never calls Divar. `scripts/import-divar.ts` cleans them into `src/data/divar.json`. Raw exports
+  stay out of git (agency/seller names); fields an ad doesn't state stay unset — never guessed.

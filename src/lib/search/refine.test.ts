@@ -24,7 +24,7 @@ describe("refine", () => {
 
   it("treats rooms bucket 4 as 4+ and filters ranges inclusively", () => {
     const four = applyRefine(results, { ...EMPTY_REFINE, rooms: [4] });
-    expect(four.every((r) => r.listing.rooms >= 4)).toBe(true);
+    expect(four.every((r) => (r.listing.rooms ?? 0) >= 4)).toBe(true);
     const cheap = applyRefine(results, { ...EMPTY_REFINE, price: [0, 800e6] });
     expect(cheap.every((r) => priceOf(r) <= 800e6)).toBe(true);
   });

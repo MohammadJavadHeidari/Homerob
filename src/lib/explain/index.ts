@@ -98,7 +98,7 @@ function facts(r: SearchResult) {
     id: l.id,
     city: l.city,
     neighborhood: l.neighborhood,
-    rooms: l.rooms === 0 ? "سوئیت" : `${toFaDigits(l.rooms)} خوابه`,
+    rooms: l.rooms === undefined ? "در آگهی نیامده" : l.rooms === 0 ? "سوئیت" : `${toFaDigits(l.rooms)} خوابه`,
     area: `${toFaDigits(l.areaM2)} متر`,
     listedPrice: `رهن ${formatToman(l.deposit)}${l.monthlyRent ? ` + اجاره ${formatToman(l.monthlyRent)}` : " (رهن کامل)"}`,
     userWouldPay: r.budget.converted

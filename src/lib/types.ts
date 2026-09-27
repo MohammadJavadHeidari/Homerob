@@ -18,15 +18,17 @@ export interface Listing {
   /** Ejare (monthly rent), Toman. 0 means full rahn. */
   monthlyRent: number;
   areaM2: number;
-  /** Bedrooms. 0 = studio (suite). */
-  rooms: number;
-  floor: number;
-  totalFloors: number;
-  /** Years since construction. 0 = brand new. */
-  buildingAge: number;
-  elevator: boolean;
-  parking: boolean;
-  storage: boolean;
+  /** Bedrooms. 0 = studio (suite). Unset = the ad doesn't say (real ads often don't). */
+  rooms?: number;
+  /** 0 = ground floor (همکف). Unset = not stated. */
+  floor?: number;
+  totalFloors?: number;
+  /** Years since construction. 0 = brand new. Unset = not stated. */
+  buildingAge?: number;
+  /** Unset = the ad doesn't say (real ads). */
+  elevator?: boolean;
+  parking?: boolean;
+  storage?: boolean;
   /** Extra amenities / notes, e.g. "بالکن", "مبله", "نزدیک قطار شهری". */
   tags: string[];
   /** Whether the landlord accepts converting deposit ↔ rent. */

@@ -93,8 +93,16 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
   - PR #13 (nationwide scale + real-data rule + Iran-only landing) merged 2026-09-26; Production live
     (title «… در ایران», `/api/geo` gone, Tehran query → «در مشهد ۹۴ آگهی هست»).
-- **Next:** owner answers "real data source" (Open questions) → build the importer, replace the sample set.
-  Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
+  - **Real-data importer (2026-09-27):** owner exported a Divar search (169 ads, وکیل‌آباد) with a
+    table-scraper extension. `scripts/import-divar.ts` (`npm run import:divar -- <html> --captured <date>`,
+    raw exports in gitignored `data/raw/`) → `src/data/divar.json`: **13 real residential rentals** (82 sales,
+    62 nightly villa rentals, 10 commercial skipped; 1 without area, 1 in فرهنگ which isn't registered).
+    `Listing.rooms/floor/totalFloors/buildingAge/elevator/parking/storage` are now optional (unset = the ad
+    doesn't say): cards hide unknowns, compare shows «نامشخص», scoring gives unknown rooms 0.5 and says
+    «آگهی دربارهٔ X چیزی نگفته» instead of «X ندارد». Real ads are served next to the sample set (footer
+    says which is which). `tsx` added as a dev dependency for TS scripts. 70 tests.
+- **Next:** owner answers "sample set vs. real data" (Open questions) + sends rent-residential exports for
+  more neighborhoods → import, then drop the sample set. Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -121,12 +129,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
-  (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
-  (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.
-  سریع، بدون حساب جدید. (ب) API رسمی دیوار (کنار): تمیزتر، ولی حساب و کلید می‌خواد و زمان‌بره.
-  (ج) جمع‌آوری دستی در CSV / Google Sheet: ساده ولی کند. فرمت لازم: `docs/DATA.md`.
-  تا جواب: داده‌ی نمونه‌ی مشهد موقتاً می‌مونه (در فوتر نتایج هم نوشته شده).
+- **داده‌ی نمونه یا واقعی؟** از ۱۶۹ آگهی خروجی، فقط ۱۳ تا اجارهٔ مسکونی بود (بقیه فروش، ویلای شبانه،
+  تجاری). گزینه‌ها: (الف) **پیشنهاد من:** از دستهٔ «اجارهٔ مسکونی» دیوار برای هر محله (وکیل‌آباد، هاشمیه،
+  سجاد، قاسم‌آباد، الهیه، احمدآباد) ۳۰–۵۰ آگهی با صفحهٔ آگهی (جدول دوم) خروجی بگیر؛ بعد داده‌ی نمونه
+  رو کامل حذف می‌کنم. ویدیو کاملاً واقعی می‌شه، یه دور خروجی گرفتن می‌خواد. (ب) همین الان نمونه رو حذف
+  کنیم: فقط ۱۳ آگهی، کوئری‌های دمو (دوخوابه ۵۰۰ میلیون وکیل‌آباد) تقریباً خالی می‌شن. (ج) تا ضبط ویدیو
+  ترکیبی بمونه (واقعی‌ها با لینک دیوار): سریع، ولی داستان «فقط داده‌ی واقعی» ناقص می‌مونه.
+  تا جواب: ترکیبی (ج)؛ فوتر نتایج می‌گه کدوم‌ها واقعی‌اند.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
@@ -219,7 +228,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
 - [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
-- [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
+- [x] Real-data importer (`scripts/import-divar.ts`) + first real batch (13 وکیل‌آباد rentals from the owner's export)
+- [ ] Replace the Mashhad sample set — waiting on the owner's rent-residential exports ("sample vs. real", Open questions)
+- [ ] Show the Divar thumbnail (`imageUrl`) on real cards — propose to the owner with the next batch
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 
 ## Stretch (only if everything above is done)
