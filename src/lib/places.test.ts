@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { parseIntentWithRules } from "./intent/rules";
-import { resolvePlace, searchCity } from "./intent/place";
+import { fillNeighborhoods, resolvePlace, searchCity } from "./intent/place";
 import { EMPTY_INTENT } from "./intent/schema";
 import { canonicalCity, findCity, findNeighborhoods, HOODS, hoodInfo } from "./places";
 import { search } from "./search";
@@ -37,6 +37,19 @@ describe("neighborhood registry", () => {
     expect(findNeighborhoods("شهرک مهر آباد", "مشهد")).toContain("شهرک مهرآباد");
     expect(findNeighborhoods("امیر آباد ۳۴", "مشهد")).toEqual(["امیرآباد"]);
     expect(findNeighborhoods("نزدیک مفتح", "مشهد")).toEqual(["ایثار"]);
+  });
+});
+
+describe("fillNeighborhoods", () => {
+  it("fills a neighborhood the LLM left in its notes", () => {
+    const llm = { ...EMPTY_INTENT, city: "مشهد", minRooms: 2, freeTextNotes: "مفتح" };
+    expect(fillNeighborhoods(llm, "دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد").neighborhoods).toEqual(["ایثار"]);
+  });
+
+  it("keeps what the LLM named, and never looks outside the city", () => {
+    const named = { ...EMPTY_INTENT, city: "مشهد", neighborhoods: ["گلشور"] };
+    expect(fillNeighborhoods(named, "نزدیک مفتح").neighborhoods).toEqual(["گلشور"]);
+    expect(fillNeighborhoods({ ...EMPTY_INTENT, city: "تهران" }, "نزدیک مفتح").neighborhoods).toEqual([]);
   });
 });
 

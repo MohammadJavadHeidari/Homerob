@@ -1,4 +1,4 @@
-import { canonicalNeighborhood, cityName, cityOfHood } from "@/lib/places";
+import { canonicalNeighborhood, cityName, cityOfHood, findNeighborhoods } from "@/lib/places";
 import type { PlaceGuess } from "@/lib/where";
 
 import type { SearchIntent } from "./schema";
@@ -29,4 +29,14 @@ export function searchCity(intent: SearchIntent): string | null {
 export function applyPlace(intent: SearchIntent, said: PlaceGuess): SearchIntent {
   if (said.status !== "found") return intent;
   return said.via === "city" || !intent.city ? { ...intent, city: said.city } : intent;
+}
+
+/**
+ * The LLM sometimes files a neighborhood — or a street that stands for one («مفتح» → ایثار) — under
+ * notes. When it named none, take the registered neighborhoods the text mentions (within its city).
+ */
+export function fillNeighborhoods(intent: SearchIntent, text: string): SearchIntent {
+  if (intent.neighborhoods.length || intent.nearMe) return intent;
+  const found = findNeighborhoods(text, intent.city);
+  return found.length ? resolvePlace({ ...intent, neighborhoods: found }) : intent;
 }
