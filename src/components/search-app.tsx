@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CategoryTabs } from "@/components/category-tabs";
 import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
+import { HomeFeed, useIsPhone } from "@/components/home-feed";
 import { IntentChips } from "@/components/intent-chips";
 import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
@@ -17,7 +18,8 @@ import { CATEGORIES, DEFAULT_CATEGORY, priceModelOf } from "@/lib/categories";
 import { withCategory } from "@/lib/intent/category";
 import { toFaDigits } from "@/lib/persian";
 import { isCovered } from "@/lib/places";
-import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
+import { clampRanges, domains, EMPTY_REFINE, type Refine, type SortKey } from "@/lib/search/refine";
+import { rememberSearch } from "@/lib/taste-store";
 import { cn } from "@/lib/utils";
 import { detectPlace } from "@/lib/where";
 
@@ -33,10 +35,12 @@ export function SearchApp() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const phone = useIsPhone();
   // hand-set price ranges only make sense within one price model (rahn, a sale price, a night)
   const priceModel = useRef(priceModelOf(null));
 
-  const run = useCallback(async (q: string, intent?: SearchIntent) => {
+  const run = useCallback(async (q: string, intent?: SearchIntent, sort?: SortKey) => {
     const text = q.trim();
     if (text.length < 2) return;
     const id = ++requestId.current;
@@ -54,14 +58,18 @@ export function SearchApp() {
       const json: SearchApiResponse = await res.json();
       if (id !== requestId.current) return; // a newer search started
       rememberCity(json.intent.city);
+      // typed searches feed the phone home's recent chips and «ادامهٔ جستجو» rail
+      if (!intent) rememberSearch({ query: json.query, intent: json.intent, at: Date.now() });
       setData(json);
       // a new query starts clean; editing the AI intent keeps the hand-set filters that still apply
       const model = priceModelOf(json.intent.category);
       const sameModel = model === priceModel.current;
       priceModel.current = model;
-      setRefine((prev) =>
-        intent && sameModel ? clampRanges(prev, domains(json.results, model)) : intent ? { ...EMPTY_REFINE, sort: prev.sort } : EMPTY_REFINE,
-      );
+      setRefine((prev) => {
+        const next =
+          intent && sameModel ? clampRanges(prev, domains(json.results, model)) : intent ? { ...EMPTY_REFINE, sort: prev.sort } : EMPTY_REFINE;
+        return sort ? { ...next, sort } : next;
+      });
       setStatus("done");
     } catch {
       if (id === requestId.current) setStatus("error");
@@ -93,6 +101,17 @@ export function SearchApp() {
   };
 
   const compact = status !== "idle";
+
+  // phone home: a rail's «نمایش همه» / a recent chip runs its search; the assistant focuses the box
+  const runFromHome = (q: string, intent?: SearchIntent, sort?: SortKey) => {
+    setQuery(q);
+    window.scrollTo({ top: 0 });
+    void run(q, intent, sort);
+  };
+  const ask = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    inputRef.current?.focus({ preventScroll: true });
+  };
   // Where the text in the box points to — instant, offline, recomputed on every keystroke.
   const guess = useMemo(() => detectPlace(query), [query]);
   // Show it while writing a new query (not under the one the results are already for).
@@ -114,6 +133,8 @@ export function SearchApp() {
           status === "done" && data?.total ? "max-w-7xl" : "max-w-5xl",
           compareIds.length ? "pb-28" : "pb-16",
           !compact && "dark text-foreground pt-16 sm:pt-16",
+          // phone home: the first screen is logo + search; the feed sheet peeks in below it
+          !compact && phone && "min-h-[72svh] flex-none",
         )}
       >
         <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
@@ -152,6 +173,7 @@ export function SearchApp() {
           <div className="relative sm:flex-1">
             <Search className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2" />
             <input
+              ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
@@ -247,6 +269,7 @@ export function SearchApp() {
           </footer>
         )}
       </div>
+      {!compact && phone && <HomeFeed onRun={runFromHome} onAsk={ask} />}
     </>
   );
 }

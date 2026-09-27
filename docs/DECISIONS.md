@@ -102,3 +102,9 @@
   page switches it. No category picker on the home page (landing stays logo + search). Residential
   rent stays the default. Categories without real ads show an honest "not yet" empty state. Listings
   are never invented. Research: `docs/research/categories.md`.
+- 2026-09-27 — **Mobile home = search first, then scrollable rails** (owner chose option A of 3; "only saves +
+  two personal rails" and "Mohammad's full structure with login/onboarding" were the alternatives). Supersedes
+  "logo + search only" **on phones** (desktop unchanged). Under the search: recent-search chips, an assistant
+  banner, rails «پیشنهاد برای تو» (from on-device saves/views, each card with a true reason), «ادامهٔ جستجو»,
+  «زیر قیمت محله», «تازه‌ترین‌ها», «اخیراً دیدی»; ♥ saves; bottom nav خانه · دستیار هوشمند · ذخیره‌شده‌ها.
+  No account: history lives in localStorage. No category picker. Research: `docs/research/mobile-home.md`.

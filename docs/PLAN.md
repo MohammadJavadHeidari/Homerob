@@ -113,7 +113,15 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   - Owner request (2026-09-27) — **mobile home research** (Torob's mobile home as reference): `docs/research/mobile-home.md`
     + interactive mockup https://claude.ai/artifact/EVasBzUqdWVC3t8SdiJeay. Proposal: search first, then scrollable rails
     («پیشنهاد برای تو» from on-device saves/views with a reason line, «ادامهٔ جستجو», «زیر قیمت محله», «تازه‌ترین‌ها»,
-    «اخیراً دیدی»), ♥ saves, bottom nav. Waiting on the owner's pick (Open questions). No code yet.
+    «اخیراً دیدی»), ♥ saves, bottom nav. Owner chose option A → **built** (phones only, < 640px; desktop unchanged):
+    `src/lib/feed.ts` (pure, tested: taste profile from saves ×3 / opened ×1 → `SearchIntent` → existing scorer,
+    ±35% price band, max 2 per neighborhood in the first 5, rule-based reason chip per card; deals = ≥10% under the
+    neighborhood median with ≥5 samples; continue = last typed search, «N جدید» for ads newer than it),
+    `POST /api/feed`, `src/lib/taste-store.ts` (localStorage, no account), `home-feed.tsx` (light sheet peeking over the
+    map, recent-search chips, assistant banner, rails with a peek + «نمایش همه» → search with that intent/sort, detail
+    and saved bottom sheets, bottom nav خانه · دستیار هوشمند · ذخیره‌شده‌ها), `save-button.tsx` (♥ also on result cards).
+    108 tests. Checked at 390 px (first visit → ♥ → picks; detail; saved; see-all) and 1440 px (unchanged), no page errors.
+    Screenshots `docs/screenshots/mobile-home-feed-*.png`. Cards have no photos until real data lands.
 - **Next:** owner answers "real data source" (Open questions) → build the importer (**all six categories**:
   set `category`, `price` / `nightlyPrice`, see `docs/DATA.md`), replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
@@ -143,11 +151,6 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- **خانهٔ موبایل (ردیف‌های افقی + «پیشنهاد برای تو»)** — جزئیات: `docs/research/mobile-home.md` و
-  https://claude.ai/artifact/EVasBzUqdWVC3t8SdiJeay. تصمیم «صفحهٔ اول فقط لوگو و جستجو» رو روی موبایل عوض می‌کنه.
-  (الف) **پیشنهاد من:** خانهٔ کامل موبایل: ۵ ردیف، ذخیره با ♥، نوار پایین (خانه · دستیار هوشمند · ذخیره‌شده‌ها)، فید روی نقشه.
-  ~۴–۵ ساعت؛ برای جلسهٔ دوشنبه مثل اپ واقعیه. (ب) فقط ذخیره + دو ردیف شخصی زیر جستجوی فعلی: ~۲ ساعت، بار اول تغییری دیده نمی‌شه.
-  (ج) ساختار کامل محمد (ورود کاربر، قفل تحلیل، معرفی دستیار): بیش از یک روز، حساب کاربری لازم داره.
 - **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
   (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
   (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.

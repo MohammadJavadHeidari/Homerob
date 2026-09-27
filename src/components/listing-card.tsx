@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 
+import { SaveButton } from "@/components/save-button";
 import type { SearchResult } from "@/lib/api-types";
 import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
 import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
@@ -40,10 +41,11 @@ export function ListingCard({
   explanation: string;
   explaining: boolean;
   aiExplained: boolean;
-  rank: number;
-  comparing: boolean;
-  compareDisabled: boolean;
-  onToggleCompare: () => void;
+  /** Position in the results; omitted outside a ranked list (the home rails' detail sheet). */
+  rank?: number;
+  comparing?: boolean;
+  compareDisabled?: boolean;
+  onToggleCompare?: () => void;
 }) {
   const { listing: l, budget, price, score, alsoOn, highlights } = result;
   const category = CATEGORIES[categoryOf(l)];
@@ -57,7 +59,7 @@ export function ListingCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
+            {rank !== undefined && <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>}
             <SourceBadge source={l.source} url={l.url} />
             {isSharedHousing(l) && categoryOf(l) === "residential-rent" && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
@@ -82,19 +84,22 @@ export function ListingCard({
         </div>
         <div className="flex shrink-0 flex-col items-center gap-2">
           <ScoreBadge score={score} />
-          <button
-            type="button"
-            onClick={onToggleCompare}
-            disabled={compareDisabled && !comparing}
-            aria-pressed={comparing}
-            className={cn(
-              "flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-40",
-              comparing ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-primary",
-            )}
-          >
-            {comparing ? <Check className="size-3" /> : <GitCompareArrows className="size-3" />}
-            مقایسه
-          </button>
+          <SaveButton id={l.id} />
+          {onToggleCompare && (
+            <button
+              type="button"
+              onClick={onToggleCompare}
+              disabled={compareDisabled && !comparing}
+              aria-pressed={comparing}
+              className={cn(
+                "flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-40",
+                comparing ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-primary",
+              )}
+            >
+              {comparing ? <Check className="size-3" /> : <GitCompareArrows className="size-3" />}
+              مقایسه
+            </button>
+          )}
         </div>
       </div>
 
