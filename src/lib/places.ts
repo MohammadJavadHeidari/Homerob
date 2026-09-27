@@ -82,10 +82,10 @@ export const HOODS: HoodInfo[] = [
     city: "مشهد",
     center: { lat: 36.3345, lng: 59.4875 },
     aliases: ["وکیل آباد", "وکیلاباد", "وکیل اباد"],
-    adjacent: ["هاشمیه", "الهیه", "قاسم‌آباد"],
+    adjacent: ["هاشمیه", "الهیه", "قاسم‌آباد", "صیاد شیرازی"],
   },
   { name: "احمدآباد", city: "مشهد", center: { lat: 36.2965, lng: 59.5755 }, aliases: ["احمد آباد", "احمداباد", "احمد اباد"], adjacent: ["سجاد"] },
-  { name: "هاشمیه", city: "مشهد", center: { lat: 36.3105, lng: 59.5045 }, aliases: [], adjacent: ["وکیل‌آباد", "قاسم‌آباد"] },
+  { name: "هاشمیه", city: "مشهد", center: { lat: 36.3105, lng: 59.5045 }, aliases: [], adjacent: ["وکیل‌آباد", "قاسم‌آباد", "فرهنگ"] },
   {
     name: "قاسم‌آباد",
     city: "مشهد",
@@ -93,6 +93,26 @@ export const HOODS: HoodInfo[] = [
     aliases: ["قاسم آباد", "قاسماباد", "قاسم اباد"],
     adjacent: ["هاشمیه", "وکیل‌آباد"],
   },
+  // Added with real Divar imports (2026-09-27). Centers: OpenStreetMap / Nominatim (ODbL) district
+  // points; adjacent = district centers within ~2 km. Names follow Divar's district list.
+  { name: "صیاد شیرازی", city: "مشهد", center: { lat: 36.3299, lng: 59.4794 }, aliases: ["صیاد"], adjacent: ["وکیل‌آباد"] },
+  { name: "فرهنگ", city: "مشهد", center: { lat: 36.3267, lng: 59.5184 }, aliases: ["بلوار فرهنگ"], adjacent: ["هاشمیه"] },
+  // east Mashhad, around Mofatteh / Tabarsi
+  { name: "ایثار", city: "مشهد", center: { lat: 36.2956, lng: 59.6404 }, aliases: ["مفتح"], adjacent: ["گلشور", "طلاب", "تلگرد"] },
+  { name: "طلاب", city: "مشهد", center: { lat: 36.3024, lng: 59.6432 }, aliases: [], adjacent: ["ایثار", "گلشور", "تلگرد"] },
+  { name: "گلشور", city: "مشهد", center: { lat: 36.2953, lng: 59.6474 }, aliases: [], adjacent: ["ایثار", "طلاب", "تلگرد"] },
+  { name: "تلگرد", city: "مشهد", center: { lat: 36.2999, lng: 59.6578 }, aliases: [], adjacent: ["گلشور", "طلاب", "ایثار"] },
+  {
+    name: "شهرک مهرآباد",
+    city: "مشهد",
+    center: { lat: 36.2795, lng: 59.6625 },
+    aliases: ["شهرک مهر آباد", "مهرآباد", "مهر آباد"],
+    adjacent: ["پورسینا", "امیرآباد", "موعود"],
+  },
+  { name: "پورسینا", city: "مشهد", center: { lat: 36.2732, lng: 59.675 }, aliases: [], adjacent: ["موعود", "شهرک مهرآباد", "شهید معقول", "امیرآباد"] },
+  { name: "موعود", city: "مشهد", center: { lat: 36.2662, lng: 59.679 }, aliases: [], adjacent: ["پورسینا", "شهید معقول", "امیرآباد", "شهرک مهرآباد"] },
+  { name: "امیرآباد", city: "مشهد", center: { lat: 36.2649, lng: 59.6569 }, aliases: ["امیر آباد"], adjacent: ["شهید معقول", "شهرک مهرآباد", "پورسینا", "موعود"] },
+  { name: "شهید معقول", city: "مشهد", center: { lat: 36.2598, lng: 59.6663 }, aliases: ["معقول"], adjacent: ["امیرآباد", "موعود", "پورسینا"] },
 ];
 
 /** Cities that have neighborhoods (and so listings). */

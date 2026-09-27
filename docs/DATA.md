@@ -2,8 +2,15 @@
 
 Since 2026-09-26 Homerob uses **real** rental ads only (see `docs/DECISIONS.md`).
 
-`src/data/divar.json` holds **real** Divar ads, written by the importer below (13 so far, وکیل‌آباد
-مشهد, captured 2026-09-27); `src/data/listings.ts` serves it. The generated sample set was removed on
+`src/data/divar.json` holds **real** Divar ads, written by the importer below — 50 so far, all Mashhad:
+
+| export (in gitignored `data/raw/`) | captured | ads | imported |
+|---|---|---|---|
+| `divar-mashhad-vakilabad-2026-09-27.html` | `2026-09-27` | 169 (all real-estate) | 14 |
+| `divar-mashhad-mofatteh-2026-09-27.rtf` | `2026-09-27T22:00` | 45 (rent-residential) | 36 |
+
+Rebuild from scratch: delete `divar.json`, then import each export in the order above.
+; `src/data/listings.ts` serves it. The generated sample set was removed on
 2026-09-27 (owner). Unit tests use hand-written fixtures (`src/test/fixtures.ts`), never served.
 
 ## Importing a Divar export
@@ -13,8 +20,19 @@ search-result cards; optionally a second table of the opened ad pages — much b
 
 ```bash
 # raw exports live in data/raw/ (gitignored: they contain agency names)
-npm run import:divar -- data/raw/<export>.html --captured 2026-09-27
+npm run import:divar -- data/raw/<export>.html --captured 2026-09-27        # or .rtf; add --verbose
 ```
+
+- **RTF** (macOS TextEdit paste) is unwrapped automatically.
+- **Columns are found by header name**, not position — the extension reorders them between exports.
+- `--captured` is the base for Divar's «۳ ساعت پیش» (Tehran time; a date means noon). Ads whose page has
+  «انتشار آگهی: ۵ مهر ۱۴۰۵، ۲۱:۰۱» get that exact time instead.
+- Page tables with JSON-LD columns give exact `lat`/`lng`, rooms and floor size.
+- Cleaning: a symbolic rent (< ۵۰۰ هزار) next to a real deposit = full rahn; the «برای تبدیل بکشید» slider
+  = convertible; areas < 15 m² (a room / storage) or > 1000 m² (typo / whole plot) are skipped.
+- Known export gap: on **apartment** pages the extension writes the feature row (آسانسور / پارکینگ /
+  انباری) into the same columns as متراژ / ساخت / اتاق, so those three are lost; area then comes from the
+  title / description or the ad is skipped (6 Mofatteh apartments).
 
 `scripts/import-divar.ts` joins cards and ad pages on the ad token, keeps only whole-unit residential
 rentals (ودیعه/اجاره), and skips sales, nightly villa rentals («تا N نفر»), commercial units, ads with
@@ -59,8 +77,9 @@ prices («توافقی», ۱٬۰۰۰ تومان) are fine — `src/lib/quality.t
 
 ## Adding a city
 
-1. Add its neighborhoods to `HOODS` in `src/lib/places.ts` (name, city, center from OpenStreetMap,
-   spelling aliases, adjacent neighborhoods). The city becomes "covered" automatically: search, the
+1. Add its neighborhoods to `HOODS` in `src/lib/places.ts` (Divar's district name, city, center from
+   OpenStreetMap — Nominatim is reachable from the sandbox, Overpass isn't — spelling aliases, adjacent =
+   centers within ~2 km, symmetric; `npm test` checks). The city becomes "covered" automatically: search, the
    AI prompt, location ("near me") and the home map pick it up.
 2. Import its listings (above) into `src/data/divar.json`. `npm test` checks every listing's city and
    neighborhood are registered.

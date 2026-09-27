@@ -72,7 +72,7 @@ export function ListingCard({
           <h3 className="text-base leading-7 font-bold">{l.title}</h3>
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <MapPin className="size-3.5 shrink-0" />
-            {l.neighborhood}، {l.street}
+            {l.street ? `${l.neighborhood}، ${l.street}` : l.neighborhood}
             <span className="bg-border mx-1 inline-block h-3 w-px" />
             {l.city}
           </p>

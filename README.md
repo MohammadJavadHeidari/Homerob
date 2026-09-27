@@ -74,7 +74,7 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 - **Tailwind CSS v4** + **shadcn/ui** (base-ui), full RTL
 - **Google Gemini** (free tier) via an OpenAI-compatible client — `AI_PROVIDER` switches to DeepSeek / OpenAI / a no-key `mock` (rule-based) mode
 - **zod** for intent validation, **vitest** for unit tests
-- **Data** — real listings only (`docs/DATA.md`): real Divar rental ads, exported by the owner from a Divar search and cleaned by `scripts/import-divar.ts` into `src/data/divar.json` (first batch: 13 rentals in وکیل‌آباد, Mashhad). Fields an ad doesn't state stay unknown — never guessed. The code is city-aware: adding a city = registering its neighborhoods in `src/lib/places.ts` + importing its listings.
+- **Data** — real listings only (`docs/DATA.md`): real Divar rental ads, exported by the owner from a Divar search and cleaned by `scripts/import-divar.ts` into `src/data/divar.json` (so far 50 rentals in Mashhad: وکیل‌آباد and the Mofatteh area — پورسینا، گلشور، شهرک مهرآباد، تلگرد، …). Fields an ad doesn't state stay unknown — never guessed. The code is city-aware: adding a city = registering its neighborhoods in `src/lib/places.ts` + importing its listings.
 
 ## Run locally
 

@@ -34,7 +34,7 @@ describe("listings", () => {
       expect(l.areaM2).toBeGreaterThan(10);
       if (l.floor !== undefined && l.totalFloors !== undefined) expect(l.floor).toBeLessThanOrEqual(l.totalFloors);
       expect(Number.isNaN(Date.parse(l.postedAt))).toBe(false);
-      expect(l.title.length).toBeGreaterThan(5);
+      expect(l.title.length).toBeGreaterThan(2); // real titles can be as short as «60متر»
     }
   });
 

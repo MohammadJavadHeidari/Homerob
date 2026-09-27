@@ -1,5 +1,5 @@
 // Imports real Divar rental ads from a browser table export (HTML) into src/data/divar.json.
-// Run: npm run import:divar -- data/raw/<export>.html [--captured 2026-09-27]
+// Run: npm run import:divar -- data/raw/<export>.html|.rtf [--captured 2026-09-27]
 //
 // The export is what the owner's scraping extension produces from a Divar search: one table of
 // search-result cards (title, price lines, "در <district>", thumbnail, link) and, optionally, a
@@ -28,7 +28,9 @@ if (!file) {
   console.error("usage: npm run import:divar -- <export.html> [--captured YYYY-MM-DD]");
   process.exit(1);
 }
-const captured = new Date(`${args.includes("--captured") ? capturedArg : new Date().toISOString().slice(0, 10)}T12:00:00+03:30`);
+// --captured 2026-09-27 (noon) or 2026-09-27T22:00, Tehran time: the base for "۳ ساعت پیش".
+const capturedAt = args.includes("--captured") ? capturedArg : new Date().toISOString().slice(0, 10);
+const captured = new Date(`${capturedAt.includes("T") ? capturedAt : `${capturedAt}T12:00`}:00+03:30`);
 /** Solar Hijri year at capture time (for "ساخت ۱۳۹۴" → age). */
 const capturedYearFa = Number(toEnDigits(new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric" }).format(captured)));
 
@@ -58,6 +60,47 @@ function readTables(html: string): Cell[][][] {
       })),
     ),
   );
+}
+
+/**
+ * macOS TextEdit wraps a pasted export in RTF: non-ASCII as \uNNNN (UTF-16 units, negative when > 32767),
+ * cp1252 bytes as \'hh, escaped braces/backslashes, and "\" + newline for line breaks.
+ */
+function unwrapRtf(rtf: string): string {
+  const start = rtf.indexOf("<table");
+  const body = rtf.slice(start >= 0 ? rtf.lastIndexOf("\n", start) + 1 : 0);
+  const units: number[] = [];
+  let out = "";
+  const flush = () => {
+    out += String.fromCharCode(...units);
+    units.length = 0;
+  };
+  for (let i = 0; i < body.length; ) {
+    const rest = body.slice(i, i + 12);
+    const u = /^\\u(-?\d+) ?/.exec(rest);
+    if (u) {
+      const n = Number(u[1]);
+      units.push(n < 0 ? n + 65536 : n);
+      i += u[0].length;
+      continue;
+    }
+    flush();
+    const hex = /^\\'([0-9a-f]{2})/i.exec(rest);
+    if (hex) {
+      out += new TextDecoder("windows-1252").decode(Uint8Array.of(parseInt(hex[1], 16)));
+      i += hex[0].length;
+    } else if (/^\\uc\d ?/.test(rest)) {
+      i += /^\\uc\d ?/.exec(rest)![0].length;
+    } else if (/^\\[\\{}\n]/.test(rest)) {
+      out += rest[1]; // escaped \ { } or a "\" line break
+      i += 2;
+    } else {
+      if (!(rest[0] === "}" && i >= body.length - 3)) out += rest[0]; // skip the document's closing brace
+      i++;
+    }
+  }
+  flush();
+  return out;
 }
 
 const EMPTY = "—";
@@ -90,7 +133,8 @@ function roomsFromText(t: string): number | undefined {
 /** Floor stated in free text: "همکف", "طبقه ۲", "طبقه چهارم". */
 function floorFromText(t: string): number | undefined {
   if (/همکف/.test(t)) return 0;
-  const m = t.match(/طبقه\s*(\d+)/) ?? t.match(/طبقه\s*(اول|دوم|سوم|چهارم|پنجم|ششم|هفتم|هشتم)/);
+  // "طبقه ۲", not the area in "دو طبقه ۱۲۵ متری"
+  const m = t.match(/طبقه\s*(\d{1,2})(?!\d|\s*متر)/) ?? t.match(/طبقه\s*(اول|دوم|سوم|چهارم|پنجم|ششم|هفتم|هشتم)/);
   if (m) return ORDINAL[m[1]] ?? Number(m[1]);
   return undefined;
 }
@@ -153,7 +197,8 @@ function stated(t: string, word: string): boolean | undefined {
 }
 
 // ---------- read export ----------
-const tables = readTables(readFileSync(file, "utf8"));
+const raw = readFileSync(file, "utf8");
+const tables = readTables(raw.startsWith("{\\rtf") ? unwrapRtf(raw) : raw);
 const cardsTable = tables.find((t) => t[0]?.some((c) => /post-card__action URL/i.test(c.text)));
 const pagesTable = tables.find((t) => t[0]?.some((c) => /^PAGE URL$/i.test(c.text)));
 if (!cardsTable) {
@@ -161,60 +206,123 @@ if (!cardsTable) {
   process.exit(1);
 }
 const cardHead = cardsTable[0].map((c) => c.text);
-const pages = new Map((pagesTable ?? []).slice(1).map((r) => [tokenOf(r[1]?.links[0] ?? r[1]?.text ?? ""), r]));
+const pageHead = pagesTable?.[0].map((c) => c.text) ?? [];
+const iPageUrl = pageHead.findIndex((h) => /^PAGE URL$/i.test(h));
+const pages = new Map((pagesTable ?? []).slice(1).map((r) => [tokenOf(r[iPageUrl]?.links[0] ?? r[iPageUrl]?.text ?? ""), r]));
 
-/** Label → value pairs of an ad page row (group rows are label, label, value, value). */
+// The extension names columns after Divar's CSS classes, and their order changes between exports, so
+// cells are found by header name + content, never by position.
+const GROUP_LABELS = ["متراژ", "متراژ ویلا", "ساخت", "اتاق"];
+const ROW_LABELS = ["طبقه", "متراژ زمین", "ودیعه و اجاره", "قیمت هر متر", "نوع ملک", "کاربری", "هزینهٔ هر نفر اضافه"];
+const FEATURE = /پارکینگ|انباری|بالکن|آسانسور/;
+const WHEN_WHERE = /(?:پیش|دیروز|پریروز)\s+در\s|^در\s/;
+
+/** "۵ مهر ۱۴۰۵، ۲۱:۰۱" (Divar's "انتشار آگهی") → ISO, via Intl's Persian calendar. */
+function jalaliToIso(line: string): string | undefined {
+  const MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+  const m = toEnDigits(line).match(/(\d{1,2})\s+(\S+)\s+(\d{4})(?:،\s*(\d{1,2}):(\d{2}))?/);
+  const month = m ? MONTHS.indexOf(m[2]) + 1 : 0;
+  if (!m || !month) return undefined;
+  const [day, year] = [Number(m[1]), Number(m[3])];
+  const fmt = new Intl.DateTimeFormat("en-u-ca-persian-nu-latn", { year: "numeric", month: "numeric", day: "numeric", timeZone: "Asia/Tehran" });
+  const guess = Date.UTC(year + 621, 2, 21) + ((month <= 6 ? (month - 1) * 31 : 186 + (month - 7) * 30) + day - 1) * 864e5;
+  for (const off of [0, -1, 1, -2, 2]) {
+    const t = guess + off * 864e5 + 12 * 3600e3;
+    const p = Object.fromEntries(fmt.formatToParts(t).map((x) => [x.type, x.value]));
+    if (Number(p.year) === year && Number(p.month) === month && Number(p.day) === day) {
+      const [hh, mm] = m[4] ? [Number(m[4]), Number(m[5])] : [12, 0];
+      const dayStart = new Date(t).toISOString().slice(0, 10);
+      return new Date(`${dayStart}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00+03:30`).toISOString();
+    }
+  }
+  return undefined;
+}
+
+/** Everything useful on an opened ad page (either export layout). */
 function pageFields(r: Cell[] | undefined) {
   const f: Record<string, string> = {};
-  if (!r) return { f, features: "", location: "", description: "" };
-  const pairs: [number, number][] = [[4, 6], [5, 7], [24, 25], [26, 27], [35, 37], [36, 38]];
-  for (const [l, v] of pairs) if (val(r[l]) && val(r[v])) f[val(r[l])] = val(r[v]);
-  // Feature rows (پارکینگ / انباری / بالکن, "… ندارد") sit where a group row's values would be.
-  const features = [6, 7, 25, 31].map((i) => val(r[i])).filter((t) => /پارکینگ|انباری|بالکن|آسانسور/.test(t)).join(" ");
-  const convertible = r.some((c) => /این ملک قابل تبدیل است/.test(c.text));
-  if (convertible) f["تبدیل"] = "بله";
-  return { f, features, location: val(r[3]), description: val(r[17]).replace(/\.\.\.$/, "…") };
+  const out = { f, features: "", location: "", description: "", district: "", city: "", category: "", published: "", lat: NaN, lng: NaN };
+  if (!r) return out;
+  const cells = r.map((c, i) => ({ h: pageHead[i] ?? "", t: val(c) })).filter((c) => c.t && c.t !== "clicked");
+  const byHead = (re: RegExp) => cells.find((c) => re.test(c.h))?.t ?? "";
+
+  // Group row (متراژ | ساخت | اتاق): labels and values in order. On apartment pages the extension puts the
+  // feature row (آسانسور / پارکینگ ندارد / انباری) in the same value columns.
+  const groupValues = cells.filter((c) => c.h === "Kt-group-row-item").map((c) => c.t);
+  if (groupValues.some((t) => FEATURE.test(t))) out.features = groupValues.filter((t) => FEATURE.test(t)).join(" ");
+  else {
+    const labels = cells.filter((c) => c.h === "Title" && GROUP_LABELS.includes(c.t)).map((c) => c.t);
+    labels.forEach((l, i) => groupValues[i] && (f[l.replace(" ویلا", "")] ??= groupValues[i]));
+  }
+  // Single rows (طبقه: ۴ از ۶, متراژ زمین: ۸۸ متر مربع, …).
+  const rowLabels = cells.filter((c) => c.h === "Title" && ROW_LABELS.includes(c.t)).map((c) => c.t);
+  const rowValues = cells.filter((c) => c.h === "Kt-unexpandable-row__value").map((c) => c.t);
+  rowLabels.forEach((l, i) => rowValues[i] && (f[l] ??= rowValues[i]));
+  // Divar renders the deposit ↔ rent slider only on convertible ads; the export sometimes drops the sentence.
+  if (cells.some((c) => /این ملک قابل تبدیل است|برای تبدیل بکشید/.test(c.t))) f["تبدیل"] = "بله";
+
+  // Structured data (JSON-LD columns) when the export has it.
+  f["اتاق"] ??= byHead(/^Rooms$/);
+  f["متراژ"] ??= byHead(/^Floor Size$/);
+  out.lat = Number(byHead(/^Latitude$/)) || NaN;
+  out.lng = Number(byHead(/^Longitude$/)) || NaN;
+  out.district = byHead(/District Persian/);
+  out.city = byHead(/City Persian/);
+  out.category = `${byHead(/Accommodation Category/)} ${byHead(/^Breadcrumb$/)}`;
+  out.published = cells.find((c) => /انتشار آگهی/.test(c.t))?.t ?? "";
+
+  const texts = cells.filter((c) => /^(p_element|Description)$/.test(c.h)).map((c) => c.t);
+  out.location = texts.find((t) => WHEN_WHERE.test(t)) ?? "";
+  out.description = (texts.find((t) => !WHEN_WHERE.test(t) && !/^آگهی .* در دیوار|\|دیوار$/.test(t)) ?? "").replace(/\.\.\.$/, "…");
+  for (const k of Object.keys(f)) if (!f[k]) delete f[k];
+  return out;
 }
 
 // ---------- build listings ----------
-const col = (name: RegExp) => cardHead.findIndex((h) => name.test(h));
-const iTitle = col(/^Title$/);
-const iUrl = col(/post-card__action URL/i);
-const iWhere = cardHead.findIndex((h, i) => h === "Description" && i > col(/red-text/i));
-const priceCols = cardHead.map((h, i) => (h === "Description" && i < iWhere ? i : -1)).filter((i) => i >= 0);
+const iTitle = cardHead.findIndex((h) => /^Title$/.test(h));
+const iUrl = cardHead.findIndex((h) => /post-card__action URL/i.test(h));
+const PRICE = /^(?:ودیعه|اجاره|رهن کامل|توافقی|از\s)|تومان|نفر/;
+const RESIDENTIAL_TITLE = /خانه|خونه|منزل|ویلایی|آپارتمان|اپارتمان|سوئیت|سوییت/;
 
 const imported: Listing[] = [];
 const skipped: Record<string, string[]> = {};
 const skip = (why: string, title: string) => (skipped[why] ??= []).push(title);
+const verbose = args.includes("--verbose");
 
 for (const row of cardsTable.slice(1)) {
   const url = row[iUrl]?.links[0] ?? `https://${val(row[iUrl])}`;
   const token = tokenOf(url);
   const title = val(row[iTitle]).replace(/\s+/g, " ");
-  const prices = priceCols.map((i) => val(row[i]));
+  const descCells = row.map((c, i) => (cardHead[i] === "Description" ? val(c) : "")).filter(Boolean);
+  const prices = descCells.filter((t) => PRICE.test(t));
+  const cardWhere = descCells.find((t) => !PRICE.test(t) && /(?:^|\s)در\s/.test(t)) ?? "";
   const depositLine = prices.find((p) => p.startsWith("ودیعه"));
   if (!depositLine) {
-    skip(prices.some((p) => /نفر|از /.test(p)) ? "nightly rental" : "sale / no price", title);
+    skip(prices.some((p) => /نفر|^از /.test(p)) ? "nightly rental" : "sale / no price", title);
     continue;
   }
 
   const page = pageFields(pages.get(token));
   const text = normalizeFa(`${title} ${page.description}`);
-  if (NOT_RESIDENTIAL.test(text) || /صنعتی|سوله/.test(Object.values(page.f).join(" "))) {
+  const residential = /اجارهٔ (?:مسکونی|آپارتمان|خانه)/.test(page.category) || RESIDENTIAL_TITLE.test(normalizeFa(title));
+  if (!residential && (NOT_RESIDENTIAL.test(text) || /صنعتی|سوله/.test(Object.values(page.f).join(" ")))) {
     skip("commercial", title);
     continue;
   }
 
   const deposit = money(depositLine);
   const rentLine = prices.find((p) => p.startsWith("اجاره")) ?? "";
-  const monthlyRent = /رهن کامل/.test(prices.join(" ")) || !rentLine ? 0 : money(rentLine);
+  const listedRent = /رهن کامل/.test(prices.join(" ")) || !rentLine ? 0 : money(rentLine);
+  // Divar makes sellers type some rent; "رهن کامل" ads carry a symbolic ۱۰–۱۰۰ هزار. Next to a real
+  // deposit that is full rahn, not rent.
+  const monthlyRent = listedRent < 5e5 && deposit >= 50e6 ? 0 : listedRent;
 
-  // Location: "۳ هفته پیش در مشهد، وکیل‌آباد، خ مدرس یکم" (page) or "… در وکیل‌آباد" (card).
-  const where = page.location || val(row[iWhere]);
-  const [, placePart = ""] = where.split(/\s+در\s+/);
-  const parts = placePart.split("،").map((s) => s.trim()).filter(Boolean);
-  const city = (parts.length > 1 && canonicalCity(parts[0])) || "مشهد";
-  const district = parts.length > 1 ? parts[1] : parts[0] ?? "";
+  // Location: structured district, else "۳ هفته پیش در مشهد، وکیل‌آباد، خ مدرس یکم" (page) or
+  // "… در وکیل‌آباد" (card; the text before the last "در" may be an agency name).
+  const where = page.location || cardWhere;
+  const parts = (where.split(/\s+در\s+|^در\s+/).pop() ?? "").split("،").map((x) => x.trim()).filter(Boolean);
+  const city = canonicalCity(page.city) || (parts.length > 1 && canonicalCity(parts[0])) || "مشهد";
+  const district = page.district || (parts.length > 1 ? parts[1] : (parts[0] ?? ""));
   // Divar's district first; else a registered neighborhood named in the ad ("پشت حاشیه وکیل آباد").
   const hood = canonicalNeighborhood(district, city) ?? findNeighborhoods(text, city)[0];
   if (!hood) {
@@ -223,19 +331,31 @@ for (const row of cardsTable.slice(1)) {
   }
 
   const areaM2 = num(page.f["متراژ"] ?? "") || areaFromText(text) || num(page.f["متراژ زمین"] ?? "") || undefined;
-  if (!areaM2 || areaM2 < 15) {
-    skip("no area in the ad", title);
+  // < 15 m²: a single room or a storage unit; > 1000 m²: a typo or the whole plot, not the unit.
+  if (!areaM2 || areaM2 < 15 || areaM2 > 1000) {
+    skip("no plausible area in the ad", title);
     continue;
   }
 
+  const WORDS: Record<string, number> = { یک: 1, دو: 2, سه: 3, چهار: 4, پنج: 5 };
   const roomsField = page.f["اتاق"];
-  const rooms = roomsField ? (/بدون/.test(roomsField) ? 0 : num(roomsField)) : roomsFromText(text);
+  const rooms = roomsField
+    ? /بدون/.test(roomsField)
+      ? 0
+      : (WORDS[roomsField] ?? (num(roomsField) || undefined))
+    : roomsFromText(text);
   const floorField = page.f["طبقه"] ? toEnDigits(page.f["طبقه"]) : "";
   const floorMatch = floorField.match(/(\d+|همکف)(?:\s*از\s*(\d+))?/);
   const floor = floorMatch ? (floorMatch[1] === "همکف" ? 0 : Number(floorMatch[1])) : floorFromText(text);
   const totalFloors = floorMatch?.[2] ? Number(floorMatch[2]) : undefined;
-  const built = num(page.f["ساخت"] ?? "");
-  const buildingAge = built > 1300 ? Math.max(0, capturedYearFa - built) : /نوساز|کلید\s*نخورده|صفر/.test(text) ? 0 : undefined;
+  const builtField = page.f["ساخت"] ?? "";
+  const built = num(builtField);
+  const buildingAge =
+    built > 1300 && !/قبل/.test(builtField)
+      ? Math.max(0, capturedYearFa - built)
+      : /نوساز|کلید\s*نخورده|صفر/.test(text)
+        ? 0
+        : undefined;
 
   const featureText = normalizeFa(`${page.features} ${text}`);
   const image = row.flatMap((c) => c.imgs).find((src) => /divarcdn\.com\/static\/photo\//.test(src));
@@ -247,7 +367,7 @@ for (const row of cardsTable.slice(1)) {
     title,
     city,
     neighborhood: hood,
-    street: parts.slice(2).join("، "),
+    street: parts.filter((x) => x !== district && !canonicalCity(x) && !canonicalNeighborhood(x, city)).join("، "),
     deposit,
     monthlyRent,
     areaM2,
@@ -261,8 +381,9 @@ for (const row of cardsTable.slice(1)) {
     tags: TAGS.filter(([, re]) => re.test(featureText)).map(([tag]) => tag),
     convertible: page.f["تبدیل"] === "بله",
     description: page.description,
-    postedAt: postedAt(where) ?? captured.toISOString(),
+    postedAt: jalaliToIso(page.published) ?? postedAt(cardWhere) ?? postedAt(where) ?? captured.toISOString(),
     imageUrl: image,
+    ...(Number.isFinite(page.lat) && Number.isFinite(page.lng) ? { lat: page.lat, lng: page.lng } : {}),
   });
 }
 
@@ -274,4 +395,7 @@ const all = [...byId.values()].sort((a, b) => b.postedAt.localeCompare(a.postedA
 writeFileSync(OUT, `${JSON.stringify(all, null, 2)}\n`);
 
 console.log(`${cardsTable.length - 1} ads read, ${imported.length} imported → ${OUT} (${all.length} total)`);
-for (const [why, titles] of Object.entries(skipped)) console.log(`  skipped ${titles.length} × ${why}`);
+for (const [why, titles] of Object.entries(skipped)) {
+  console.log(`  skipped ${titles.length} × ${why}`);
+  if (verbose) for (const t of titles) console.log(`      ${t}`);
+}

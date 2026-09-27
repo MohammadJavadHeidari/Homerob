@@ -105,6 +105,14 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     only the 13 real ads are served. Tests that relied on the sample moved to hand-written fixtures
     (`src/test/fixtures.ts`). Footer/README/DATA.md say the data is real. Other Mashhad neighborhoods stay
     registered (queries naming them still parse; results come from وکیل‌آباد by soft ranking).
+  - **Mofatteh batch (2026-09-27):** owner's second export (RTF, 45 rent-residential ads around مفتح) →
+    36 imported; **50 real ads** total. Importer now reads RTF, finds columns by header name (layout changed),
+    uses JSON-LD lat/lng/rooms/floor size and exact «انتشار آگهی» dates, treats symbolic rents (< ۵۰۰ هزار)
+    as full rahn and the conversion slider as convertible, skips implausible areas. 11 Mashhad
+    neighborhoods registered with OSM/Nominatim centers (ایثار «مفتح»، طلاب، گلشور، تلگرد، شهرک مهرآباد،
+    پورسینا، موعود، امیرآباد، شهید معقول، صیاد شیرازی، فرهنگ) → the 1st batch's فرهنگ ad now imports and
+    one ad moved to its real district (صیاد شیرازی). 6 apartments skipped: the export loses their
+    متراژ (DATA.md, "Known export gap"). 72 tests.
 - **Next:** owner approves new demo queries that work on the real data ([DECISION] below) + sends more
   rent-residential exports (other neighborhoods) → `npm run import:divar`. Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
@@ -138,12 +146,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   (b) keep everything live and re-record if Gemini is slow. Until answered: live only.
   Evidence (2026-09-24 evening): `gemini-3.6-flash` daily quota exhausted (429); lite models took
   6–13 s per call → most requests fell back to the rule parser/explanations.
-- [DECISION] **کوئری‌های دمو با دادهٔ واقعی.** کوئری‌های قبلی روی ۱۳ آگهی واقعی ضعیف شدن (سجاد آگهی نداره؛
-  «دوخوابه ۵۰۰ میلیون وکیل‌آباد» فقط یک‌خوابه‌ها رو با نکتهٔ «۱ خوابه است، نه ۲ خوابه» نشون می‌ده).
-  پیشنهاد من (همه روی دادهٔ فعلی تست شده): (۱) ساده: «سه‌خوابه وکیل‌آباد رهن ۷۰۰ اجاره ۱۰» → آپارتمان
-  ۱۵۰ متری با ۹۵٪ تطابق، (۲) بودجهٔ سخت: «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن» → توضیح صادقانه که با این
-  بودجه دوخوابه نیست، (۳) بده‌بستون: «ویلایی حیاط‌دار وکیل‌آباد» + حذف یک چیپ. جایگزین: صبر کنیم تا
-  خروجی محله‌های دیگه برسه و کوئری‌های قبلی رو نگه داریم.
+- [DECISION] **کوئری‌های دمو با دادهٔ واقعی (۵۰ آگهی: وکیل‌آباد + اطراف مفتح).** پیشنهاد من (همه روی دادهٔ
+  فعلی تست شده): (۱) ساده: «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد» → دو آپارتمان دوخوابهٔ ایثار با ۹۶٪
+  تطابق، (۲) بودجهٔ سخت: «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن» → توضیح صادقانه که با این بودجه دوخوابه
+  نیست، (۳) بده‌بستون: «خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن» + حذف یک چیپ. جایگزین: صبر کنیم تا
+  خروجی محله‌های دیگه برسه.
 
 ---
 
