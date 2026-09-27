@@ -7,16 +7,20 @@ import {
   CalendarClock,
   Car,
   Check,
+  ChevronDown,
   Clock,
-  ExternalLink,
   GitCompareArrows,
   MapPin,
+  MapPinned,
   Package,
   Ruler,
   Sparkles,
   X,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 
+import { NearbyAdvantages } from "@/components/nearby-advantages";
 import { SaveButton } from "@/components/save-button";
 import type { SearchResult } from "@/lib/api-types";
 import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
@@ -24,8 +28,6 @@ import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { isSharedHousing } from "@/lib/quality";
 import { cn } from "@/lib/utils";
-
-const SOURCE_LABEL = { divar: "دیوار", sheypoor: "شیپور" } as const;
 
 export function ListingCard({
   result,
@@ -36,6 +38,7 @@ export function ListingCard({
   comparing,
   compareDisabled,
   onToggleCompare,
+  selected = false,
 }: {
   result: SearchResult;
   explanation: string;
@@ -46,29 +49,27 @@ export function ListingCard({
   comparing?: boolean;
   compareDisabled?: boolean;
   onToggleCompare?: () => void;
+  /** Picked on the map: the neighborhood advantages open by themselves. */
+  selected?: boolean;
 }) {
-  const { listing: l, budget, price, score, alsoOn, highlights } = result;
+  const [nearbyOpen, setNearbyOpen] = useState(false);
+  const showNearby = nearbyOpen || selected;
+  const { listing: l, budget, price, score, highlights } = result;
   const category = CATEGORIES[categoryOf(l)];
   const model = category.priceModel;
   const cons = highlights.filter((h) => h.kind === "con").slice(0, 2);
   const pros = highlights.filter((h) => h.kind === "pro").slice(0, 2);
 
   return (
-    <article className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl border p-4 shadow-xs sm:p-5">
+    <article className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl p-4 sm:rounded-lg sm:p-5">
       {/* header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {rank !== undefined && <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>}
-            <SourceBadge source={l.source} url={l.url} />
             {isSharedHousing(l) && categoryOf(l) === "residential-rent" && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
-            {alsoOn.map((s) => (
-              <span key={s} className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
-                در {SOURCE_LABEL[s]} هم هست
-              </span>
-            ))}
             <span className="text-muted-foreground ms-1 flex items-center gap-1">
               <Clock className="size-3" />
               {timeAgoFa(l.postedAt)}
@@ -93,7 +94,7 @@ export function ListingCard({
               aria-pressed={comparing}
               className={cn(
                 "flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-40",
-                comparing ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-primary",
+                comparing ? "border-foreground bg-foreground text-background" : "text-muted-foreground hover:border-foreground/40 hover:text-foreground",
               )}
             >
               {comparing ? <Check className="size-3" /> : <GitCompareArrows className="size-3" />}
@@ -122,7 +123,7 @@ export function ListingCard({
           </>
         )}
         {budget.converted && (
-          <p className="bg-primary/10 text-primary col-span-2 rounded-lg px-2.5 py-1.5 text-xs font-medium">
+          <p className="bg-secondary text-foreground col-span-2 rounded-lg px-2.5 py-1.5 text-xs font-medium">
             با بودجهٔ تو: رهن {formatToman(Math.round(budget.deposit / 1e6) * 1e6)}
             {budget.monthlyRent > 0
               ? ` + اجاره ${formatToman(Math.round(budget.monthlyRent / 5e5) * 5e5)}`
@@ -157,15 +158,15 @@ export function ListingCard({
       {/* AI explanation */}
       <div
         className={cn(
-          "border-primary/20 bg-brand-soft relative rounded-xl border p-3 transition-colors",
+          "bg-secondary relative rounded-lg border p-3 transition-colors",
           explaining && "animate-pulse",
         )}
       >
-        <p className="text-primary mb-1 flex items-center gap-1.5 text-xs font-bold">
-          <Sparkles className="size-3.5" />
+        <p className="text-foreground mb-1 flex items-center gap-1.5 text-xs font-bold">
+          <Sparkles className="text-primary size-3.5" />
           {explaining ? "ترب داره توضیح می‌نویسه…" : "چرا این آگهی؟"}
           {aiExplained && !explaining && (
-            <span className="bg-primary/15 ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>
+            <span className="bg-brand-soft text-brand-ink ms-auto rounded px-1.5 py-px text-[10px] font-bold">AI</span>
           )}
         </p>
         <p className={cn("text-sm leading-7", explaining && "text-muted-foreground")}>{explanation}</p>
@@ -184,26 +185,37 @@ export function ListingCard({
           </ul>
         )}
       </div>
-    </article>
-  );
-}
 
-function SourceBadge({ source, url }: { source: SearchResult["listing"]["source"]; url?: string }) {
-  const body = (
-    <>
-      <span className={cn("size-1.5 rounded-full", source === "divar" ? "bg-rose-500" : "bg-indigo-500")} />
-      {SOURCE_LABEL[source]}
-      {url && <ExternalLink className="size-3" />}
-    </>
-  );
-  const cls = "bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold";
-  // Real listings link back to the original ad.
-  return url ? (
-    <a href={url} target="_blank" rel="noopener noreferrer" className={cn(cls, "hover:text-primary")} aria-label={`آگهی اصلی در ${SOURCE_LABEL[source]}`}>
-      {body}
-    </a>
-  ) : (
-    <span className={cls}>{body}</span>
+      {/* neighborhood advantages (lazy: one AI call per opened listing) */}
+      <div className="-mt-1 rounded-xl border border-dashed">
+        <button
+          type="button"
+          onClick={() => setNearbyOpen(!showNearby)}
+          aria-expanded={showNearby}
+          className="hover:text-primary flex w-full items-center gap-2 px-3 py-2.5 text-sm font-bold transition-colors"
+        >
+          <MapPinned className="text-primary size-4" />
+          {category.residential ? "اطراف این خونه چی داره؟" : "اطراف اینجا چی داره؟"}
+          <span className="text-muted-foreground text-xs font-normal">مترو، خرید، درمانگاه…</span>
+          <ChevronDown className={cn("text-muted-foreground ms-auto size-4 transition-transform", showNearby && "rotate-180")} />
+        </button>
+        <AnimatePresence initial={false}>
+          {showNearby && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3">
+                <NearbyAdvantages id={l.id} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </article>
   );
 }
 

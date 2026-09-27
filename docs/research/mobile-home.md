@@ -17,7 +17,7 @@ Visual version with phone mockups: see the artifact link in `docs/PLAN.md` (Open
 | Install card | «می‌خواهید ترب را روی گوشی نصب کنید؟» | PWA install | Later (manifest exists in Torob; low priority for the demo) |
 | Banner carousel | «ترب‌پی — پرداخت در ۴ قسط» | Marketing | Skip (no marketing to show) |
 | **Rails** | «ترندهای موبایل…», «پرفروش‌ترین گوشی‌ها» + «نمایش همه» | Browse without a query; 2 cards + a peek of the 3rd | **The core of this proposal** (§3) |
-| Rail card | Photo, photo count, «آگهی» (sponsored) tag, 2-line title, «از ۷۲٫۳۰۰٫۰۰۰ تومان», «در ۸۰ فروشگاه» | Price + "how many sellers" = Torob's value in one line | Photo, 2-line title, rahn/ejare in bold ink, «۹۵ متر · ۲ خواب · وکیل‌آباد», one signal chip, «در دیوار و شیپور» (our `alsoOn` = Torob's «در N فروشگاه») |
+| Rail card | Photo, photo count, «آگهی» (sponsored) tag, 2-line title, «از ۷۲٫۳۰۰٫۰۰۰ تومان», «در ۸۰ فروشگاه» | Price + "how many sellers" = Torob's value in one line | Photo, 2-line title, rahn/ejare in bold ink, «۹۵ متر · ۲ خواب · وکیل‌آباد», one signal chip (no ad source: owner decision of PR #19) |
 | Bottom nav | جستجو · دسته‌بندی · پیشنهاد ویژه · ترب من | Familiar app frame | خانه · دستیار هوشمند · ذخیره‌شده‌ها (+ ترب من later) |
 
 Takeaway: Torob's mobile home is **search first, then things to tap**. Nobody has to type to get value.
@@ -74,7 +74,7 @@ is the demo moment (§5).
 - Photo (4:3) when the listing has one; until real data lands, a neutral tile with the category icon and
   the neighborhood name (the sample set has no photos).
 - Title 2 lines · price bold ink («رهن ۴۵۰م · اجاره ۱۸م») · «۹۵ متر · ۲ خواب · وکیل‌آباد» ·
-  one signal chip (green «۲۱٪ زیر قیمت محله», or «۲ ساعت پیش») · «در دیوار و شیپور» when deduped ·
+  one signal chip (green «۲۱٪ زیر قیمت محله», or «۲ ساعت پیش») ·
   ♥ button top corner. Same tokens as `BRAND.md` (8px radius, prices never red).
 
 ### Frame

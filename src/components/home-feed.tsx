@@ -217,13 +217,10 @@ const SIGNAL_TONE: Record<Signal["tone"], string> = {
   muted: "bg-muted text-muted-foreground",
 };
 
-const SOURCE_FA = { divar: "دیوار", sheypoor: "شیپور" } as const;
-
 function RailCard({ item, onOpen, className }: { item: RailItem; onOpen: (r: SearchResult) => void; className?: string }) {
   const l = item.listing;
   const category = CATEGORIES[categoryOf(l)];
   const Icon = CATEGORY_ICON[categoryOf(l)];
-  const sources = [l.source, ...item.alsoOn].map((s) => SOURCE_FA[s]).join(" و ");
   return (
     <div
       role="button"
@@ -240,7 +237,6 @@ function RailCard({ item, onOpen, className }: { item: RailItem; onOpen: (r: Sea
         <Icon className="size-7 opacity-60" />
         <span className="text-[11px] font-medium">{l.neighborhood}</span>
         <SaveButton id={l.id} variant="overlay" className="absolute top-1.5 start-1.5" />
-        <span className="absolute end-1.5 bottom-1.5 rounded bg-slate-900/70 px-1.5 text-[10px] text-white">{sources}</span>
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
         <h3 className="line-clamp-2 min-h-[2.6rem] text-[13px] leading-[1.3rem] font-bold">{l.title}</h3>

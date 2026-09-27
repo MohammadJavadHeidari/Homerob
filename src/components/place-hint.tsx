@@ -45,7 +45,7 @@ function CityChip({ city, onClick, label }: { city: string; onClick: (c: string)
     <button
       type="button"
       onClick={() => onClick(city)}
-      className="border-border bg-card/60 hover:border-primary/50 hover:bg-brand-soft hover:text-brand-ink inline-flex h-7 items-center rounded-full border px-3 text-[13px] font-medium transition-colors"
+      className="border-border bg-card/60 hover:border-foreground/40 hover:bg-secondary hover:text-foreground inline-flex h-7 items-center rounded-full border px-3 text-[13px] font-medium transition-colors"
     >
       {label ?? city}
     </button>
