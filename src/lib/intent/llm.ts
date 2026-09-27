@@ -2,7 +2,7 @@ import "server-only";
 
 import { AMENITIES, AMENITY_KEYS } from "@/lib/amenities";
 import { chatJson } from "@/lib/ai/client";
-import { canonicalCity, canonicalNeighborhood, COVERED_CITIES, hoodsIn } from "@/lib/places";
+import { canonicalNeighborhood, cityName, COVERED_CITIES, hoodsIn } from "@/lib/places";
 
 import { SearchIntentSchema, type SearchIntent } from "./schema";
 
@@ -42,7 +42,10 @@ Money rules (critical):
 
 Other rules:
 - Map neighborhood spellings to the canonical names above ("وکیل آباد" → "وکیل‌آباد"). Ignore unknown neighborhoods.
-- Any Iranian city the user names goes in "city" in Persian (e.g. "تهران"), even if it is not in the list.
+- Any Iranian city the user names goes in "city" in Persian (e.g. "تهران", "کیش"), even if it is not in the list.
+- If no city is named but a well-known neighborhood, street or landmark clearly belongs to one city
+  ("سعادت‌آباد" → "تهران", "حرم امام رضا" → "مشهد"), set that city. If it could be in several cities, use null.
+- Moving from one city to another ("از تهران میام مشهد"): "city" is where they want to live.
 - "خانواده ۳ نفره" or more → minRooms 2 if rooms not stated, and mention it in freeTextNotes.
 - Amenities the user says don't matter ("مهم نیست") go nowhere.
 - Default flexibleConversion to true.
@@ -88,7 +91,7 @@ function clean(raw: unknown): unknown {
     maxDeposit: num(r.maxDeposit),
     maxRent: num(r.maxRent),
     flexibleConversion: r.flexibleConversion !== false,
-    city: typeof r.city === "string" ? canonicalCity(r.city) : null,
+    city: typeof r.city === "string" ? cityName(r.city) : null,
     neighborhoods: hoods,
     minRooms: int(r.minRooms),
     maxRooms: int(r.maxRooms),

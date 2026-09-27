@@ -1,11 +1,12 @@
 "use client";
 
 import { GitCompareArrows, Info, LoaderCircle, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
 import { IntentChips } from "@/components/intent-chips";
+import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { toFaDigits } from "@/lib/persian";
 import { isCovered } from "@/lib/places";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
+import { detectPlace } from "@/lib/where";
 
 const COMPARE_MAX = 3;
 
@@ -46,6 +48,7 @@ export function SearchApp() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
       if (id !== requestId.current) return; // a newer search started
+      rememberCity(json.intent.city);
       setData(json);
       // a new query starts clean; editing the AI intent keeps the hand-set filters that still apply
       setRefine((prev) => (intent ? clampRanges(prev, domains(json.results)) : EMPTY_REFINE));
@@ -80,10 +83,21 @@ export function SearchApp() {
   };
 
   const compact = status !== "idle";
+  // Where the text in the box points to — instant, offline, recomputed on every keystroke.
+  const guess = useMemo(() => detectPlace(query), [query]);
+  // Show it while writing a new query (not under the one the results are already for).
+  const typing = status === "idle" || query.trim() !== data?.query;
+
+  const addCity = (city: string) => {
+    const next = withCity(query, city);
+    setQuery(next);
+    // on the home page let them keep writing; on results, search again right away
+    if (compact) void run(next);
+  };
 
   return (
     <>
-      {!compact && <HeroMap className="z-0" />}
+      {!compact && <HeroMap className="z-0" focus={query.trim().length >= 3 ? guess : undefined} />}
       <div
         className={cn(
           "relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
@@ -141,12 +155,28 @@ export function SearchApp() {
             جستجو
           </Button>
         </form>
+        {typing && (
+          <PlaceLine
+            query={query}
+            guess={guess}
+            onAddCity={addCity}
+            className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
+          />
+        )}
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
         {status === "done" && data && (
           <section className="flex flex-col gap-5">
             <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+            <PlaceQuestion
+              data={data}
+              onAddCity={(city) => {
+                const next = withCity(data.query, city);
+                setQuery(next);
+                void run(next);
+              }}
+            />
             <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
             {data.total === 0 ? (
               <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />

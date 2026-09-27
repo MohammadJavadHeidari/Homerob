@@ -66,12 +66,73 @@ export const CITIES: CityInfo[] = [
   city("یاسوج", 30.67, 51.59),
   city("ایلام", 33.64, 46.42),
   city("کاشان", 33.98, 51.44),
+  // Islands, the north coast and other places people rent in (holiday towns, satellite cities).
+  city("کیش", 26.53, 53.98),
+  city("قشم", 26.95, 56.27),
+  city("چابهار", 25.29, 60.64),
+  city("رامسر", 36.92, 50.64),
+  city("تنکابن", 36.82, 50.87),
+  city("چالوس", 36.65, 51.42),
+  city("نوشهر", 36.65, 51.5),
+  city("محمودآباد", 36.63, 52.26),
+  city("بابلسر", 36.7, 52.65),
+  city("بابل", 36.54, 52.68),
+  city("آمل", 36.47, 52.35),
+  city("قائم‌شهر", 36.46, 52.86),
+  city("بندر انزلی", 37.47, 49.46),
+  city("لاهیجان", 37.21, 50.0),
+  city("لواسان", 35.82, 51.63),
+  city("اسلامشهر", 35.55, 51.23),
+  city("شهریار", 35.66, 51.06),
+  city("ورامین", 35.32, 51.65),
+  city("شاهین‌شهر", 32.86, 51.55),
+  city("نجف‌آباد", 32.63, 51.37),
+  city("خمینی‌شهر", 32.7, 51.52),
+  city("آبادان", 30.34, 48.3),
+  city("خرمشهر", 30.44, 48.18),
+  city("دزفول", 32.38, 48.4),
+  city("بندر ماهشهر", 30.56, 49.2),
+  city("ساوه", 35.02, 50.36),
+  city("شاهرود", 36.42, 54.98),
+  city("گنبد کاووس", 37.25, 55.17),
+  city("بروجرد", 33.9, 48.75),
+  city("ملایر", 34.3, 48.82),
+  city("رفسنجان", 30.4, 56.0),
+  city("سیرجان", 29.45, 55.68),
+  city("جیرفت", 28.68, 57.74),
+  city("بم", 29.1, 58.36),
+  city("مراغه", 37.39, 46.24),
+  city("خوی", 38.55, 44.95),
+  city("مهاباد", 36.76, 45.72),
+  city("مرودشت", 29.87, 52.8),
+  city("زابل", 31.03, 61.49),
+  city("تربت جام", 35.24, 60.62),
+  city("کاشمر", 35.24, 58.46),
+  city("گناباد", 34.35, 58.68),
+  city("شاندیز", 36.4, 59.3),
+  city("طرقبه", 36.31, 59.37),
+  city("گلبهار", 36.52, 59.21),
 ];
 
+/** Other spellings, including Finglish (people type "tehran" or "kish" too). */
 const CITY_ALIASES: Record<string, string[]> = {
-  "تهران": ["طهران"],
-  "اصفهان": ["اصفهون"],
+  "تهران": ["طهران", "tehran"],
+  "مشهد": ["mashhad", "mashad"],
+  "اصفهان": ["اصفهون", "isfahan", "esfahan"],
+  "شیراز": ["shiraz"],
+  "تبریز": ["tabriz"],
+  "کرج": ["karaj"],
+  "قم": ["qom", "ghom"],
+  "اهواز": ["ahvaz", "ahwaz"],
+  "رشت": ["rasht"],
+  "یزد": ["yazd"],
+  "کیش": ["جزیره کیش", "kish"],
+  "قشم": ["qeshm", "gheshm"],
   "خرم‌آباد": ["خرم آباد", "خرماباد"],
+  "بندر انزلی": ["انزلی", "بندرانزلی"],
+  "بندر ماهشهر": ["ماهشهر"],
+  "گنبد کاووس": ["گنبد"],
+  "بندرعباس": ["بندر عباس"],
 };
 
 export const HOODS: HoodInfo[] = [
@@ -140,24 +201,68 @@ export function findNeighborhoods(text: string, inCity?: string | null): string[
   return HOODS.filter((h) => (!inCity || h.city === inCity) && spellings(h).some((s) => t.includes(s))).map((h) => h.name);
 }
 
-const cityWords = (c: CityInfo) => [c.fa, ...(CITY_ALIASES[c.fa] ?? [])].map(normalizeFa);
-const FA_LETTER = "؀-ۿ";
+const cityWords = (c: CityInfo) => [c.fa, ...(CITY_ALIASES[c.fa] ?? [])];
+
+/**
+ * Text form used for place matching: normalized, lower-case, «آ» as «ا» (people type both), and
+ * ZWNJ / no space / space treated alike ("وکیل‌آباد" = "وکیل آباد" = "وکیلاباد").
+ */
+const loose = (s: string) => normalizeFa(s).toLowerCase().replace(/آ/g, "ا");
+
+/**
+ * Whole-word pattern for a place name ("قم", not the "قم" inside "رقم"). Spaces inside the name are
+ * optional, so a joined spelling still matches.
+ */
+export function placePattern(name: string): RegExp {
+  const body = loose(name)
+    .split(" ")
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join(" ?");
+  // letters (and marks) of any script are word characters; «،» and «؟» are not
+  return new RegExp(`(?<![\\p{L}\\p{M}])${body}(?![\\p{L}\\p{M}])`, "gu");
+}
+
+/** Every whole-word hit of a place name in text (index in the `loose` form of the text). */
+export function placeHits(text: string, name: string): number[] {
+  return [...loose(text).matchAll(placePattern(name))].map((m) => m.index);
+}
 
 /** Canonical city name for any spelling, or null. */
 export function canonicalCity(name: string): string | null {
-  const n = normalizeFa(name);
-  return CITIES.find((c) => cityWords(c).includes(n))?.fa ?? null;
+  const n = loose(name).replace(/^(شهر|جزیره|استان) /, "");
+  return CITIES.find((c) => cityWords(c).some((w) => loose(w) === n))?.fa ?? null;
 }
 
-/** First city named in free text, as a whole word ("قم", not the "قم" inside "رقم"). */
-export function findCity(text: string): string | null {
-  const t = normalizeFa(text);
-  let best: { fa: string; at: number } | null = null;
+/**
+ * City name to search by: the canonical one when known, else the name as written (so a query for a
+ * city we don't list yet gets "no listings from X yet", not another city's listings). Not a city → null.
+ */
+export function cityName(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const known = canonicalCity(name);
+  if (known) return known;
+  const n = normalizeFa(name).replace(/^(شهر|جزیره|استان) /, "");
+  return /^[\p{Script=Arabic} ]{2,24}$/u.test(n) && !/^(ایران|کل ایران|همه جا)$/.test(n) ? n : null;
+}
+
+/** Every city named in free text, in reading order. */
+export function citiesIn(text: string): { fa: string; at: number }[] {
+  const t = loose(text);
+  const hits: { fa: string; at: number }[] = [];
   for (const c of CITIES) {
-    for (const w of cityWords(c)) {
-      const m = new RegExp(`(?<![${FA_LETTER}])${w}(?![${FA_LETTER}])`).exec(t);
-      if (m && (!best || m.index < best.at)) best = { fa: c.fa, at: m.index };
-    }
+    const at = Math.min(...cityWords(c).flatMap((w) => placeHits(t, w)));
+    if (Number.isFinite(at)) hits.push({ fa: c.fa, at });
   }
-  return best?.fa ?? null;
+  return hits.sort((a, b) => a.at - b.at);
+}
+
+/**
+ * The city the user wants to live in: the first one named, except one they are moving away from
+ * ("از تهران میام مشهد" → مشهد) when another city is named too.
+ */
+export function findCity(text: string): string | null {
+  const t = loose(text);
+  const hits = citiesIn(t);
+  const from = (h: { at: number }) => /(?:^|\s)از\s?$/.test(t.slice(Math.max(0, h.at - 4), h.at));
+  return (hits.find((h) => !from(h)) ?? hits[0])?.fa ?? null;
 }

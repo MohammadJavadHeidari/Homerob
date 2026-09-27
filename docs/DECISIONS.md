@@ -90,3 +90,7 @@
   newest real titles once real data lands.
 - 2026-09-26 — Findings of the owner's call with Mohammad (2026-09-25) are kept in
   `docs/research/call-2026-09-25-mohammad.md` (Persian) for future reference.
+- 2026-09-27 — **Place from the prompt** (owner request): infer the city from the text (city, then a
+  neighborhood/landmark), show it live under the search box and on the home map, ask with one-tap city chips
+  only when it's ambiguous or missing; a tapped city is written into the query. Searching without a city is
+  never blocked (all of Iran + a "where?" question on results). Details: `docs/research/location-intent.md`.

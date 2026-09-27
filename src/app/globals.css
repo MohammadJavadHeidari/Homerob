@@ -429,6 +429,33 @@ html:root {
   }
 }
 
+/* The place the query points to: a steady brand pin with a pulsing ring; "new ad" pins step back. */
+.hm-focus {
+  position: absolute;
+}
+.hm-focus-pin {
+  width: 30px;
+  height: 30px;
+  margin: -29px 0 0 -15px;
+  filter: drop-shadow(0 3px 10px rgb(215 57 72 / 0.55));
+}
+.hm-focus-ring {
+  border-color: #d73948;
+  animation: hm-ring 1.8s 0.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.hm-focus-title {
+  bottom: 34px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(215 57 72 / 0.9);
+  border-color: rgb(255 255 255 / 0.25);
+}
+.hero-map[data-focused] .hm-drop {
+  opacity: 0.25 !important;
+  transition: opacity 0.3s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-map *,
   .hero-map *::before,
