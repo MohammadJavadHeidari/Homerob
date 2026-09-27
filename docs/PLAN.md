@@ -170,6 +170,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     maps.mail.ru Overpass mirror to cover east Mashhad (3.5k → 4.9k places; 4 پورسینا ads still have nothing in
     walking range → honest «هنوز اطلاعات کافی…»); feed tests use real ids; footer/demo script say "real ads"
     without naming the site (PR #19).
+  - **PR #21 merged 2026-09-27 → Production serves the 50 real ads.** Checked the 3 demo queries on Production:
+    Gemini filed «مفتح» under notes (no ایثار chip) → `fillNeighborhoods` (`src/lib/intent/place.ts`): when the
+    LLM names no neighborhood, the registered ones the text mentions are filled in (fresh queries only; an
+    edited intent / removed chip is kept). 125 tests.
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,

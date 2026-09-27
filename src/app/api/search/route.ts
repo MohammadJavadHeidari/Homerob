@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { parseIntent } from "@/lib/intent";
-import { applyPlace, resolvePlace } from "@/lib/intent/place";
+import { applyPlace, fillNeighborhoods, resolvePlace } from "@/lib/intent/place";
 import { SearchIntentSchema } from "@/lib/intent/schema";
 import { hoodInfo } from "@/lib/places";
 import { DEFAULT_CATEGORY } from "@/lib/categories";
@@ -34,7 +34,8 @@ export async function POST(request: Request) {
   const { near } = body.data;
   // Where the text says they're looking (instant, offline); the UI shows it and asks when unclear.
   const where = detectPlace(body.data.query);
-  const placed = body.data.intent ? parsed.intent : applyPlace(parsed.intent, where);
+  // An edited intent (a removed chip) is kept as is; a fresh one gets the place the text names.
+  const placed = body.data.intent ? parsed.intent : fillNeighborhoods(applyPlace(parsed.intent, where), body.data.query);
   // resolvePlace drops "near me" when the query names another city.
   const intent = resolvePlace(!body.data.intent && near && !placed.neighborhoods.length ? { ...placed, nearMe: near } : placed);
   const { results, total, excluded } = search(intent, undefined, Infinity);
