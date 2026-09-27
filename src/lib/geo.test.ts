@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { hoodShape, inShape } from "./hood-shapes";
 import { areaAround, distanceKm, listingLatLng, locate } from "./geo";
 import { EMPTY_INTENT } from "./intent/schema";
 import { hoodCenter } from "./places";
@@ -46,6 +47,14 @@ describe("listingLatLng", () => {
     expect(at("dv-0901")).toEqual(a);
     expect(distanceKm(a, hoodCenter("وکیل‌آباد", "مشهد")!)).toBeLessThan(1.2);
     expect(at("dv-0902")).not.toEqual(a);
+  });
+
+  it("lands inside the real boundary when the neighborhood has one", () => {
+    const shape = hoodShape("ایثار", "مشهد")!;
+    for (let i = 0; i < 40; i++) {
+      const p = listingLatLng({ id: `dv-${i}`, city: "مشهد", neighborhood: "ایثار" });
+      expect(inShape([p.lng, p.lat], shape)).toBe(true);
+    }
   });
 
   it("uses the listing's own coordinates when the source gives them", () => {

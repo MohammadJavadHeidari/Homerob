@@ -1,3 +1,4 @@
+import { hoodShape, pointInShape } from "@/lib/hood-shapes";
 import { adjacentHoods, CITIES, hoodCenter, hoodsIn, isCovered, type LatLng } from "@/lib/places";
 import type { Listing } from "@/lib/types";
 
@@ -51,8 +52,9 @@ export type BBox = [number, number, number, number];
 const SPREAD = 0.01;
 
 /**
- * Approximate map position of a seeded listing: a stable point inside its neighborhood, derived
- * from the id (the sample data has no real addresses). Same id → same point, on server and client.
+ * Approximate map position of a listing whose ad has no coordinates: a stable point inside its
+ * neighborhood, derived from the id. Same id → same point, on server and client. Inside the real
+ * boundary when the neighborhood has one (`hood-shapes.ts`), else within ~1.1 km of its center.
  */
 export function listingLatLng(l: Pick<Listing, "id" | "neighborhood" | "city" | "lat" | "lng">): LatLng {
   if (l.lat != null && l.lng != null) return { lat: l.lat, lng: l.lng };
@@ -63,6 +65,9 @@ export function listingLatLng(l: Pick<Listing, "id" | "neighborhood" | "city" | 
   const r = SPREAD * Math.sqrt(0.08 + 0.92 * u); // uniform over a disc, never exactly the center
   const a = 2 * Math.PI * v;
   const c = hoodCenter(l.neighborhood, l.city) ?? { lat: 32.4, lng: 53.7 }; // unknown place → middle of Iran
+  const shape = hoodShape(l.neighborhood, l.city);
+  const inside = shape && pointInShape(shape, u, v, c);
+  if (inside) return inside;
   return { lat: c.lat + r * Math.sin(a), lng: c.lng + (r * Math.cos(a)) / Math.cos((c.lat * Math.PI) / 180) };
 }
 

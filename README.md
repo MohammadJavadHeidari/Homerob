@@ -125,5 +125,6 @@ Built as part of Torob's AI Product Engineer challenge.
 [MIT](LICENSE)
 
 Map data on the home page: Iran provinces from [geoBoundaries](https://www.geoboundaries.org/) (CC BY 4.0);
-Mashhad roads and the places behind "neighborhood advantages" (`src/data/pois.json`) ©
+Mashhad roads, the places behind "neighborhood advantages" (`src/data/pois.json`) and the neighborhood
+boundaries outlined on the results map (`src/data/hood-shapes.json`) ©
 [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).

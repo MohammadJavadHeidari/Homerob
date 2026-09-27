@@ -91,5 +91,8 @@ prices («توافقی», ۱٬۰۰۰ تومان) are fine — `src/lib/quality.t
 3. Re-bake the nearby places for "neighborhood advantages": `node scripts/build-nearby.mjs [cacheDir]`
    (Overpass API / OpenStreetMap; writes `src/data/pois.json`, server-side only). Without it, listings
    in the new city show «هنوز اطلاعات کافی از اطراف این خونه نداریم».
+   Also re-bake the neighborhood boundaries for the results-map outline: `node scripts/build-hood-shapes.mjs
+   [cacheDir]` (OSM admin_level 10/11 boundaries matched by name + near the registered center; writes
+   `src/data/hood-shapes.json`). A neighborhood without an OSM boundary keeps a dashed ~1.2 km circle.
 4. Optional: its province name in `PROVINCE_OF` (`src/components/hero-map/hero-map.tsx`) and baked
    roads (`scripts/build-hero-map.mjs`, needs Overpass access).

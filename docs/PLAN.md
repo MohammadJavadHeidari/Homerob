@@ -174,6 +174,15 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Gemini filed «مفتح» under notes (no ایثار chip) → `fillNeighborhoods` (`src/lib/intent/place.ts`): when the
     LLM names no neighborhood, the registered ones the text mentions are filled in (fresh queries only; an
     edited intent / removed chip is kept). 125 tests.
+  - Owner request (2026-09-27) — **Divar-style neighborhood outline on the results map:** instead of a dashed circle,
+    the neighborhoods in focus are drawn along their real street boundaries (OSM municipal neighborhoods, admin_level 11,
+    baked by `scripts/build-hood-shapes.mjs` → `src/data/hood-shapes.json`, 14 of 17 Mashhad neighborhoods incl. ایثار
+    «مفتح» and پورسینا). `src/lib/focus-area.ts` merges touching neighborhoods into one outline (`polygon-clipping`) and
+    dims the rest of the map; white-cased brand line + name tab on the outline. No OSM boundary (وکیل‌آباد — OSM's
+    «وکیل آباد» is a different area in the far west —, هاشمیه, قاسم‌آباد, سجاد) → dashed circle, so approximate never
+    looks exact. Pins without ad coordinates now land inside the real boundary (`listingLatLng`). Camera: frames the
+    outline + pins within ~1.5 km, and refits when the map column finishes animating in (it used to stay at minZoom).
+    Checked at 1440 and 390 px (`docs/screenshots/desktop-map-outline.png`). 133 tests.
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
