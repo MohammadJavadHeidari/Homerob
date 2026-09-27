@@ -94,3 +94,7 @@
   API, no new account). The owner exports Divar searches with a browser table-scraper extension; the
   sandbox never calls Divar. `scripts/import-divar.ts` cleans them into `src/data/divar.json`. Raw exports
   stay out of git (agency/seller names); fields an ad doesn't state stay unset — never guessed.
+- 2026-09-27 — **Sample set removed now** (owner chose option (b) of 3; "export more first" and "keep a
+  mix until the video" were the alternatives). The app serves only the 13 real Divar ads (وکیل‌آباد
+  مشهد); demo queries naming other neighborhoods or a 2-bed at 500M get few/weak results until more real
+  data arrives. Tests use hand-written fixtures (`src/test/fixtures.ts`), never served.

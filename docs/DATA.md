@@ -2,12 +2,9 @@
 
 Since 2026-09-26 Homerob uses **real** rental ads only (see `docs/DECISIONS.md`).
 
-- `src/data/divar.json` — **real** Divar ads, written by the importer below (13 so far, وکیل‌آباد مشهد,
-  captured 2026-09-27).
-- `src/data/listings.json` — 100 generated Mashhad listings, a temporary leftover until enough real
-  data replaces it (the owner decides when; `docs/PLAN.md` → Open questions).
-
-`src/data/listings.ts` serves both, real first.
+`src/data/divar.json` holds **real** Divar ads, written by the importer below (13 so far, وکیل‌آباد
+مشهد, captured 2026-09-27); `src/data/listings.ts` serves it. The generated sample set was removed on
+2026-09-27 (owner). Unit tests use hand-written fixtures (`src/test/fixtures.ts`), never served.
 
 ## Importing a Divar export
 
@@ -35,7 +32,7 @@ Best export for the next batch: the **rent-residential** category of one neighbo
 
 ## Format
 
-Both files are arrays of `Listing` (`src/lib/types.ts`). Money is **Toman**.
+`divar.json` is an array of `Listing` (`src/lib/types.ts`). Money is **Toman**.
 
 | field | example | notes |
 |---|---|---|

@@ -101,8 +101,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     doesn't say): cards hide unknowns, compare shows «نامشخص», scoring gives unknown rooms 0.5 and says
     «آگهی دربارهٔ X چیزی نگفته» instead of «X ندارد». Real ads are served next to the sample set (footer
     says which is which). `tsx` added as a dev dependency for TS scripts. 70 tests.
-- **Next:** owner answers "sample set vs. real data" (Open questions) + sends rent-residential exports for
-  more neighborhoods → import, then drop the sample set. Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
+  - **Sample set removed (owner chose (b), 2026-09-27):** `listings.json` + `generate-listings.mjs` deleted;
+    only the 13 real ads are served. Tests that relied on the sample moved to hand-written fixtures
+    (`src/test/fixtures.ts`). Footer/README/DATA.md say the data is real. Other Mashhad neighborhoods stay
+    registered (queries naming them still parse; results come from وکیل‌آباد by soft ranking).
+- **Next:** owner approves new demo queries that work on the real data ([DECISION] below) + sends more
+  rent-residential exports (other neighborhoods) → `npm run import:divar`. Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -112,8 +116,6 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   shadcn/ui set up with the official CLI (`base-nova`, RTL on). Add components with
   `npx shadcn@latest add <name>`. Already added: button, card, badge, skeleton, input. `cn()` comes from
   the `cn` package (shadcn's replacement for clsx + tailwind-merge).
-  Demo anchor listings `dv-0901…dv-0906` (2-bed وکیل‌آباد around a 500M budget). `sp-0905` is a
-  deliberate Sheypoor duplicate of `dv-0901` → either do the dedup stretch or hide it before recording.
   Gemini free tier is flaky (503 / hangs): models raced `3.5-flash-lite` → `flash-lite-latest` →
   `3.6-flash`, 1.5s hedge, 5s deadline, then rule parser (same quality on demo queries). Check
   `meta.intentSource` in the API response ("ai" vs "rules").
@@ -123,29 +125,25 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   a "what budget would I need" hint would fit the Phase 4 empty/weak state.
   Sandbox Chromium can't open the public site (proxy CA not trusted) → test UI on localhost,
   verify Production with curl against `/api/search` and `/api/explain`.
-  Demo query «دانشجوام… ماهی ۵ تومن» returns 0 results on purpose → good empty-state demo (Phase 4).
+  With the real data «دانشجوام… ماهی ۵ تومن» returns 1 result (the 50 m² house, 250M + 3M) — no longer an
+  empty-state demo.
   `AGENTS.md` is managed by `next dev` — leave it; it keeps Next from editing `CLAUDE.md`.
 - **Production URL:** https://homerob.vercel.app (public; deploys from `main`)
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- **داده‌ی نمونه یا واقعی؟** از ۱۶۹ آگهی خروجی، فقط ۱۳ تا اجارهٔ مسکونی بود (بقیه فروش، ویلای شبانه،
-  تجاری). گزینه‌ها: (الف) **پیشنهاد من:** از دستهٔ «اجارهٔ مسکونی» دیوار برای هر محله (وکیل‌آباد، هاشمیه،
-  سجاد، قاسم‌آباد، الهیه، احمدآباد) ۳۰–۵۰ آگهی با صفحهٔ آگهی (جدول دوم) خروجی بگیر؛ بعد داده‌ی نمونه
-  رو کامل حذف می‌کنم. ویدیو کاملاً واقعی می‌شه، یه دور خروجی گرفتن می‌خواد. (ب) همین الان نمونه رو حذف
-  کنیم: فقط ۱۳ آگهی، کوئری‌های دمو (دوخوابه ۵۰۰ میلیون وکیل‌آباد) تقریباً خالی می‌شن. (ج) تا ضبط ویدیو
-  ترکیبی بمونه (واقعی‌ها با لینک دیوار): سریع، ولی داستان «فقط داده‌ی واقعی» ناقص می‌مونه.
-  تا جواب: ترکیبی (ج)؛ فوتر نتایج می‌گه کدوم‌ها واقعی‌اند.
 - **Demo cache (proposal):** Gemini free tier is slow/rate-limited at times (explanations fell back
   to rules on the flagship query once). Options: (a) ship pre-generated *real* AI outputs for the
   3 demo queries as a static cache so the recording is instant and reliable (recommended),
   (b) keep everything live and re-record if Gemini is slow. Until answered: live only.
   Evidence (2026-09-24 evening): `gemini-3.6-flash` daily quota exhausted (429); lite models took
   6–13 s per call → most requests fell back to the rule parser/explanations.
-- [DECISION] **Demo script:** approve the 3 queries in `docs/DEMO_SCRIPT.md` — (1) «یه آپارتمان
-  دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن» (simple), (2) «دانشجوام… ماهی ۵ تومن» (tricky budget →
-  empty state + suggestion), (3) «دوخوابه بالکن‌دار سجاد، پارکینگ مهم نیست، رهن ۴۰۰ میلیون»
-  (trade-off + remove a chip) — and the narration.
+- [DECISION] **کوئری‌های دمو با دادهٔ واقعی.** کوئری‌های قبلی روی ۱۳ آگهی واقعی ضعیف شدن (سجاد آگهی نداره؛
+  «دوخوابه ۵۰۰ میلیون وکیل‌آباد» فقط یک‌خوابه‌ها رو با نکتهٔ «۱ خوابه است، نه ۲ خوابه» نشون می‌ده).
+  پیشنهاد من (همه روی دادهٔ فعلی تست شده): (۱) ساده: «سه‌خوابه وکیل‌آباد رهن ۷۰۰ اجاره ۱۰» → آپارتمان
+  ۱۵۰ متری با ۹۵٪ تطابق، (۲) بودجهٔ سخت: «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن» → توضیح صادقانه که با این
+  بودجه دوخوابه نیست، (۳) بده‌بستون: «ویلایی حیاط‌دار وکیل‌آباد» + حذف یک چیپ. جایگزین: صبر کنیم تا
+  خروجی محله‌های دیگه برسه و کوئری‌های قبلی رو نگه داریم.
 
 ---
 
@@ -229,7 +227,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
 - [x] Real-data importer (`scripts/import-divar.ts`) + first real batch (13 وکیل‌آباد rentals from the owner's export)
-- [ ] Replace the Mashhad sample set — waiting on the owner's rent-residential exports ("sample vs. real", Open questions)
+- [x] Replace the Mashhad sample set — removed (owner chose (b)); only real ads served
+- [ ] More real ads: rent-residential exports for other neighborhoods / cities (owner exports, I import)
 - [ ] Show the Divar thumbnail (`imageUrl`) on real cards — propose to the owner with the next batch
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 

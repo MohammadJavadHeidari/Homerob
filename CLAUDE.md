@@ -51,7 +51,7 @@ How to ask:
 - Never commit secrets. Keys live only in env vars (`.env.local` is gitignored).
 - No paid services, purchases, or new third-party accounts.
 - **Real data only.** Listings must be real ads (Divar, Sheypoor, …). Never generate, invent or add
-  fake listings. The seeded Mashhad sample set is a temporary leftover until real data replaces it.
+  fake listings. (The generated sample set was removed on 2026-09-27; only real Divar ads are served.)
 - Don't store sellers' phone numbers or other personal data from listings.
 
 ## Time discipline

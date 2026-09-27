@@ -74,7 +74,7 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 - **Tailwind CSS v4** + **shadcn/ui** (base-ui), full RTL
 - **Google Gemini** (free tier) via an OpenAI-compatible client — `AI_PROVIDER` switches to DeepSeek / OpenAI / a no-key `mock` (rule-based) mode
 - **zod** for intent validation, **vitest** for unit tests
-- **Data** — real listings only from 2026-09-26 (`docs/DATA.md`). Until the real-data import lands, the app still runs on 100 generated Divar/Sheypoor-style Mashhad listings (الهیه، سجاد، وکیل‌آباد، احمدآباد، هاشمیه، قاسم‌آباد). The code is city-aware: adding a city = registering its neighborhoods in `src/lib/places.ts` + its listings.
+- **Data** — real listings only (`docs/DATA.md`): real Divar rental ads, exported by the owner from a Divar search and cleaned by `scripts/import-divar.ts` into `src/data/divar.json` (first batch: 13 rentals in وکیل‌آباد, Mashhad). Fields an ad doesn't state stay unknown — never guessed. The code is city-aware: adding a city = registering its neighborhoods in `src/lib/places.ts` + importing its listings.
 
 ## Run locally
 
@@ -83,7 +83,7 @@ npm install
 cp .env.example .env.local   # optional: AI_PROVIDER=gemini + GEMINI_API_KEY=...
 npm run dev                  # http://localhost:3000  (works without a key in mock mode)
 npm test                     # unit tests (pricing, parser, budget, ranking, grounding)
-npm run generate:listings    # regenerate src/data/listings.json (deterministic)
+npm run import:divar -- data/raw/<export>.html --captured YYYY-MM-DD   # import a Divar export
 ```
 
 Key files: `src/lib/intent/` (schema, rule parser, LLM parser) · `src/lib/pricing.ts` · `src/lib/search/` (budget, score, dedup, suggest) · `src/lib/explain/` · `src/lib/ai/client.ts` · `src/components/`.
@@ -96,7 +96,7 @@ Key files: `src/lib/intent/` (schema, rule parser, LLM parser) · `src/lib/prici
 
 Not built for this MVP — kept here as stated direction, not a claim:
 
-- **Live aggregation** — plug the same AI layer into a live, read-only listings source (e.g. an MCP server over public listings, or official platform data such as Divar's Kenar), replacing the sample dataset. The data source is already isolated behind `src/data/`
+- **Live aggregation** — plug the same AI layer into a live, read-only listings source (e.g. an MCP server over public listings, or official platform data such as Divar's Kenar), instead of manual exports. The data source is already isolated behind `src/data/`
 - Smarter cross-source duplicate detection (fuzzy matching on text, photos, location) — today's is exact-match
 - Real transaction-price data to improve the fair-price signal beyond a neighborhood median
 - More cities, map view, saved searches / alerts

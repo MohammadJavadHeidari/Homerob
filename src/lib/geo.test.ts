@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 import { areaAround, distanceKm, listingLatLng, locate } from "./geo";
 import { EMPTY_INTENT } from "./intent/schema";
 import { hoodCenter } from "./places";
-import { search } from "./search";
+import { search as searchAll } from "./search";
+import type { SearchIntent } from "./intent/schema";
+import { FIXTURES } from "@/test/fixtures";
+
+const search = (i: SearchIntent) => searchAll(i, FIXTURES);
 
 describe("locate", () => {
   it("finds Mashhad and the nearest neighborhood", () => {
