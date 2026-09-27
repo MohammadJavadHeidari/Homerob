@@ -8,7 +8,7 @@ Built for [Torob](https://torob.com)'s **AI Product Engineer** hiring challenge 
 
 > ترب برای پیدا کردن بهترین قیمت کالا رو ساده کرده؛ Homerob همون کارو برای پیدا کردن خونه انجام می‌ده.
 
-![Homerob results for «یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن»](docs/screenshots/desktop-results.png)
+![Homerob results for «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد» — real Divar ads](docs/screenshots/desktop-results.png)
 
 ---
 
@@ -28,7 +28,7 @@ Homerob is a **meta-search / AI-normalization layer** on top of existing listing
 1. **Understands** the request — budget, neighborhood, rooms, must-haves vs. nice-to-haves — and shows it back as editable chips
 2. **Normalizes** every listing's rahn/ejare split to comparable numbers (full-deposit equivalent, price per m², and *your* split if the landlord allows conversion)
 3. **Ranks** listings by fit (hard budget filter + soft, weighted scoring)
-4. **Explains** each top result in plain Persian — including the trade-off (e.g. «۵۰ میلیون زیر بودجه‌ته و خود وکیل‌آباده، ولی پارکینگ نداره.»)
+4. **Explains** each top result in plain Persian — including the trade-off (e.g. «۷۰۰ میلیون زیر بودجه‌ات و حدود ۲۰٪ ارزان‌تر از میانهٔ ۷ آگهی گلشور؛ ولی گلشور است، نزدیک ایثار.»)
 
 ## How it works
 
@@ -54,7 +54,7 @@ Resilience: the Gemini free tier is flaky, so models are **raced** (next model a
 
 ## Core Features
 
-- 🔎 **Natural-language Persian search** — e.g. *«سوئیت یا یک‌خوابه تو سجاد، ماهی حداکثر ۸ تومن»*
+- 🔎 **Natural-language Persian search** — e.g. *«خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن»*
 - 🏷️ **"What the AI understood" chips** — remove any chip to refine instantly (no re-typing, no extra AI call)
 - 💰 **Rahn ↔ Ejare normalization** — full-deposit equivalent, price per m², and the split *you* would pay
 - 📊 **Fair-price signal** — cheaper/pricier than the neighborhood median per m²

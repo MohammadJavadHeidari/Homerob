@@ -98,3 +98,7 @@
   mix until the video" were the alternatives). The app serves only the 13 real Divar ads (وکیل‌آباد
   مشهد); demo queries naming other neighborhoods or a 2-bed at 500M get few/weak results until more real
   data arrives. Tests use hand-written fixtures (`src/test/fixtures.ts`), never served.
+- 2026-09-27 — **Demo queries approved** (owner chose option (a); "wait for more exports" was the
+  alternative): (1) «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد», (2) «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن»,
+  (3) «خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن» + remove the «پورسینا» chip. Script:
+  `docs/DEMO_SCRIPT.md`. Owner asked to merge and update the live site.

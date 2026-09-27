@@ -113,8 +113,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     پورسینا، موعود، امیرآباد، شهید معقول، صیاد شیرازی، فرهنگ) → the 1st batch's فرهنگ ad now imports and
     one ad moved to its real district (صیاد شیرازی). 6 apartments skipped: the export loses their
     متراژ (DATA.md, "Known export gap"). 72 tests.
-- **Next:** owner approves new demo queries that work on the real data ([DECISION] below) + sends more
-  rent-residential exports (other neighborhoods) → `npm run import:divar`. Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
+  - **Demo queries approved (owner, option (a)):** `docs/DEMO_SCRIPT.md` rewritten for the real data (Q1
+    «دوخوابه مفتح…», Q2 «دوخوابه وکیل‌آباد ۵۰۰…», Q3 «خونه ویلایی پورسینا…» + remove the neighborhood chip),
+    `demo-queries.ts` + a test that every demo query returns results, README screenshots retaken. The
+    «مادرم تنها زندگی می‌کند» ad now counts as shared housing (it topped Q3 as «۹۰٪ ارزان‌تر»).
+- **Next:** record the video (owner). More rent-residential exports → `npm run import:divar`. Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
   gemini/deepseek/openai).
@@ -146,11 +149,6 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
   (b) keep everything live and re-record if Gemini is slow. Until answered: live only.
   Evidence (2026-09-24 evening): `gemini-3.6-flash` daily quota exhausted (429); lite models took
   6–13 s per call → most requests fell back to the rule parser/explanations.
-- [DECISION] **کوئری‌های دمو با دادهٔ واقعی (۵۰ آگهی: وکیل‌آباد + اطراف مفتح).** پیشنهاد من (همه روی دادهٔ
-  فعلی تست شده): (۱) ساده: «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد» → دو آپارتمان دوخوابهٔ ایثار با ۹۶٪
-  تطابق، (۲) بودجهٔ سخت: «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن» → توضیح صادقانه که با این بودجه دوخوابه
-  نیست، (۳) بده‌بستون: «خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن» + حذف یک چیپ. جایگزین: صبر کنیم تا
-  خروجی محله‌های دیگه برسه.
 
 ---
 
@@ -207,7 +205,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 ### Phase 6 — Demo package (≤ 2h)
 - [x] `docs/DEMO_SCRIPT.md`: Persian narration, ≤ 5 min: problem → solution → 3 live queries
       (simple, tricky budget, trade-off) → what's next (live aggregation, dedup across sources, more cities)
-- [ ] [DECISION] Owner approves the 3 demo queries and the script
+- [x] [DECISION] Owner approves the 3 demo queries and the script (2026-09-27, real-data queries)
 - [x] README updated with live link, screenshot, how it works
 
 ## Follow-ups from divar-mcp decision (owner: options 1 + 4)
@@ -237,7 +235,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Replace the Mashhad sample set — removed (owner chose (b)); only real ads served
 - [ ] More real ads: rent-residential exports for other neighborhoods / cities (owner exports, I import)
 - [ ] Show the Divar thumbnail (`imageUrl`) on real cards — propose to the owner with the next batch
-- [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
+- [x] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")

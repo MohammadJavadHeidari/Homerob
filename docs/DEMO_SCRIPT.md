@@ -1,36 +1,36 @@
 # Homerob — Demo script (≤ 5 min, Persian narration)
 
-> Status: **draft — waiting for owner approval** of the three demo queries and the narration
-> (see `docs/PLAN.md` → Open questions). Numbers below are what production returned on
-> 2026-09-24; small wording differences in the AI text are expected.
+> Status: **approved by the owner (2026-09-27)** — three queries on the real Divar data (50 ads,
+> Mashhad). Numbers below are what the app returned on 2026-09-27; small wording differences in the AI
+> text are expected.
 
 Live: https://homerob.vercel.app
 
 ## Before recording (checklist)
 
 - Browser window ~1280×800, zoom 110%, hide bookmarks bar, one clean tab.
-- Home-page map intro (~8s: Iran → "موقعیت شما: مشهد، نزدیک …" → fly into Mashhad) uses the browser
-  location (allow it), falling back to IP location. With a VPN and location blocked it can't tell
-  you're in Mashhad — then open **`/?city=Mashhad`**. Let the intro finish before typing — it's a good
-  opening shot.
+- The home page is only the Torob logo + search box over the Iran map with "new ad" pins; it asks for
+  no location. Let a few pins drop before typing — it's the opening shot.
 - **Warm up**: run the 3 queries once 1–2 minutes before recording (fills the in-memory cache,
   avoids Gemini free-tier slowness). Wait ~1 min after warm-up so the rate limit resets.
 - Check the explanation box shows the small **AI** badge. If it doesn't (Gemini busy), wait a minute
   and re-run — the rule-based text is fine, but the AI one tells the story better.
+- Every card links to the real Divar ad (دیوار ↗). Ads expire — re-run the queries on recording day and
+  adjust the card numbers below if an ad is gone.
 - Direct links (paste instead of typing if needed):
-  - Q1: https://homerob.vercel.app/?q=یه%20آپارتمان%20دوخوابه%20نزدیک%20وکیل‌آباد%20با%20۵۰۰%20میلیون%20رهن
-  - Q2: https://homerob.vercel.app/?q=دانشجوام،%20یه%20سوئیت%20ارزون%20هر%20جای%20مشهد،%20ماهی%20۵%20تومن
-  - Q3: https://homerob.vercel.app/?q=دوخوابه%20بالکن‌دار%20سجاد،%20پارکینگ%20مهم%20نیست،%20رهن%20۴۰۰%20میلیون
+  - Q1: https://homerob.vercel.app/?q=دوخوابه%20مفتح%20رهن%20کامل%20تا%20۱.۵%20میلیارد
+  - Q2: https://homerob.vercel.app/?q=دوخوابه%20وکیل‌آباد%20با%20۵۰۰%20میلیون%20رهن
+  - Q3: https://homerob.vercel.app/?q=خونه%20ویلایی%20پورسینا%20رهن%20۲۰۰%20ماهی%20۱۰%20تومن
 
 ## Timeline
 
 | Time | On screen | Beat |
 |---|---|---|
 | 0:00–0:35 | Divar/Sheypoor-style listing text (or the Homerob home page) | Problem |
-| 0:35–1:05 | Homerob home page (map intro plays) | Idea: Torob for home |
+| 0:35–1:05 | Home page (Iran map, "new ad" pins) | Idea: Torob for home |
 | 1:05–2:10 | Q1 — simple query | Understanding + normalization + explanation |
-| 2:10–3:00 | Q2 — tricky budget | Empty state that helps |
-| 3:00–4:00 | Q3 — trade-off + remove a chip | Honest trade-offs, user in control |
+| 2:10–3:00 | Q2 — tricky budget | Honest "not with this budget" |
+| 3:00–4:00 | Q3 — trade-off + remove a chip | User in control, nearby options |
 | 4:00–4:35 | (stay on results) | Under the hood / product decisions |
 | 4:35–5:00 | Home page | What's next |
 
@@ -47,62 +47,62 @@ Live: https://homerob.vercel.app
 
 ### 0:35 — ایده (≈ ۳۰ ثانیه)
 
-*On screen: home page — let the map fly-in finish, then point at the search box and the 3 example chips.*
+*On screen: home page — a few "new ad" pins drop across Iran; point at the search box.*
 
-> هومراب یعنی «ترب، ولی برای خونه». همون کاری که ترب برای قیمت کالا کرده — جمع کردن، ساختار دادن،
-> مقایسه کردن — این‌بار برای اجاره‌ی خونه تو مشهد. اینجا فیلتر و فرم نداریم؛ فقط می‌نویسی چی
-> می‌خوای، به زبان خودت، و هوش مصنوعی بقیه‌ش رو انجام می‌ده.
+> این «ترب برای خونه»ه. همون کاری که ترب برای قیمت کالا کرده — جمع کردن، ساختار دادن، مقایسه
+> کردن — این‌بار برای اجاره‌ی خونه. آگهی‌ها واقعی‌ان، از دیوار، و هر کارت به آگهی اصلی لینک داره.
+> اینجا فیلتر و فرم نداریم؛ فقط می‌نویسی چی می‌خوای، به زبان خودت، و هوش مصنوعی بقیه‌ش رو انجام می‌ده.
 
 ### 1:05 — سؤال ۱: ساده (≈ ۶۵ ثانیه)
 
-*Type or click:* **«یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن»**
+*Type or click:* **«دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد»**
 
-1. *Point at the chips* (رهن تا ۵۰۰ میلیون · وکیل‌آباد · ۲ خواب یا بیشتر):
-   > اول ببینید هومراب چی فهمید: بودجه‌ی رهن ۵۰۰ میلیون، محله وکیل‌آباد، حداقل دو خواب. این‌ها
-   > فیلترهایی‌ان که از یه جمله‌ی محاوره‌ای درآومده.
-2. *Point at card #1 (dv-0901, 450M + 18M, "در شیپور هم هست")*:
-   > نتیجه‌ی اول: ۹۵ متر، دوخوابه، خود وکیل‌آباد. این آگهی هم تو دیوار بوده هم تو شیپور؛ هومراب
-   > تشخیص داده یکی‌ان و یه کارت نشون می‌ده — دقیقاً کاری که ترب با کالای تکراری می‌کنه.
-3. *Point at the AI box*: «پنجاه میلیون زیر بودجه‌ته و خود وکیل‌آباده، ولی پارکینگ نداره.»
-   > و مهم‌تر: می‌گه چرا. نه فقط مزیت، بلکه ضعفش رو هم صادقانه می‌گه: پارکینگ نداره.
-4. *Point at card #2 (sp-0902, 550M + 16M → «با بودجهٔ تو: رهن ۵۰۰ میلیون + اجاره ۱۷٫۵ میلیون»)*:
-   > این یکی ۵۵۰ میلیون رهن می‌خواد، یعنی بالای بودجه‌ست. ولی قابل تبدیله؛ هومراب حساب کرده اگه
-   > ۵۰۰ بدی، اجاره می‌شه ۱۷ و نیم میلیون. همه‌ی قیمت‌ها با یه نرخ ثابت — هر یک میلیون رهن، ۳۰ هزار
-   > تومن اجاره — هم‌تراز شدن، برای همین «معادل رهن کامل» و «قیمت هر متر» قابل مقایسه‌ان.
+1. *Point at the chips* (رهن کامل تا ۱٫۵ میلیارد · شهر مشهد · ایثار · ۲ خواب یا بیشتر):
+   > اول ببینید چی فهمید: رهن کامل تا یک و نیم میلیارد، حداقل دو خواب. «مفتح» اسم یه خیابون و
+   > ایستگاه متروئه، نه محله؛ هومراب می‌دونه تو محله‌ی ایثاره و محله‌های کناری — گلشور، طلاب،
+   > تلگرد — رو هم با امتیاز کمتر میاره.
+2. *Point at card #1 (ایثار، ۹۵ متر، دوخوابه — رهن ۱ میلیارد + اجاره ۱ میلیون)*:
+   > نتیجه‌ی اول: دوخوابه‌ی ۹۵ متری تو خود ایثار. آگهی گفته یه میلیارد رهن و یه میلیون اجاره، ولی
+   > من رهن کامل خواستم. چون قابل تبدیله، هومراب حساب کرده: «با ۱ میلیارد رهن کامل می‌شه» — و
+   > تازه ۴۶۷ میلیون زیر بودجه‌ست. همه‌ی قیمت‌ها با یه نرخ ثابت هم‌تراز شدن — هر یک میلیون رهن، ۳۰
+   > هزار تومن اجاره — برای همین «معادل رهن کامل» و «قیمت هر متر» قابل مقایسه‌ان.
+3. *Point at card #3 (گلشور، ۱۱۵ متر، رهن کامل ۸۰۰ میلیون)* and its AI box:
+   > و این یکی صادقانه می‌گه: ۲۰٪ ارزون‌تر از میانه‌ی ۷ آگهی گلشوره — ولی گلشوره، نه ایثار. تصمیم
+   > با منه.
+4. *Click «دیوار ↗» on card #1* (opens the real ad), come back.
+   > و این آگهی واقعیه؛ یه کلیک تا خود آگهی تو دیوار.
 5. *(≈ 10 s, optional)* Tick «مقایسه» on cards #1–#3 → «مقایسه» in the bottom bar.
    > می‌تونم دو سه تا رو کنار هم بذارم؛ فقط چیزهایی که فرق دارن نشون داده می‌شن و بهترینِ هر ردیف
-   > سبزه.
-6. *(one line)* Point at the small note «۱ آگهی قیمت واقعی نداشت…»:
-   > آگهی‌ای که قیمتش «توافقی» یا یه عدد الکیه، نه ارزون حساب می‌شه نه میانه‌ی محله رو خراب می‌کنه.
+   > سبزه. چیزی که آگهی نگفته «نامشخص» می‌مونه؛ هومراب حدس نمی‌زنه.
 
 ### 2:10 — سؤال ۲: بودجه‌ی سخت (≈ ۵۰ ثانیه)
 
-*Type or click:* **«دانشجوام، یه سوئیت ارزون هر جای مشهد، ماهی ۵ تومن»**
+*Type or click:* **«دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن»**
 
-1. *Chips:* اجاره تا ۵ میلیون · سوئیت · دانشجو
-   > «ماهی ۵ تومن» یعنی ۵ میلیون؛ این رو هم فهمید.
-2. *Empty state:* «هیچ آگهی‌ای با این بودجه نیست» + button «با ماهی ۶ میلیون، ۲ آگهی پیدا می‌شه — نشونم بده»
-   > با این بودجه هیچی نیست — و به جای یه صفحه‌ی خالی، هومراب می‌گه با ماهی ۶ میلیون دو تا
-   > گزینه هست.
-3. *Click the button.* Top results: سوئیت ۴۴ متری قاسم‌آباد → «با ۲۲۳ میلیون رهن، اجاره‌اش ۶ میلیون می‌شه».
-   > یه کلیک، و حتی می‌گه چقدر رهن بدی تا اجاره به ۶ میلیون برسه.
-4. *(optional, ≈ 10 s)* Back, then the note «۲ آگهی اجاره اتاق / همخونه… نشونم بده»:
-   > اتاق‌های همخونه رو جدا نگه داشته، چون قیمتشون برای یه اتاقه نه کل واحد؛ ولی اگه برای یه
-   > دانشجو گزینه‌ی خوبیه، یه کلیک فاصله داره.
+1. *Chips:* رهن تا ۵۰۰ میلیون · وکیل‌آباد · ۲ خواب یا بیشتر
+2. *Top results:* three 1-bedrooms in وکیل‌آباد (۵۰ متری ۲۵۰ + ۳ میلیون، ویلایی ۱۰۰ متری ۴۰۰ + ۱۴ میلیون,
+   سوئیت ۴۰ متری), each with the con «۱ خوابه است، نه ۲ خوابه»; #4 is a 2-bedroom villa in گلشور.
+   > دوخوابه‌های وکیل‌آباد تو دیوار الان از یک میلیارد رهن کامل شروع می‌شن. هومراب به جای اینکه
+   > نتیجه‌ی بد رو خوب جلوه بده، صاف می‌گه: «۱ خوابه است، نه ۲ خوابه». بده‌بستان رو جلوی چشمم
+   > می‌ذاره: یا تو وکیل‌آباد یه‌خوابه، یا دوخوابه ولی تو یه محله‌ی دیگه.
+3. *(optional)* Open «فیلترها» → price histogram:
+   > و با فیلترها می‌تونم ببینم قیمت‌ها کجا جمع شدن، بدون اینکه دوباره تایپ کنم.
 
 ### 3:00 — سؤال ۳: بده‌بستان (≈ ۶۰ ثانیه)
 
-*Type or click:* **«دوخوابه بالکن‌دار سجاد، پارکینگ مهم نیست، رهن ۴۰۰ میلیون»**
+*Type or click:* **«خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن»**
 
-1. *Chips:* رهن تا ۴۰۰ میلیون · سجاد · ۲ خواب یا بیشتر · بالکن — **no parking chip**
-   > دقت کنید: گفتم «پارکینگ مهم نیست» و هومراب پارکینگ رو شرط نکرده.
-2. *Top results:* a 1-bedroom in Sajjad («۱۰۰ میلیون زیر بودجه‌ات… ولی ۱ خوابه است، نه ۲ خوابه») and
-   a 2-bedroom outside Sajjad.
-   > با ۴۰۰ میلیون، تو سجاد دوخوابه‌ی بالکن‌دار نیست. هومراب قایمش نمی‌کنه؛ بده‌بستان رو نشون می‌ده:
-   > یا تو سجاد یه‌خوابه، یا دوخوابه ولی تو محله‌ی دیگه.
-3. *Remove the «سجاد» chip (×).* New top: 2-bedrooms in وکیل‌آباد / قاسم‌آباد / هاشمیه.
-   > اگه محله برام مهم نباشه، فقط این چیپ رو برمی‌دارم — بدون تایپ دوباره — و بهترین دوخوابه‌ها
-   > با همین بودجه میان بالا. کنترل دست کاربره.
+1. *Chips:* رهن تا ۲۰۰ میلیون · اجاره تا ۱۰ میلیون · پورسینا
+   > «ماهی ۱۰ تومن» یعنی ۱۰ میلیون؛ این رو هم فهمید. بودجه‌ی دوطرفه: هم رهن، هم اجاره.
+2. *Top results:* ویلایی ۵۵ متری، رهن کامل ۲۰۰ میلیون («ماهی ۱۰ میلیون کمتر از سقف اجاره‌ات»،
+   «۱۱٪ ارزان‌تر از میانهٔ ۱۰ آگهی پورسینا»); #2 خانه ۶۰ متری ۲۵۰ رهن کامل → «با ۲۰۰ میلیون رهن،
+   اجاره‌اش ۱٫۵ میلیون می‌شه».
+   > دومی ۲۵۰ رهن می‌خواد، بالای بودجه‌م؛ ولی قابل تبدیله و هومراب حساب کرده با ۲۰۰ میلیون، اجاره
+   > فقط یک و نیم میلیون می‌شه.
+3. *Remove the «پورسینا» chip (×).* New results include a 3-bedroom 120 m² villa in شهید معقول (۱۰۰ +
+   ۱۰ میلیون) and a 3-bedroom 110 m² house in تلگرد (۲۰۰ + ۱۰ میلیون).
+   > حالا اگه محله برام مهم نباشه، فقط این چیپ رو برمی‌دارم — بدون تایپ دوباره — و با همین بودجه
+   > خونه‌های سه‌خوابه تو محله‌های کناری میان بالا. کنترل دست کاربره.
 
 ### 4:00 — پشت صحنه (≈ ۳۵ ثانیه)
 
@@ -113,7 +113,7 @@ Live: https://homerob.vercel.app
 
 ### 4:35 — قدم بعدی (≈ ۲۵ ثانیه)
 
-> این نسخه با داده‌ی نمونه‌ی مشهد کار می‌کنه، ولی معماری‌ش منبع داده رو جدا نگه داشته. قدم بعدی
+> این نسخه با ۵۰ آگهی واقعی دیوار از مشهد کار می‌کنه و معماری‌ش منبع داده رو جدا نگه داشته. قدم بعدی
 > وصل شدن به یه منبع زنده و فقط‌خواندنیه — مثلاً یه سرور MCP روی آگهی‌های عمومی، یا داده‌ای که
 > خود پلتفرم‌ها رسماً در اختیار می‌ذارن — و بعد تشخیص تکراری هوشمندتر بین سایت‌ها و شهرهای بیشتر.
 > هدف رقابت با دیوار نیست؛ هدف لایه‌ی هوشمندیه که به آگهی‌های موجود معنی می‌ده. ممنون که دیدید.
@@ -122,6 +122,5 @@ Live: https://homerob.vercel.app
 
 ## Backup query (if one of the above misbehaves)
 
-- **«پونصد تومن پول پیش دارم و ماهی ۱۵ تومن می‌تونم اجاره بدم، قاسم‌آباد»** — shows colloquial
-  numbers (پونصد تومن → ۵۰۰ میلیون، ۱۵ تومن → ۱۵ میلیون) and a two-sided budget; top result
-  «ماهی ۳ میلیون کمتر از سقف اجاره‌ات».
+- **«یک خوابه گلشور ماهی ۱۵ تومن»** — colloquial rent (۱۵ تومن → ۱۵ میلیون); top result a 2-bedroom
+  115 m² in گلشور, full rahn, «۲۰٪ ارزان‌تر از میانهٔ ۷ آگهی گلشور».

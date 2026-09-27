@@ -22,6 +22,7 @@ describe("data quality", () => {
   it("flags shared rooms in any spelling", () => {
     expect(isSharedHousing({ title: "اجاره اتاق در واحد دوخوابه", description: "" })).toBe(true);
     expect(isSharedHousing({ title: "هم‌خونه آقا", description: "" })).toBe(true);
+    expect(isSharedHousing({ title: "خانه ۱۶۰متری", description: "مادرم تنها زندگی می‌کند فقط خانم تنها" })).toBe(true);
     expect(isSharedHousing({ title: "آپارتمان ۹۵ متری", description: "مناسب خانواده" })).toBe(false);
   });
 

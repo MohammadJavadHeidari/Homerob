@@ -1,19 +1,19 @@
-/** Example queries: shown as clickable chips in the UI and used for manual testing. */
+/** Example queries for manual testing — all return results on the real data (src/data/divar.json). */
 export const DEMO_QUERIES = [
-  "یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن",
-  "سوئیت یا یک‌خوابه تو سجاد، ماهی حداکثر ۸ تومن",
-  "خونه پارکینگ‌دار در احمدآباد برای خانواده ۳ نفره",
-  "رهن کامل تا یک و نیم میلیارد، هاشمیه یا وکیل‌آباد",
-  "پونصد تومن پول پیش دارم و ماهی ۱۵ تومن می‌تونم اجاره بدم، قاسم‌آباد",
-  "رهن ۳۰۰ اجاره ۱۰، دوخوابه با آسانسور",
-  "یه جای نوساز و مبله برای یه زوج جوان، الهیه، ترجیحاً نزدیک قطار شهری",
-  "حدود ۱۲۰ متر سه‌خوابه با پارکینگ و انباری، بودجه ۲ میلیارد",
-  "دانشجوام، یه سوئیت ارزون هر جای مشهد، ماهی ۵ تومن",
-  "دوخوابه بالکن‌دار سجاد، پارکینگ مهم نیست، رهن ۴۰۰ میلیون",
+  // docs/DEMO_SCRIPT.md, in order
+  "دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد",
+  "دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن",
+  "خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن",
+  // backup / extra
+  "یک خوابه گلشور ماهی ۱۵ تومن",
+  "سه خوابه وکیل‌آباد رهن ۷۰۰ اجاره ۱۰",
+  "آپارتمان با آسانسور و پارکینگ نزدیک مفتح، رهن کامل تا ۲ میلیارد",
+  "خونه حیاط‌دار شرق مشهد، رهن ۱۰۰ ماهی ۱۰ تومن",
 ] as const;
 
 /**
- * Home-page chips: short, the way people really type (docs/research/landing-ux.md) — three is
- * enough. Each must parse with the rule fallback too and return results.
+ * Short chips, the way people really type (docs/research/landing-ux.md). Not on the home page since
+ * the "logo + search only" landing; kept for tests and future use. Each must parse with the rule
+ * fallback too and return results.
  */
-export const HERO_EXAMPLES = ["دوخوابه وکیل‌آباد ۵۰۰ رهن", "سوئیت سجاد ماهی ۸ تومن", "رهن کامل تا یک و نیم میلیارد هاشمیه"] as const;
+export const HERO_EXAMPLES = ["دوخوابه مفتح رهن کامل", "ویلایی پورسینا ۲۰۰ رهن", "دوخوابه وکیل‌آباد ۵۰۰ رهن"] as const;

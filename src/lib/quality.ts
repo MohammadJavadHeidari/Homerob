@@ -11,7 +11,8 @@ export function isPlaceholderPrice(l: Pick<Listing, "deposit" | "monthlyRent">):
   return tiny || repeated(l.deposit) || repeated(l.monthlyRent);
 }
 
-const SHARED = /همخونه|هم خونه|هماتاقی|هم اتاقی|اجاره اتاق|اتاق اجاره/;
+// Also "living with the owner's family": «مادرم تنها زندگی می‌کند، فقط خانم تنها».
+const SHARED = /همخونه|هم خونه|هماتاقی|هم اتاقی|اجاره اتاق|اتاق اجاره|تنها زندگی می ?کند|تنها زندگی میکنه/;
 
 /** A room in a shared flat: its price is for one room, not a whole unit. */
 export function isSharedHousing(l: Pick<Listing, "title" | "description">): boolean {
