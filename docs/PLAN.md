@@ -318,3 +318,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] "Compare" view for 2–3 listings (done via divar-mcp follow-ups)
 - [x] Post-search filter panel (facets, histograms, sort, mobile sheet, motion) — owner request
 - [x] Map view with price pins (Neshan, owner chose option 1)
+
+## Feature candidates (owner-shortlisted 2026-09-27 — not scheduled, build only when the owner picks one)
+- [ ] **«خبرم کن» — saved-search alerts** (owner liked it). Save a search (its `SearchIntent`) and get
+  notified when a new real ad matches it. No account: the saved intent lives on the device (like
+  `taste-store.ts`); delivery via browser push (Web Push, free) or a Telegram bot (new account → owner).
+  Reuses the scorer + `feed.ts` «N جدید» logic. **Blocker for real value:** ads are imported by hand, so
+  alerts would be rare and late until listings are refreshed on a schedule. Open choices when picked:
+  push vs Telegram, where saved searches are kept server-side for matching (current rule: no database).
