@@ -174,6 +174,20 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Gemini filed «مفتح» under notes (no ایثار chip) → `fillNeighborhoods` (`src/lib/intent/place.ts`): when the
     LLM names no neighborhood, the registered ones the text mentions are filled in (fresh queries only; an
     edited intent / removed chip is kept). 125 tests.
+  - Owner request (2026-09-27) — **students: «نفری چقدر؟» + «تا دانشگاه چقدر راهه؟»** (owner chose option (a) of the
+    student brainstorm). Intent `people` (group sharing the cost, 2–12) + `campus`. `src/lib/intent/group.ts`: reads
+    «۴ تا دانشجوییم / ۳ نفریم / با ۲ تا دوستم» and per-person budgets («نفری», «هر نفر» — not «۴ نفری») → the intent keeps
+    the group's total budget, no room count → ⌈people/2⌉ bedrooms; home rentals only; a family never counts. LLM prompt
+    gets `people` + `budgetPerPerson` (+ 1 example); the server fills both from the text when the LLM misses them.
+    `src/lib/campuses.ts`: 5 Mashhad universities with OSM outlines (فردوسی، علوم پزشکی، آزاد، پیام نور، خیام; aliases
+    always name the university, so «خیابان فردوسی» / «بلوار خیام» don't match; فرهنگیان / سجاد left out — their names
+    contain a neighborhood); straight-line km to the campus edge, from the ad's own point (0.1 km) or «حدود» from the
+    neighborhood center (0.5 km); walking minutes ≤ 2.5 km. Ranking: campus distance replaces / halves the neighborhood
+    weight. Results carry `share` (each person's rahn + rent after conversion) and `campus`; highlights: share, «۱ خوابه
+    برای ۳ نفر جا تنگه» / «هر نفر یک اتاق», distance, savings said per person. UI: «۴ نفر با هم» + «نزدیک دانشگاه
+    فردوسی» chips, budget chips show «(نفری …)», card rows «سهم هر نفر» and 🎓 distance. 136 tests. Checked at 390 and
+    1280 px (`docs/screenshots/*-students*.png`), no page errors. LLM path not checked locally (no key) → check on
+    Production. Not done: campus pin on the map, «نزدیک‌ترین به دانشگاه» sort, universities of other cities.
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,

@@ -1,8 +1,9 @@
 "use client";
 
-import { MapPin, Sparkles, Tag, X, type LucideIcon } from "lucide-react";
+import { GraduationCap, MapPin, Sparkles, Tag, Users, X, type LucideIcon } from "lucide-react";
 
 import { AMENITIES } from "@/lib/amenities";
+import { campusById } from "@/lib/campuses";
 import type { SearchIntent } from "@/lib/api-types";
 import { CATEGORIES, priceModelOf } from "@/lib/categories";
 import { formatToman, toFaDigits } from "@/lib/persian";
@@ -30,16 +31,29 @@ export function intentToChips(intent: SearchIntent): Chip[] {
       remove: (i) => ({ ...i, maxPrice: null }),
     });
   }
+  // a group's budget is its total; say what that is per person too
+  const each = (v: number) => (intent.people ? ` (نفری ${formatToman(Math.round(v / intent.people / 1e5) * 1e5)})` : "");
+  if (intent.people) {
+    chips.push({
+      id: "people",
+      label: `${toFaDigits(intent.people)} نفر با هم`,
+      tone: "home",
+      icon: Users,
+      remove: (i) => ({ ...i, people: null }),
+    });
+  }
   if (intent.maxDeposit !== null) {
     chips.push({
       id: "deposit",
-      label: intent.maxRent === 0 ? `رهن کامل تا ${formatToman(intent.maxDeposit)}` : `رهن تا ${formatToman(intent.maxDeposit)}`,
+      label:
+        (intent.maxRent === 0 ? `رهن کامل تا ${formatToman(intent.maxDeposit)}` : `رهن تا ${formatToman(intent.maxDeposit)}`) +
+        (intent.maxDeposit > 0 ? each(intent.maxDeposit) : ""),
       tone: "budget",
       remove: (i) => ({ ...i, maxDeposit: null, maxRent: i.maxRent === 0 ? null : i.maxRent }),
     });
   }
   if (intent.maxRent !== null && intent.maxRent > 0) {
-    chips.push({ id: "rent", label: `اجاره تا ${formatToman(intent.maxRent)}`, tone: "budget", remove: (i) => ({ ...i, maxRent: null }) });
+    chips.push({ id: "rent", label: `اجاره تا ${formatToman(intent.maxRent)}${each(intent.maxRent)}`, tone: "budget", remove: (i) => ({ ...i, maxRent: null }) });
   }
   if (!intent.flexibleConversion) {
     chips.push({ id: "fixed", label: "بدون تبدیل رهن و اجاره", tone: "budget", remove: (i) => ({ ...i, flexibleConversion: true }) });
@@ -61,6 +75,10 @@ export function intentToChips(intent: SearchIntent): Chip[] {
       tone: "place",
       remove: (i) => ({ ...i, neighborhoods: i.neighborhoods.filter((x) => x !== n) }),
     });
+  }
+  const campus = campusById(intent.campus);
+  if (campus) {
+    chips.push({ id: "campus", label: `نزدیک ${campus.name}`, tone: "place", icon: GraduationCap, remove: (i) => ({ ...i, campus: null }) });
   }
   if (intent.nearMe && !intent.neighborhoods.length) {
     chips.push({

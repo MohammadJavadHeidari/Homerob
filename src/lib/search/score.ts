@@ -1,5 +1,6 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
 import { AMENITIES, amenityKnown, amenityNo, amenityUnstated, amenityYes, type AmenityKey } from "@/lib/amenities";
+import { campusDistanceFa, campusScore, type CampusDistance } from "@/lib/campuses";
 import { categoryOf, priceModelOf, unitPrice } from "@/lib/categories";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { formatToman, toFaDigits } from "@/lib/persian";
@@ -8,6 +9,7 @@ import { isComparable } from "@/lib/quality";
 import type { Listing } from "@/lib/types";
 
 import type { BudgetFit } from "./budget";
+import type { Share } from "./index";
 
 /** Soft-score weights (sum = 100 → the match score is a percentage). Tune here. */
 export const WEIGHTS = {
@@ -66,9 +68,13 @@ const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
 // ---------- scoring ----------
 
-export function scoreListing(l: Listing, intent: SearchIntent): { score: number; breakdown: ScoreBreakdown } {
+export function scoreListing(
+  l: Listing,
+  intent: SearchIntent,
+  campus?: CampusDistance,
+): { score: number; breakdown: ScoreBreakdown } {
   const b: ScoreBreakdown = {
-    neighborhood: neighborhoodScore(l, intent),
+    neighborhood: placeScore(l, intent, campus),
     mustHave: fraction(intent.mustHave, l, 1),
     rooms: roomsScore(l, intent),
     area: intent.minArea === null ? 1 : clamp01(1 - ((intent.minArea - l.areaM2) / intent.minArea) * 3),
@@ -81,6 +87,13 @@ export function scoreListing(l: Listing, intent: SearchIntent): { score: number;
     0,
   );
   return { score: Math.round(score), breakdown: b };
+}
+
+/** Where it is: the neighborhoods asked for and, for students, how close the university is. */
+function placeScore(l: Listing, intent: SearchIntent, campus?: CampusDistance) {
+  if (!campus) return neighborhoodScore(l, intent);
+  const near = campusScore(campus.km);
+  return intent.neighborhoods.length ? (neighborhoodScore(l, intent) + near) / 2 : near;
 }
 
 function neighborhoodScore(l: Listing, intent: SearchIntent) {
@@ -120,9 +133,36 @@ function valueScore(l: Listing) {
 
 // ---------- highlights (facts the explanation is built from) ----------
 
-export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Highlight[] {
+export function highlights(
+  l: Listing,
+  intent: SearchIntent,
+  fit: BudgetFit,
+  extra: { share?: Share; campus?: CampusDistance } = {},
+): Highlight[] {
   const out: Highlight[] = [];
   const add = (kind: Highlight["kind"], text: string, weight: number) => out.push({ kind, text, weight });
+
+  // a group renting together: each person's share, and whether everyone gets a bed in a real room
+  const { share, campus } = extra;
+  let crowded = false;
+  if (share) {
+    add("info", shareFa(share), 9);
+    if (l.rooms !== undefined) {
+      const perRoom = share.people / Math.max(1, l.rooms);
+      crowded = perRoom > 2;
+      if (crowded) add("con", `${roomsLabel(l.rooms)} برای ${toFaDigits(share.people)} نفر جا تنگه`, 9);
+      else if (perRoom <= 1) add("pro", "هر نفر یک اتاق", 5);
+    }
+  }
+  // a group's savings are said per person, like its share
+  const people = share?.people ?? 1;
+  const each = people > 1 ? "نفری " : "";
+  if (campus) {
+    const walk = campus.walkMin ? ` (حدود ${toFaDigits(campus.walkMin)} دقیقه پیاده)` : "";
+    if (campus.km <= 1.5) add("pro", `${campusDistanceFa(campus)}${walk}`, 8);
+    else if (campus.km <= 4) add("info", `${campusDistanceFa(campus)}${walk}`, 7);
+    else add("con", `${campusDistanceFa(campus)}، با اتوبوس یا مترو`, 8);
+  }
 
   // budget — phrase savings on the side the user talked about
   const { maxDeposit: D, maxRent: R, maxPrice: P } = intent;
@@ -144,10 +184,10 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   }
   const rentSlack = R !== null ? R - fit.monthlyRent : 0;
   const depositSlack = D !== null ? D - fit.deposit : 0;
-  if (R !== null && R > 0 && rentSlack >= 1e6) {
-    add("pro", `ماهی ${formatToman(roundHalfM(rentSlack))} کمتر از سقف اجاره‌ات`, 7);
-  } else if (D !== null && depositSlack >= 20e6) {
-    add("pro", `${formatToman(roundM(depositSlack))} زیر بودجه‌ات`, 7);
+  if (R !== null && R > 0 && rentSlack / people >= 1e6) {
+    add("pro", `${each}ماهی ${formatToman(roundHalfM(rentSlack / people))} کمتر از سقف اجاره‌ات`, 7);
+  } else if (D !== null && depositSlack / people >= 20e6) {
+    add("pro", `${each}${formatToman(roundM(depositSlack / people))} زیر بودجه‌ات`, 7);
   } else if ((D !== null || R !== null) && !fit.converted) {
     add("info", "درست در حد بودجه‌ات", 3);
   }
@@ -168,7 +208,7 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   // rooms / area
   if (l.rooms === undefined) {
     if (intent.minRooms !== null || intent.maxRooms !== null) add("info", "تعداد خواب در آگهی نیامده", 5);
-  } else if (intent.minRooms !== null && l.rooms < intent.minRooms) {
+  } else if (intent.minRooms !== null && l.rooms < intent.minRooms && !crowded) {
     add("con", `${roomsLabel(l.rooms)} است، نه ${roomsLabel(intent.minRooms)}`, 9);
   } else if (intent.maxRooms !== null && l.rooms > intent.maxRooms) {
     add("info", `${roomsLabel(l.rooms)}، بزرگ‌تر از چیزی که گفتی`, 4);
@@ -212,6 +252,12 @@ export function ruleExplanation(hl: Highlight[]): string {
   if (!con) return `${pro.join(" و ")}.`;
   if (!pro.length) return `${con}.`;
   return `${pro.join(" و ")}؛ ولی ${con}.`;
+}
+
+/** "نفری ۱۵۰ میلیون رهن + ماهی ۳ میلیون (۴ نفر)" */
+export function shareFa({ people, deposit, monthlyRent }: Share): string {
+  const parts = [deposit > 0 && `${formatToman(deposit)} رهن`, monthlyRent > 0 && `ماهی ${formatToman(monthlyRent)}`].filter(Boolean);
+  return `سهم هر نفر (${toFaDigits(people)} نفر): ${parts.join(" + ") || "صفر"}`;
 }
 
 const roundM = (v: number) => Math.round(v / 1e6) * 1e6;

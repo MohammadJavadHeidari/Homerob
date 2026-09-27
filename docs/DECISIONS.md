@@ -130,3 +130,6 @@
   alternative): (1) «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد», (2) «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن»,
   (3) «خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن» + remove the «پورسینا» chip. Script:
   `docs/DEMO_SCRIPT.md`. Owner asked to merge and update the live site.
+- 2026-09-27 — **Students (owner chose (a) of 3):** build «نفری چقدر؟» (group size + per-person budget → each person's
+  share on every card) and «تا دانشگاه چقدر راهه؟» (distance to a named university, used in ranking). Roommate
+  matching (profiles of people) is out: personal data and safety. «خبرم کن» stays a shortlisted candidate (PLAN.md).

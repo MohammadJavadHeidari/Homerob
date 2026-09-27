@@ -10,11 +10,13 @@ import {
   ChevronDown,
   Clock,
   GitCompareArrows,
+  GraduationCap,
   MapPin,
   MapPinned,
   Package,
   Ruler,
   Sparkles,
+  Users,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -27,6 +29,7 @@ import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
 import { ageFa, floorFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { isSharedHousing } from "@/lib/quality";
+import { campusDistanceFa } from "@/lib/campuses";
 import { cn } from "@/lib/utils";
 
 export function ListingCard({
@@ -82,6 +85,15 @@ export function ListingCard({
             <span className="bg-border mx-1 inline-block h-3 w-px" />
             {l.city}
           </p>
+          {result.campus && (
+            <p className="text-foreground flex items-center gap-1 text-sm font-medium">
+              <GraduationCap className="text-primary size-3.5 shrink-0" />
+              {campusDistanceFa(result.campus)}
+              {result.campus.walkMin !== null && (
+                <span className="text-muted-foreground font-normal">· حدود {toFaDigits(result.campus.walkMin)} دقیقه پیاده</span>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 flex-col items-center gap-2">
           <ScoreBadge score={score} />
@@ -121,6 +133,20 @@ export function ListingCard({
             <Price label={PRICE_LABEL[model].price} value={price} />
             {model === "sale" && <Price label="قیمت هر متر" value={Math.round(price / l.areaM2)} />}
           </>
+        )}
+        {result.share && (
+          <p className="bg-brand-soft text-brand-ink col-span-2 flex flex-wrap items-center gap-x-1.5 rounded-lg px-2.5 py-1.5 text-sm font-bold">
+            <Users className="size-4 shrink-0" />
+            سهم هر نفر ({toFaDigits(result.share.people)} نفر):
+            <span>
+              {[
+                result.share.deposit > 0 && `رهن ${formatToman(result.share.deposit)}`,
+                result.share.monthlyRent > 0 && `ماهی ${formatToman(result.share.monthlyRent)}`,
+              ]
+                .filter(Boolean)
+                .join(" + ") || "—"}
+            </span>
+          </p>
         )}
         {budget.converted && (
           <p className="bg-secondary text-foreground col-span-2 rounded-lg px-2.5 py-1.5 text-xs font-medium">

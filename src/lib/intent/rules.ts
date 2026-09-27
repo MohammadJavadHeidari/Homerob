@@ -1,9 +1,11 @@
 import { AMENITIES, AMENITY_KEYS, type AmenityKey } from "@/lib/amenities";
+import { findCampus } from "@/lib/campuses";
 import { detectCategory } from "@/lib/categories";
 import { findCity, findNeighborhoods } from "@/lib/places";
 import { normalizeFa } from "@/lib/text";
 
 import { settleBudget } from "./category";
+import { applyGroup, detectGroup } from "./group";
 import { EMPTY_INTENT, type SearchIntent } from "./schema";
 
 /**
@@ -36,7 +38,12 @@ export function parseIntentWithRules(query: string): SearchIntent {
     intent.freeTextNotes = "زوج جوان";
   }
 
-  return settleBudget(intent);
+  const campus = findCampus(text, intent.city);
+  if (campus) {
+    intent.campus = campus.id;
+    intent.city ??= campus.city;
+  }
+  return applyGroup(settleBudget(intent), detectGroup(text));
 }
 
 // ---------- numbers ----------
@@ -61,7 +68,7 @@ const NUMBER_RUN = new RegExp(
 );
 
 /** "پونصد" → "500", "یک و نیم" → "1.5", "صد و پنجاه" → "150". Leaves "نه" (no) alone. */
-function wordsToDigits(text: string): string {
+export function wordsToDigits(text: string): string {
   return text.replace(NUMBER_RUN, (match, run: string) => {
     if (match === "نه" || match === "یه" || match === "سی") return match; // too ambiguous alone
     const value = run.split(" و ").reduce((sum, w) => sum + (UNITS[w] ?? 0), 0);

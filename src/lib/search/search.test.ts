@@ -83,3 +83,25 @@ describe("suggest", async () => {
     expect(s!.text).toContain("آگهی پیدا می‌شه");
   });
 });
+
+describe("students: group share and distance to campus", () => {
+  it("shows each person's share and ranks closer to the campus higher", () => {
+    const { results } = search(intent({ people: 4, maxDeposit: 2000 * M, campus: "ferdowsi" }));
+    expect(results.length).toBeGreaterThan(1);
+    for (const r of results) {
+      expect(r.share?.people).toBe(4);
+      expect(r.share!.deposit).toBe(Math.round(r.budget.deposit / 4 / M) * M);
+      expect(r.campus?.campus).toBe("دانشگاه فردوسی");
+    }
+    expect(results[0].highlights.some((h) => h.text.startsWith("سهم هر نفر"))).toBe(true);
+    const near = results.find((r) => r.listing.neighborhood === "هاشمیه");
+    const far = results.find((r) => r.listing.neighborhood === "احمدآباد");
+    if (near && far) expect(near.campus!.km).toBeLessThan(far.campus!.km);
+  });
+
+  it("adds nothing for a regular search", () => {
+    const r = search(intent({ maxDeposit: 500 * M })).results[0];
+    expect(r.share).toBeUndefined();
+    expect(r.campus).toBeUndefined();
+  });
+});

@@ -26,6 +26,13 @@ export const SearchIntentSchema = z.object({
   niceToHave: z.array(z.enum(AMENITY_KEYS)),
   /** User wants a room in a shared flat (همخونه / اجاره اتاق). Default false = whole units only. */
   sharedRoom: z.boolean(),
+  /**
+   * People who will share the place and its cost (students, friends), ≥ 2. The budget fields are the
+   * group's total; cards show each person's share. null = one household.
+   */
+  people: z.number().int().min(2).max(12).nullable().default(null),
+  /** University to live near (id in src/lib/campuses.ts); ranks by distance to its campus. */
+  campus: z.string().nullable().default(null),
   /** Anything else worth keeping, in Persian (e.g. "خانواده سه نفره"). */
   freeTextNotes: z.string().nullable(),
   /**
@@ -51,6 +58,8 @@ export const EMPTY_INTENT: SearchIntent = {
   mustHave: [],
   niceToHave: [],
   sharedRoom: false,
+  people: null,
+  campus: null,
   freeTextNotes: null,
   nearMe: null,
 };

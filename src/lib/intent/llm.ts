@@ -6,6 +6,7 @@ import { canonicalNeighborhood, cityName, COVERED_CITIES, hoodsIn } from "@/lib/
 import { CATEGORIES, CATEGORY_KEYS, detectCategory, isCategoryKey } from "@/lib/categories";
 
 import { settleBudget } from "./category";
+import { applyGroup } from "./group";
 import { SearchIntentSchema, type SearchIntent } from "./schema";
 
 const AMENITY_LIST = AMENITY_KEYS.map((k) => `${k} (${AMENITIES[k].label})`).join(", ");
@@ -31,6 +32,8 @@ Output ONLY a JSON object with exactly these keys:
   "mustHave": string[],               // required amenities, keys from the list below
   "niceToHave": string[],             // preferred amenities ("ترجیحاً", "اگه… بهتره")
   "sharedRoom": boolean,              // true only if they want a room in a shared flat (همخونه / اجاره اتاق)
+  "people": number | null,            // people who will share the place and its cost (students, friends: "۴ نفریم", "با ۲ تا دوستم" = 3); null for a family or one person
+  "budgetPerPerson": boolean,         // true if the amounts are per person ("نفری ۱۵۰", "هر نفر ماهی ۳")
   "freeTextNotes": string | null      // short Persian note for anything else useful (household, lifestyle); else null
 }
 Amenity keys: ${AMENITY_LIST}.
@@ -47,6 +50,7 @@ Money rules (critical):
 - "رهن کامل" with a budget → maxRent 0.
 - An amount with no rahn/ejare word: ≥ 100 million → maxDeposit, otherwise → maxRent.
 - Never invent a budget that was not stated; use null.
+- Per-person budgets ("نفری", "هر نفر"): write the amounts as stated (do NOT multiply) and set budgetPerPerson true.
 
 Category rules:
 - Buying (خرید، بخرم، فروشی، قیمت کل) a home/land → residential-sale; an office/shop/industrial unit → commercial-sale.
@@ -68,17 +72,19 @@ Other rules:
 
 Examples:
 Q: یه آپارتمان دوخوابه نزدیک وکیل‌آباد با ۵۰۰ میلیون رهن
-A: {"category":"residential-rent","maxPrice":null,"maxDeposit":500000000,"maxRent":null,"flexibleConversion":true,"city":"مشهد","neighborhoods":["وکیل‌آباد"],"minRooms":2,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}
+A: {"category":"residential-rent","maxPrice":null,"maxDeposit":500000000,"maxRent":null,"flexibleConversion":true,"city":"مشهد","neighborhoods":["وکیل‌آباد"],"minRooms":2,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"people":null,"budgetPerPerson":false,"freeTextNotes":null}
 Q: سوئیت یا یک خوابه مبله تو سجاد، ماهی حداکثر ۱۰ تومن، پول پیش زیاد ندارم
-A: {"category":"residential-rent","maxPrice":null,"maxDeposit":null,"maxRent":10000000,"flexibleConversion":true,"city":"مشهد","neighborhoods":["سجاد"],"minRooms":0,"maxRooms":1,"minArea":null,"mustHave":["furnished"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":"پول پیش کم"}
+A: {"category":"residential-rent","maxPrice":null,"maxDeposit":null,"maxRent":10000000,"flexibleConversion":true,"city":"مشهد","neighborhoods":["سجاد"],"minRooms":0,"maxRooms":1,"minArea":null,"mustHave":["furnished"],"niceToHave":[],"sharedRoom":false,"people":null,"budgetPerPerson":false,"freeTextNotes":"پول پیش کم"}
 Q: آپارتمان سه خوابه در تهران با پارکینگ، رهن کامل تا ۳ میلیارد
-A: {"category":"residential-rent","maxPrice":null,"maxDeposit":3000000000,"maxRent":0,"flexibleConversion":true,"city":"تهران","neighborhoods":[],"minRooms":3,"maxRooms":null,"minArea":null,"mustHave":["parking"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}
+A: {"category":"residential-rent","maxPrice":null,"maxDeposit":3000000000,"maxRent":0,"flexibleConversion":true,"city":"تهران","neighborhoods":[],"minRooms":3,"maxRooms":null,"minArea":null,"mustHave":["parking"],"niceToHave":[],"sharedRoom":false,"people":null,"budgetPerPerson":false,"freeTextNotes":null}
 Q: میخوام یه آپارتمان صد متری تو شیراز بخرم، تا ۶ میلیارد
-A: {"category":"residential-sale","maxPrice":6000000000,"maxDeposit":null,"maxRent":null,"flexibleConversion":true,"city":"شیراز","neighborhoods":[],"minRooms":null,"maxRooms":null,"minArea":100,"mustHave":[],"niceToHave":[],"sharedRoom":false,"freeTextNotes":null}
+A: {"category":"residential-sale","maxPrice":6000000000,"maxDeposit":null,"maxRent":null,"flexibleConversion":true,"city":"شیراز","neighborhoods":[],"minRooms":null,"maxRooms":null,"minArea":100,"mustHave":[],"niceToHave":[],"sharedRoom":false,"people":null,"budgetPerPerson":false,"freeTextNotes":null}
 Q: مغازه بر خیابون برای اجاره، رهن ۳۰۰ اجاره ۲۰
-A: {"category":"commercial-rent","maxPrice":null,"maxDeposit":300000000,"maxRent":20000000,"flexibleConversion":true,"city":null,"neighborhoods":[],"minRooms":null,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"freeTextNotes":"بر خیابان"}
+A: {"category":"commercial-rent","maxPrice":null,"maxDeposit":300000000,"maxRent":20000000,"flexibleConversion":true,"city":null,"neighborhoods":[],"minRooms":null,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"people":null,"budgetPerPerson":false,"freeTextNotes":"بر خیابان"}
 Q: ویلا با استخر برای آخر هفته، شبی تا ۴ میلیون
-A: {"category":"short-term","maxPrice":4000000,"maxDeposit":null,"maxRent":null,"flexibleConversion":true,"city":null,"neighborhoods":[],"minRooms":null,"maxRooms":null,"minArea":null,"mustHave":["pool"],"niceToHave":[],"sharedRoom":false,"freeTextNotes":"ویلا"}`;
+A: {"category":"short-term","maxPrice":4000000,"maxDeposit":null,"maxRent":null,"flexibleConversion":true,"city":null,"neighborhoods":[],"minRooms":null,"maxRooms":null,"minArea":null,"mustHave":["pool"],"niceToHave":[],"sharedRoom":false,"people":null,"budgetPerPerson":false,"freeTextNotes":"ویلا"}
+Q: ۴ تا دانشجوییم، نفری ۱۵۰ میلیون رهن و ماهی ۳ تومن، نزدیک دانشگاه فردوسی
+A: {"category":"residential-rent","maxPrice":null,"maxDeposit":150000000,"maxRent":3000000,"flexibleConversion":true,"city":"مشهد","neighborhoods":[],"minRooms":null,"maxRooms":null,"minArea":null,"mustHave":[],"niceToHave":[],"sharedRoom":false,"people":4,"budgetPerPerson":true,"freeTextNotes":"دانشجو"}`;
 
 /** Parse a query with the LLM. Throws if the provider fails or returns an unusable object. */
 export async function parseIntentWithLLM(query: string): Promise<{ intent: SearchIntent; model: string }> {
@@ -88,8 +94,10 @@ export async function parseIntentWithLLM(query: string): Promise<{ intent: Searc
     temperature: 0,
   });
   const intent = SearchIntentSchema.parse(clean(data));
+  const perPerson = (data as Record<string, unknown> | null)?.budgetPerPerson === true;
   // a lite model sometimes drops the category; the keyword rules are a safe second opinion
-  return { intent: settleBudget({ ...intent, category: intent.category ?? detectCategory(query) }), model };
+  const settled = settleBudget({ ...intent, category: intent.category ?? detectCategory(query) });
+  return { intent: applyGroup(settled, { people: intent.people, perPerson }), model };
 }
 
 /** Lenient cleanup before strict validation: canonical names, numbers from strings, drop unknowns. */
@@ -125,6 +133,10 @@ function clean(raw: unknown): unknown {
     mustHave,
     niceToHave: amenities(r.niceToHave).filter((k) => !mustHave.includes(k)),
     sharedRoom: r.sharedRoom === true,
+    people: (() => {
+      const n = int(r.people);
+      return n !== null && n >= 2 && n <= 12 ? n : null;
+    })(),
     freeTextNotes: typeof r.freeTextNotes === "string" && r.freeTextNotes.trim() ? r.freeTextNotes.trim() : null,
   };
 }

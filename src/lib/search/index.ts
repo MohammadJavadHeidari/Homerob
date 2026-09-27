@@ -1,4 +1,5 @@
 import { listings as ALL_LISTINGS } from "@/data/listings";
+import { campusById, campusDistance, type CampusDistance } from "@/lib/campuses";
 import { categoryOf, comparablePrice, DEFAULT_CATEGORY } from "@/lib/categories";
 import { areaAround } from "@/lib/geo";
 import { searchCity } from "@/lib/intent/place";
@@ -26,6 +27,25 @@ export interface SearchResult {
   highlights: Highlight[];
   /** Rule-based explanation; the UI swaps in the AI one from /api/explain when it arrives. */
   explanation: string;
+  /** Each person's share when a group rents together (intent.people), after any rahn ↔ ejare conversion. */
+  share?: Share;
+  /** Distance to the university the user named (intent.campus). */
+  campus?: CampusDistance;
+}
+
+export interface Share {
+  people: number;
+  deposit: number;
+  monthlyRent: number;
+}
+
+/** Each person's part of what the group would pay: rahn to the million, rent to 100 thousand. */
+export function shareOf(fit: Pick<BudgetFit, "deposit" | "monthlyRent">, people: number): Share {
+  return {
+    people,
+    deposit: Math.round(fit.deposit / people / 1e6) * 1e6,
+    monthlyRent: Math.round(fit.monthlyRent / people / 1e5) * 1e5,
+  };
 }
 
 export interface SearchResponse {
@@ -53,6 +73,7 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
   const city = searchCity(intent);
   const area = intent.nearMe && !intent.neighborhoods.length ? areaAround(intent.nearMe, city) : null;
   const excluded = { placeholderPrice: 0, sharedRoom: 0 };
+  const campus = campusById(intent.campus);
   const relevant = (l: Listing) =>
     area ? area.includes(l.neighborhood) : !intent.neighborhoods.length || intent.neighborhoods.includes(l.neighborhood);
   for (const { listing, alsoOn } of dedupe(listings)) {
@@ -70,8 +91,10 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
     }
     const budget = fitBudget(listing, intent);
     if (!budget.fits) continue;
-    const { score, breakdown } = scoreListing(listing, intent);
-    const hl = highlights(listing, intent, budget);
+    const campusD = campus ? (campusDistance(listing, campus) ?? undefined) : undefined;
+    const share = intent.people && category === DEFAULT_CATEGORY ? shareOf(budget, intent.people) : undefined;
+    const { score, breakdown } = scoreListing(listing, intent, campusD);
+    const hl = highlights(listing, intent, budget, { share, campus: campusD });
     results.push({
       listing,
       alsoOn,
@@ -81,6 +104,8 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
       breakdown,
       highlights: hl,
       explanation: ruleExplanation(hl),
+      ...(share && { share }),
+      ...(campusD && { campus: campusD }),
     });
   }
   results.sort((a, b) => b.score - a.score || a.price - b.price);
