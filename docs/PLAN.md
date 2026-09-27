@@ -103,6 +103,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     category + price chips, filter panel hides rooms for offices/shops and the rahn/ejare switch outside
     rentals, per-model slider steps. Empty state «هنوز آگهی «X» در Y نداریم» + one click back to a category with
     results. Home page unchanged. 88 tests. Research: `docs/research/categories.md`. Checked at 390 and 1280 px.
+    PR #15 merged 2026-09-27; Production live (Gemini parses «خرید آپارتمان… تا ۵ میلیارد» → residential-sale,
+    maxPrice 5B → «در «اجاره مسکونی» ۹۵ آگهی هست»; flagship rent query unchanged, 34 results).
 - **Next:** owner answers "real data source" (Open questions) → build the importer (**all six categories**:
   set `category`, `price` / `nightlyPrice`, see `docs/DATA.md`), replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
