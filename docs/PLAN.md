@@ -129,8 +129,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     (`neshan+osm` | `osm`) and `neshan` (`ok` | `off` | `error 485`…) for checking Production. ≈1,000 toman per
     opened listing (6 × 160 + 3 × 40), cached per listing. 80 tests. Sandbox can't reach api.neshan.org →
     untested against the live API.
-- **Next:** owner: Neshan ticket (enable Search + Nearby on `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel
-  (Open questions) → check `/api/nearby?id=dv-0901` on Production says `"neshan":"ok"`. Owner answers "real data
+  - PR #17 (neighborhood advantages + Neshan) merged 2026-09-27; Production live: `/api/nearby?id=dv-0901` →
+    `source: ai` (Gemini title/summary/lines, grounded), `places: osm`, `neshan: error 485` → the key is set in
+    Vercel and Neshan is reachable from Vercel, but Search/Nearby aren't enabled on the key yet.
+- **Next:** owner: Neshan ticket (enable Search + Nearby on `homerob-server`) + credit (Open questions) → check
+  `/api/nearby?id=dv-0901` on Production says `"neshan":"ok"` (cached per listing: use a not-yet-opened id). Owner answers "real data
   source" (Open questions) → build the importer (**all six categories**: set `category`, `price` / `nightlyPrice`,
   see `docs/DATA.md`), replace the sample set; re-bake `pois.json` for every new city (`scripts/build-nearby.mjs`).
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
