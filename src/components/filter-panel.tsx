@@ -17,7 +17,6 @@ import {
   Ruler,
   Sofa,
   Sparkles,
-  Store,
   TramFront,
   Trees,
   Wallet,
@@ -48,7 +47,6 @@ import {
   type RangeKey,
   type Refine,
 } from "@/lib/search/refine";
-import type { ListingSource } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
@@ -69,10 +67,6 @@ const AMENITY_ICONS: Record<AmenityKey, LucideIcon> = {
 
 const AGE_LABEL = (a: MaxAge) => (a === null ? "همه" : a === 0 ? "کلیدنخورده" : `${toFaDigits(a)} سال`);
 const ROOM_LABEL = (r: number) => (r === 0 ? "سوئیت" : r === 4 ? "۴+" : toFaDigits(r));
-const SOURCES: { key: ListingSource; label: string; dot: string }[] = [
-  { key: "divar", label: "دیوار", dot: "bg-rose-500" },
-  { key: "sheypoor", label: "شیپور", dot: "bg-indigo-500" },
-];
 
 const toggle = <T,>(xs: T[], x: T) => (xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x]);
 
@@ -195,7 +189,7 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
           </div>
         </Section>
 
-        <Section title="سن بنا" hint="(حداکثر)" icon={Hourglass} active={refine.maxAge !== null} onClear={() => set("maxAge", null)}>
+        <Section title="سن بنا" hint="(حداکثر)" icon={Hourglass} active={refine.maxAge !== null} onClear={() => set("maxAge", null)} last>
           <Segmented
             layoutId="age"
             value={String(refine.maxAge)}
@@ -204,20 +198,6 @@ export function FilterPanel({ results, refine, onChange, domains, intent, onInte
           />
         </Section>
 
-        <Section title="منبع آگهی" icon={Store} active={refine.sources.length > 0} onClear={() => set("sources", [])} last>
-          <div className="flex flex-wrap gap-1.5">
-            {SOURCES.map((s) => (
-              <ToggleChip
-                key={s.key}
-                dot={s.dot}
-                label={s.label}
-                count={fc.sources[s.key]}
-                selected={refine.sources.includes(s.key)}
-                onClick={() => set("sources", toggle(refine.sources, s.key))}
-              />
-            ))}
-          </div>
-        </Section>
       </div>
     </LayoutGroup>
   );

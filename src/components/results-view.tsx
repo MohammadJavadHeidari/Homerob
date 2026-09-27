@@ -350,8 +350,6 @@ function ActiveFilters({ refine, model, onChange }: { refine: Refine; model: Pri
   if (refine.maxAge !== null)
     chips.push({ id: "age", label: refine.maxAge === 0 ? "کلیدنخورده" : `تا ${toFaDigits(refine.maxAge)} سال ساخت`, next: { ...refine, maxAge: null } });
   if (refine.bbox) chips.push({ id: "bbox", label: "محدودهٔ نقشه", next: { ...refine, bbox: null } });
-  for (const s of refine.sources)
-    chips.push({ id: `s-${s}`, label: s === "divar" ? "فقط دیوار" : "فقط شیپور", next: { ...refine, sources: refine.sources.filter((x) => x !== s) } });
 
   return (
     <AnimatePresence initial={false}>

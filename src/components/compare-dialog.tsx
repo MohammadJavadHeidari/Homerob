@@ -134,9 +134,6 @@ export function CompareDialog({
                 {items.map((r) => (
                   <th key={r.listing.id} className="p-2 text-start align-top font-bold leading-6">
                     <span className="line-clamp-2">{r.listing.title}</span>
-                    <span className="text-muted-foreground block text-xs font-normal">
-                      {r.listing.source === "divar" ? "دیوار" : "شیپور"}
-                    </span>
                   </th>
                 ))}
               </tr>
