@@ -9,7 +9,6 @@ import {
   Check,
   ChevronDown,
   Clock,
-  ExternalLink,
   GitCompareArrows,
   MapPin,
   MapPinned,
@@ -28,8 +27,6 @@ import { ageFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { isSharedHousing } from "@/lib/quality";
 import { cn } from "@/lib/utils";
-
-const SOURCE_LABEL = { divar: "دیوار", sheypoor: "شیپور" } as const;
 
 export function ListingCard({
   result,
@@ -55,7 +52,7 @@ export function ListingCard({
 }) {
   const [nearbyOpen, setNearbyOpen] = useState(false);
   const showNearby = nearbyOpen || selected;
-  const { listing: l, budget, price, score, alsoOn, highlights } = result;
+  const { listing: l, budget, price, score, highlights } = result;
   const category = CATEGORIES[categoryOf(l)];
   const model = category.priceModel;
   const cons = highlights.filter((h) => h.kind === "con").slice(0, 2);
@@ -68,15 +65,9 @@ export function ListingCard({
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
-            <SourceBadge source={l.source} url={l.url} />
             {isSharedHousing(l) && categoryOf(l) === "residential-rent" && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
-            {alsoOn.map((s) => (
-              <span key={s} className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5">
-                در {SOURCE_LABEL[s]} هم هست
-              </span>
-            ))}
             <span className="text-muted-foreground ms-1 flex items-center gap-1">
               <Clock className="size-3" />
               {timeAgoFa(l.postedAt)}
@@ -220,25 +211,6 @@ export function ListingCard({
         </AnimatePresence>
       </div>
     </article>
-  );
-}
-
-function SourceBadge({ source, url }: { source: SearchResult["listing"]["source"]; url?: string }) {
-  const body = (
-    <>
-      <span className={cn("size-1.5 rounded-full", source === "divar" ? "bg-rose-500" : "bg-indigo-500")} />
-      {SOURCE_LABEL[source]}
-      {url && <ExternalLink className="size-3" />}
-    </>
-  );
-  const cls = "bg-muted inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold";
-  // Real listings link back to the original ad.
-  return url ? (
-    <a href={url} target="_blank" rel="noopener noreferrer" className={cn(cls, "hover:text-primary")} aria-label={`آگهی اصلی در ${SOURCE_LABEL[source]}`}>
-      {body}
-    </a>
-  ) : (
-    <span className={cls}>{body}</span>
   );
 }
 

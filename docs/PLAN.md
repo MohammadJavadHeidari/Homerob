@@ -268,6 +268,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Neshan search API for nearby places (live, merged with OSM; needs `NESHAN_API_KEY`) (2026-09-27)
 - [x] Torob light-theme patterns on the results page (owner's second capture): ink for selected controls, borderless
       cards, white header band with attached search, outlined chips, neutral AI box (`docs/BRAND.md`)
+- [x] No sign of where an ad comes from on the results page (owner): no Divar/Sheypoor badge, "also on" tag,
+      original-ad link, source filter, compare-row source, or site names in footer/empty-state copy (2026-09-27).
+      The /api/search JSON still carries `source`, `url`, `alsoOn` and `dv-`/`sp-` ids (not shown in the UI).
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 

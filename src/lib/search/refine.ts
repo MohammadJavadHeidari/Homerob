@@ -2,7 +2,7 @@ import { AMENITIES, type AmenityKey } from "@/lib/amenities";
 import type { PriceModel } from "@/lib/categories";
 import { inBBox, listingLatLng, type BBox } from "@/lib/geo";
 import { MONTHLY_RATE } from "@/lib/pricing";
-import type { ListingSource, Neighborhood } from "@/lib/types";
+import type { Neighborhood } from "@/lib/types";
 
 import type { SearchResult } from "./index";
 
@@ -54,7 +54,6 @@ export interface Refine {
   neighborhoods: Neighborhood[];
   amenities: AmenityKey[];
   maxAge: MaxAge;
-  sources: ListingSource[];
   /** Visible map area ("search as I move the map"). */
   bbox: BBox | null;
 }
@@ -68,7 +67,6 @@ export const EMPTY_REFINE: Refine = {
   neighborhoods: [],
   amenities: [],
   maxAge: null,
-  sources: [],
   bbox: null,
 };
 
@@ -94,7 +92,6 @@ function matches(r: SearchResult, f: Refine, skip?: FilterKey): boolean {
   if (skip !== "amenities" && !f.amenities.every((k) => AMENITIES[k].has(l))) return false;
   if (skip !== "maxAge" && f.maxAge !== null && l.buildingAge > f.maxAge) return false;
   if (skip !== "bbox" && f.bbox && !inBBox(listingLatLng(l), f.bbox)) return false;
-  if (skip !== "sources" && f.sources.length && ![l.source, ...r.alsoOn].some((s) => f.sources.includes(s))) return false;
   return true;
 }
 
@@ -130,7 +127,6 @@ export interface Facets {
   neighborhoods: Record<string, number>;
   amenities: Record<string, number>;
   maxAge: Record<string, number>;
-  sources: Record<string, number>;
 }
 
 /** How many results each option would give, given all the *other* active filters. */
@@ -148,7 +144,6 @@ export function facets(results: SearchResult[], f: Refine): Facets {
       [...f.amenities, k].every((a) => AMENITIES[a].has(r.listing)),
     ),
     maxAge: count("maxAge", ages, (r, k) => k === "null" || r.listing.buildingAge <= Number(k)),
-    sources: count("sources", ["divar", "sheypoor"] as ListingSource[], (r, k) => [r.listing.source, ...r.alsoOn].includes(k)),
   };
 }
 
@@ -183,7 +178,6 @@ export function activeCount(f: Refine): number {
     f.neighborhoods.length +
     f.amenities.length +
     (f.maxAge !== null ? 1 : 0) +
-    f.sources.length +
     (f.bbox ? 1 : 0)
   );
 }

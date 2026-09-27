@@ -252,7 +252,7 @@ export function SearchApp() {
             lives here on the results page and in the README. */}
         {compact && (
           <footer className="text-muted-foreground mt-auto border-t pt-6 text-center text-xs leading-6">
-            این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند (به سبک دیوار و شیپور، بدون کپی از این سایت‌ها).
+            این یک نسخهٔ نمایشی است: آگهی‌ها نمونه و ساختگی‌اند.
             هوش مصنوعی درخواستت رو به فیلتر تبدیل می‌کنه، قیمت‌ها رو با تبدیل رهن و اجاره (هر ۱ میلیون رهن = ۳۰ هزار
             تومان اجاره) هم‌تراز می‌کنه و برای هر نتیجه دلیل می‌نویسه.
             <span className="block opacity-60">نقشهٔ صفحهٔ اول: geoBoundaries (CC BY 4.0)</span>
@@ -325,7 +325,7 @@ function EmptyState({ data, onApply }: { data: SearchApiResponse; onApply: (i: S
   const [title, hint] = !data.categoryCount && data.intent.category && data.intent.category !== DEFAULT_CATEGORY
     ? [
         `هنوز آگهی «${category.label}»${data.intent.city ? ` در ${data.intent.city}` : ""} نداریم`,
-        `ترب دسته‌به‌دسته آگهی‌های واقعی دیوار و شیپور رو اضافه می‌کنه (${category.types.join("، ")}).`,
+        `ترب دسته‌به‌دسته آگهی‌های واقعی رو اضافه می‌کنه (${category.types.join("، ")}).`,
       ]
     : newCity
     ? [`هنوز آگهی‌ای از ${newCity} نداریم`, "ترب شهربه‌شهر آگهی‌های واقعی رو اضافه می‌کنه."]
