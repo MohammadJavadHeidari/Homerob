@@ -1,6 +1,6 @@
 # Listing data (real listings only)
 
-Since 2026-09-26 Homerob uses **real** rental ads only (see `docs/DECISIONS.md`). The current
+Since 2026-09-26 Homerob uses **real** ads only (see `docs/DECISIONS.md`). The current
 `src/data/listings.json` (100 generated Mashhad listings) is a temporary leftover until real data
 replaces it.
 
@@ -12,13 +12,16 @@ replaces it.
 |---|---|---|
 | `id` | `"dv-QZx7abc"` | unique; prefix `dv-` Divar, `sp-` Sheypoor + the site's own token |
 | `source` | `"divar"` | `divar` \| `sheypoor` |
+| `category` | `"residential-sale"` | one of `residential-rent`, `residential-sale`, `commercial-rent`, `commercial-sale`, `short-term`, `projects` (Divar's «املاک» split, `src/lib/categories.ts`); missing = `residential-rent` |
 | `url` | `"https://divar.ir/v/…"` | link to the original ad (shown on the card) |
 | `title` | `"آپارتمان ۹۵ متری دوخوابه"` | as posted |
 | `city` | `"تهران"` | Persian name from `CITIES` in `src/lib/places.ts` |
 | `neighborhood` | `"پونک"` | canonical name; must exist in `HOODS` for that city |
 | `street` | `"بلوار عدل"` | optional detail, `""` if none |
-| `deposit` / `monthlyRent` | `500000000` / `18000000` | rahn / ejare; `monthlyRent: 0` = full rahn |
-| `areaM2`, `rooms`, `floor`, `totalFloors`, `buildingAge` | `95, 2, 3, 5, 6` | `rooms: 0` = سوئیت; `floor: 0` = همکف |
+| `deposit` / `monthlyRent` | `500000000` / `18000000` | rentals (`*-rent`): rahn / ejare; `monthlyRent: 0` = full rahn. Other categories: `0` / `0` |
+| `price` | `4800000000` | sales and `projects`: total asking price; omit or `0` if «توافقی» |
+| `nightlyPrice` | `2500000` | `short-term`: price per night |
+| `areaM2`, `rooms`, `floor`, `totalFloors`, `buildingAge` | `95, 2, 3, 5, 6` | `rooms: 0` = سوئیت (or none, for offices / shops / land); `floor: 0` = همکف |
 | `elevator`, `parking`, `storage`, `convertible` | booleans | `convertible` = «قابل تبدیل» |
 | `tags` | `["بالکن", "مبله"]` | extra amenities in Persian |
 | `description` | text | as posted, **without phone numbers** |

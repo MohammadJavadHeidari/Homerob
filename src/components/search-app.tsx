@@ -1,20 +1,25 @@
 "use client";
 
 import { GitCompareArrows, Info, LoaderCircle, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CategoryTabs } from "@/components/category-tabs";
 import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
 import { IntentChips } from "@/components/intent-chips";
+import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
+import { CATEGORIES, DEFAULT_CATEGORY, priceModelOf } from "@/lib/categories";
+import { withCategory } from "@/lib/intent/category";
 import { toFaDigits } from "@/lib/persian";
 import { isCovered } from "@/lib/places";
 import { clampRanges, domains, EMPTY_REFINE, type Refine } from "@/lib/search/refine";
 import { cn } from "@/lib/utils";
+import { detectPlace } from "@/lib/where";
 
 const COMPARE_MAX = 3;
 
@@ -28,6 +33,8 @@ export function SearchApp() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const requestId = useRef(0);
+  // hand-set price ranges only make sense within one price model (rahn, a sale price, a night)
+  const priceModel = useRef(priceModelOf(null));
 
   const run = useCallback(async (q: string, intent?: SearchIntent) => {
     const text = q.trim();
@@ -46,9 +53,15 @@ export function SearchApp() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
       if (id !== requestId.current) return; // a newer search started
+      rememberCity(json.intent.city);
       setData(json);
       // a new query starts clean; editing the AI intent keeps the hand-set filters that still apply
-      setRefine((prev) => (intent ? clampRanges(prev, domains(json.results)) : EMPTY_REFINE));
+      const model = priceModelOf(json.intent.category);
+      const sameModel = model === priceModel.current;
+      priceModel.current = model;
+      setRefine((prev) =>
+        intent && sameModel ? clampRanges(prev, domains(json.results, model)) : intent ? { ...EMPTY_REFINE, sort: prev.sort } : EMPTY_REFINE,
+      );
       setStatus("done");
     } catch {
       if (id === requestId.current) setStatus("error");
@@ -80,10 +93,21 @@ export function SearchApp() {
   };
 
   const compact = status !== "idle";
+  // Where the text in the box points to — instant, offline, recomputed on every keystroke.
+  const guess = useMemo(() => detectPlace(query), [query]);
+  // Show it while writing a new query (not under the one the results are already for).
+  const typing = status === "idle" || query.trim() !== data?.query;
+
+  const addCity = (city: string) => {
+    const next = withCity(query, city);
+    setQuery(next);
+    // on the home page let them keep writing; on results, search again right away
+    if (compact) void run(next);
+  };
 
   return (
     <>
-      {!compact && <HeroMap className="z-0" />}
+      {!compact && <HeroMap className="z-0" focus={query.trim().length >= 3 ? guess : undefined} />}
       <div
         className={cn(
           "relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
@@ -141,12 +165,32 @@ export function SearchApp() {
             جستجو
           </Button>
         </form>
+        {typing && (
+          <PlaceLine
+            query={query}
+            guess={guess}
+            onAddCity={addCity}
+            className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
+          />
+        )}
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
         {status === "done" && data && (
           <section className="flex flex-col gap-5">
+            <CategoryTabs
+              value={data.intent.category ?? DEFAULT_CATEGORY}
+              onChange={(k) => run(data.query, withCategory(data.intent, k))}
+            />
             <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+            <PlaceQuestion
+              data={data}
+              onAddCity={(city) => {
+                const next = withCity(data.query, city);
+                setQuery(next);
+                void run(next);
+              }}
+            />
             <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
             {data.total === 0 ? (
               <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
@@ -263,12 +307,18 @@ function LoadingState() {
 }
 
 function EmptyState({ data, onApply }: { data: SearchApiResponse; onApply: (i: SearchIntent) => void }) {
-  const hasBudget = data.intent.maxDeposit !== null || data.intent.maxRent !== null;
+  const hasBudget = data.intent.maxDeposit !== null || data.intent.maxRent !== null || data.intent.maxPrice !== null;
   const newCity = data.intent.city && !isCovered(data.intent.city) ? data.intent.city : null;
-  const [title, hint] = newCity
+  const category = CATEGORIES[data.intent.category ?? DEFAULT_CATEGORY];
+  const [title, hint] = !data.categoryCount && data.intent.category && data.intent.category !== DEFAULT_CATEGORY
+    ? [
+        `هنوز آگهی «${category.label}»${data.intent.city ? ` در ${data.intent.city}` : ""} نداریم`,
+        `ترب دسته‌به‌دسته آگهی‌های واقعی دیوار و شیپور رو اضافه می‌کنه (${category.types.join("، ")}).`,
+      ]
+    : newCity
     ? [`هنوز آگهی‌ای از ${newCity} نداریم`, "ترب شهربه‌شهر آگهی‌های واقعی رو اضافه می‌کنه."]
     : hasBudget
-      ? ["هیچ آگهی‌ای با این بودجه نیست", "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره."]
+      ? ["هیچ آگهی‌ای با این بودجه نیست", category.priceModel === "rent" ? "قیمت‌ها از بودجه‌ات بالاترن، حتی با جابجایی رهن و اجاره." : "قیمت‌ها از بودجه‌ات بالاترن."]
       : ["آگهی‌ای پیدا نشد", "فیلترها رو کمتر کن یا جور دیگه‌ای بنویس."];
   return (
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed px-6 py-12 text-center">

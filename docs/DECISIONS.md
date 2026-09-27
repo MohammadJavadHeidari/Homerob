@@ -2,7 +2,8 @@
 
 ## Product
 - Name: **Homerob** (Torob + Home). Repo: https://github.com/MohammadJavadHeidari/Homerob
-- Market: real estate, **rental only (rahn/ejare)**, no buy/sell.
+- Market: real estate, **all six Divar «املاک» categories** (2026-09-27, supersedes "rental only"):
+  residential rent/sale, office & commercial rent/sale, short-term rentals, construction projects.
 - Scale: **all of Iran** — any city; a city is "covered" once it has listings (2026-09-26, supersedes
   "Mashhad only").
 - Data: **real listings only** (Divar, Sheypoor, …), flat JSON/TS file, **no database** (2026-09-26,
@@ -90,6 +91,17 @@
   newest real titles once real data lands.
 - 2026-09-26 — Findings of the owner's call with Mohammad (2026-09-25) are kept in
   `docs/research/call-2026-09-25-mohammad.md` (Persian) for future reference.
+- 2026-09-27 — **Place from the prompt** (owner request): infer the city from the text (city, then a
+  neighborhood/landmark), show it live under the search box and on the home map, ask with one-tap city chips
+  only when it's ambiguous or missing; a tapped city is written into the query. Searching without a city is
+  never blocked (all of Iran + a "where?" question on results). Details: `docs/research/location-intent.md`.
+- 2026-09-27 — **Real-estate categories** (owner request; supersedes "rental only (rahn/ejare), no
+  buy/sell"). Six categories with Divar's names: اجاره مسکونی، فروش مسکونی، اجاره اداری و تجاری،
+  فروش اداری و تجاری، اجاره کوتاه‌مدت، پروژه‌های ساخت و ساز. Each has its own price model (rahn+ejare /
+  total price / per night). The AI detects the category from the query, and a tab row on the results
+  page switches it. No category picker on the home page (landing stays logo + search). Residential
+  rent stays the default. Categories without real ads show an honest "not yet" empty state. Listings
+  are never invented. Research: `docs/research/categories.md`.
 - 2026-09-27 — **Neighborhood advantages** (owner request, from the call findings: "main competitive
   advantage"). Each listing gets «اطراف این خونه چی داره؟» → a catchy AI title + only advantages
   (metro, supermarket, 24h pharmacy, clinic, gym, park, mosque, bus-stop count) with walking minutes.
