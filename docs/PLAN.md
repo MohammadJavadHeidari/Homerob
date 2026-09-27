@@ -239,8 +239,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
 - [x] Know where the user is looking from the prompt (city / neighborhood / landmark, ask when unclear) (2026-09-27)
 - [x] Real-estate categories in search + filters (Divar's six; tabs on results, AI detects the category) (2026-09-27)
-- [x] Hide ad sources on the results page (owner): no Divar/Sheypoor badge, "also on" tag, source filter or
-      compare-row source; cards keep a neutral «آگهی اصلی» link when the ad has a URL (2026-09-27)
+- [x] No sign of where an ad comes from on the results page (owner): no Divar/Sheypoor badge, "also on" tag,
+      original-ad link, source filter, compare-row source, or site names in footer/empty-state copy (2026-09-27).
+      The /api/search JSON still carries `source`, `url`, `alsoOn` and `dv-`/`sp-` ids (not shown in the UI).
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
 

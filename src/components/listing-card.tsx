@@ -8,7 +8,6 @@ import {
   Car,
   Check,
   Clock,
-  ExternalLink,
   GitCompareArrows,
   MapPin,
   Package,
@@ -56,7 +55,6 @@ export function ListingCard({
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>
-            {l.url && <OriginalAdLink url={l.url} />}
             {isSharedHousing(l) && categoryOf(l) === "residential-rent" && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
@@ -173,21 +171,6 @@ export function ListingCard({
         )}
       </div>
     </article>
-  );
-}
-
-// Real listings link back to the original ad, without naming the site it came from.
-function OriginalAdLink({ url }: { url: string }) {
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="bg-muted hover:text-primary inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold"
-    >
-      آگهی اصلی
-      <ExternalLink className="size-3" />
-    </a>
   );
 }
 
