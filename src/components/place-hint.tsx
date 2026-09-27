@@ -20,7 +20,7 @@ export function rememberCity(city: string | null) {
   }
 }
 
-function readLastCity() {
+export function readLastCity() {
   try {
     return localStorage.getItem(LAST_CITY_KEY);
   } catch {

@@ -129,6 +129,18 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     (`neshan+osm` | `osm`) and `neshan` (`ok` | `off` | `error 485`…) for checking Production. ≈1,000 toman per
     opened listing (6 × 160 + 3 × 40), cached per listing. 80 tests. Sandbox can't reach api.neshan.org →
     untested against the live API.
+  - Owner request (2026-09-27) — **mobile home research** (Torob's mobile home as reference): `docs/research/mobile-home.md`
+    + interactive mockup https://claude.ai/artifact/EVasBzUqdWVC3t8SdiJeay. Proposal: search first, then scrollable rails
+    («پیشنهاد برای تو» from on-device saves/views with a reason line, «ادامهٔ جستجو», «زیر قیمت محله», «تازه‌ترین‌ها»,
+    «اخیراً دیدی»), ♥ saves, bottom nav. Owner chose option A → **built** (phones only, < 640px; desktop unchanged):
+    `src/lib/feed.ts` (pure, tested: taste profile from saves ×3 / opened ×1 → `SearchIntent` → existing scorer,
+    ±35% price band, max 2 per neighborhood in the first 5, rule-based reason chip per card; deals = ≥10% under the
+    neighborhood median with ≥5 samples; continue = last typed search, «N جدید» for ads newer than it),
+    `POST /api/feed`, `src/lib/taste-store.ts` (localStorage, no account), `home-feed.tsx` (light sheet peeking over the
+    map, recent-search chips, assistant banner, rails with a peek + «نمایش همه» → search with that intent/sort, detail
+    and saved bottom sheets, bottom nav خانه · دستیار هوشمند · ذخیره‌شده‌ها), `save-button.tsx` (♥ also on result cards). Rail cards show no ad source (PR #19).
+    All tests passing. Checked at 390 px (first visit → ♥ → picks; detail; saved; see-all) and 1440 px (unchanged), no page errors; re-checked after merging PRs #17–#19 (detail sheet now includes «اطراف این خونه چی داره؟»). 119 tests.
+    Screenshots `docs/screenshots/mobile-home-feed-*.png`. Cards have no photos until real data lands.
 - **Next:** owner: Neshan ticket (enable Search + Nearby on `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel
   (Open questions) → check `/api/nearby?id=dv-0901` on Production says `"neshan":"ok"`. Owner answers "real data
   source" (Open questions) → build the importer (**all six categories**: set `category`, `price` / `nightlyPrice`,

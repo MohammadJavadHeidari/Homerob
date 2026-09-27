@@ -52,7 +52,7 @@ export const HOOD_MEDIAN_PPM: Record<string, number> = Object.fromEntries(
 );
 
 /** Fewer comparable listings than this → no "cheaper/pricier than the neighborhood" verdict. */
-const MIN_SAMPLE = 5;
+export const MIN_SAMPLE = 5;
 
 /** How many listings each median is based on — shown to the user, like any honest price verdict. */
 export const HOOD_SAMPLE_SIZE: Record<string, number> = Object.fromEntries(

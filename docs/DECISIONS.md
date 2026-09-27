@@ -112,3 +112,9 @@
   (pharmacy, supermarket, bakery) around the listing with the *service* key `homerob-server` in `NESHAN_API_KEY`
   (Vercel env only, never committed); merged with the baked OSM places, OSM alone as the fallback. Spec:
   `docs/research/neshan-api.md`. Activation (ticket) and credit are the owner's call (paid service).
+- 2026-09-27 — **Mobile home = search first, then scrollable rails** (owner chose option A of 3; "only saves +
+  two personal rails" and "Mohammad's full structure with login/onboarding" were the alternatives). Supersedes
+  "logo + search only" **on phones** (desktop unchanged). Under the search: recent-search chips, an assistant
+  banner, rails «پیشنهاد برای تو» (from on-device saves/views, each card with a true reason), «ادامهٔ جستجو»,
+  «زیر قیمت محله», «تازه‌ترین‌ها», «اخیراً دیدی»; ♥ saves; bottom nav خانه · دستیار هوشمند · ذخیره‌شده‌ها.
+  No account: history lives in localStorage. No category picker. Research: `docs/research/mobile-home.md`.
