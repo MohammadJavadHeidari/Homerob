@@ -8,7 +8,7 @@ import { activeProvider, chatJson } from "@/lib/ai/client";
 import type { NearbyApiResponse } from "@/lib/api-types";
 import { listingLatLng } from "@/lib/geo";
 import { BUS_MINUTES, itemText, nearbyItems, ruleSummary, ruleTitle, type Poi } from "@/lib/nearby/facts";
-import { neshanPois } from "@/lib/nearby/neshan";
+import { neshanPois, neshanStatus } from "@/lib/nearby/neshan";
 import { toEnDigits, toFaDigits } from "@/lib/persian";
 
 /** `title`: catchy one-liner; `summary`: one sentence like a friend who lives there (may be empty). */
@@ -57,6 +57,7 @@ export async function nearbyAdvantages(id: string): Promise<NearbyAdvantages | n
     summary: ruleSummary(items),
     items: items.map((i) => ({ ...i, text: itemText(i) })),
     places: live ? "neshan+osm" : "osm",
+    neshan: neshanStatus,
     source: "rules",
     ms: 0,
   };

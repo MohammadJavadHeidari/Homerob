@@ -96,6 +96,7 @@
   Places are **real** (OpenStreetMap via Overpass, baked into `src/data/pois.json`, ODbL), never
   generated; the AI only words them and every number/"24h" is checked against the data. Walking time =
   straight line × 1.3 at 80 m/min, labeled approximate. Lazy: one call per opened/selected listing.
-- 2026-09-27 — **Nearby places also from Neshan's search API** (owner). Server-side `GET /v1/search` per
-  category around the listing with a Neshan *service* key in `NESHAN_API_KEY` (never committed); results are
-  merged with the baked OSM places, and OSM alone is the fallback when the key is missing or Neshan fails.
+- 2026-09-27 — **Nearby places also from Neshan** (owner). Server-side `/v1/nearby` (layers) + `/v3/search`
+  (pharmacy, supermarket, bakery) around the listing with the *service* key `homerob-server` in `NESHAN_API_KEY`
+  (Vercel env only, never committed); merged with the baked OSM places, OSM alone as the fallback. Spec:
+  `docs/research/neshan-api.md`. Activation (ticket) and credit are the owner's call (paid service).

@@ -51,7 +51,7 @@ Homerob is a **meta-search / AI-normalization layer** on top of existing listing
         │
         ▼
  GET /api/nearby?id=…   (when a listing is opened or picked on the map)
-   «مزیت‌های محله»: real places within walking distance — Neshan search API (live, per category,
+   «مزیت‌های محله»: real places within walking distance — Neshan (/v1/nearby + /v3/search, live,
    NESHAN_API_KEY) + OpenStreetMap (baked by scripts/build-nearby.mjs, also the fallback) → only advantages (metro, supermarket, 24h pharmacy, clinic, gym, park,
    mosque, bus stops) → Gemini writes a catchy title + one line per place; every name/minute is
    checked against the data → rule-based text on failure. The map draws each place + a 5-min ring.

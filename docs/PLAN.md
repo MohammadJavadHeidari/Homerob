@@ -103,15 +103,17 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     map card shows the top 4 + icons for each place, dashed lines and a 5-min walk ring; map refits above the
     card. Checked at 390 and 1440 px (`docs/screenshots/*nearby*.png`). 75 tests. AI text not verified
     locally (no key in the sandbox) → check on Production.
-  - Owner request (2026-09-27) — **Neshan search for nearby places:** `src/lib/nearby/neshan.ts` queries
-    `GET api.neshan.org/v1/search?term&lat&lng` (header `Api-Key`) once per category (11 terms, parallel, 3.5 s
-    timeout) around each opened listing; hits filtered by title (`acceptsName`: no «خیابان مسجد», metro ≠ bus)
-    and walking distance, merged with the baked OSM places (closest real place wins), source shown in the
-    footer («نقشهٔ نشان»). No `NESHAN_API_KEY` or Neshan down → OSM only (verified locally with a fake key).
-    Response field `places` = `neshan+osm` | `osm` for checking Production. 79 tests. Sandbox can't reach
-    api.neshan.org → **untested against the real API** until the owner adds the service key.
-- **Next:** owner adds `NESHAN_API_KEY` (Open questions) → check `/api/nearby?id=dv-0901` on Production says
-  `"places":"neshan+osm"`. Then owner answers "real data source" (Open questions) → build the importer, replace the sample set.
+  - Owner request (2026-09-27) — **Neshan for nearby places** (spec captured by the owner with Claude in Chrome:
+    `docs/research/neshan-api.md`): `src/lib/nearby/neshan.ts` calls `/v1/nearby` (layers metro_entrance, bus_station,
+    clinic, gym, park, mosque; radius 1300 m) + `/v3/search` (pharmacy, supermarket, bakery — no layer), in parallel,
+    3.5 s timeout, with Referer/Origin `homerob.vercel.app` (the key is domain-whitelisted). Hits are cleaned (no
+    streets, `category=place`), merged with the baked OSM places (closest real place per category wins), source in
+    the footer. Key/config errors (480/483/484/485) pause Neshan for 10 min; `/api/nearby` returns `places`
+    (`neshan+osm` | `osm`) and `neshan` (`ok` | `off` | `error 485`…) for checking Production. ≈1,000 toman per
+    opened listing (6 × 160 + 3 × 40), cached per listing. 80 tests. Sandbox can't reach api.neshan.org →
+    untested against the live API.
+- **Next:** owner: Neshan ticket (enable Search + Nearby on `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel
+  (Open questions) → check `/api/nearby?id=dv-0901` on Production says `"neshan":"ok"`. Then owner answers "real data source" (Open questions) → build the importer, replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
 - **Blocked:** nothing. (torob.com blocks the sandbox; the owner captures it with Claude in Chrome.) AI provider: Gemini free tier (see DECISIONS).
 - **Cut / deferred:** `claude` provider (owner switched to Gemini; OpenAI-compatible client covers
@@ -139,10 +141,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
-- **کلید سرویس نشان برای جستجوی مکان‌های اطراف:** کلید فعلی (`web.`) فقط برای نقشه‌ست و Search API کلید
-  نوع «سرویس» می‌خواد. (الف) **پیشنهاد من:** توی پنل نشان یه API Key از نوع سرویس با دسترسی «جستجو» بساز و
-  در Vercel به اسم `NESHAN_API_KEY` بذار (فقط سمت سرور، رایگان در سقف پلن). (ب) فعلاً فقط OpenStreetMap:
-  بدون کار اضافه، ولی مکان‌های کمتری داره. تا جواب: OSM به‌طور خودکار استفاده می‌شه.
+- **نشان برای مکان‌های اطراف (هزینه دارد):** کلید سرویس `homerob-server` ساخته شده، ولی Search و Nearby روش فعال
+  نیست (۴۸۵) و فقط با تیکت فعال می‌شن؛ اعتبار حساب صفره. هزینه‌ی تقریبی: حدود ۱٬۰۰۰ تومان برای هر آگهی‌ای که باز
+  می‌شه (بعدش کش می‌شه). (الف) **پیشنهاد من:** تیکت بزن، کوچک‌ترین بسته‌ی اعتبار رو بخر، `NESHAN_API_KEY` رو در
+  Vercel بذار؛ کد آماده‌ست. (ب) فقط OpenStreetMap بمونه: رایگان، ولی مکان‌های کمتر. تا جواب: OSM خودکار استفاده می‌شه.
 - **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
   (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
   (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.

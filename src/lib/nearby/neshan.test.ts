@@ -1,39 +1,69 @@
 import { describe, expect, it } from "vitest";
 
 import { nearbyItems } from "@/lib/nearby/facts";
-import { toPois } from "@/lib/nearby/neshan";
+import { fromNearby, fromSearch } from "@/lib/nearby/neshan";
 
-// shape of GET https://api.neshan.org/v1/search (location.x = lng, location.y = lat)
-const answer = (titles: string[]) => ({
-  count: titles.length,
-  items: titles.map((title, i) => ({
-    title,
+// shapes from docs/research/neshan-api.md
+
+const nearbyAnswer = (names: string[]) => ({
+  layerPoints: {
+    layer: { farsiTitle: "مسجد", icon: "https://static.neshanmap.ir/poi/64/mosque.png", slug: "mosque" },
+    nearestPoints: names.map((name, i) => ({
+      distance: 400 + i * 100,
+      duration: 70,
+      location: { latitude: 36.3345 + i * 0.001, longitude: 59.4875 },
+      name,
+      poiHash: "x",
+    })),
+  },
+});
+
+const searchAnswer = (items: { title: string; type?: string; category?: string }[]) => ({
+  count: items.length,
+  items: items.map((it, i) => ({
     address: "مشهد، وکیل‌آباد",
-    type: "place",
+    region: "مشهد، استان خراسان رضوی",
+    neighbourhood: "",
     category: "place",
-    location: { x: 59.4875 + i * 0.001, y: 36.3345, z: "NaN" },
+    location: { x: 59.4875 + i * 0.001, y: 36.3345 },
+    poiHash: "x",
+    ...it,
   })),
 });
 
-describe("toPois (Neshan search → places)", () => {
-  it("keeps real places of the category and drops streets with the same word", () => {
-    const pois = toPois("mosque", answer(["مسجد امام رضا", "خیابان مسجد", "بلوار مسجد جامع"]));
-    expect(pois.map((p) => p.n)).toEqual(["مسجد امام رضا"]);
-    expect(pois[0]).toMatchObject({ c: "mosque", lat: 36.3345, lng: 59.4875, s: "neshan" });
+describe("fromNearby (/v1/nearby)", () => {
+  it("reads name + location and skips streets named after the place", () => {
+    const pois = fromNearby("mosque", nearbyAnswer(["مسجد امام رضا", "خیابان مسجد"]));
+    expect(pois).toEqual([{ c: "mosque", lat: 36.3345, lng: 59.4875, n: "مسجد امام رضا", s: "neshan" }]);
   });
 
-  it("separates metro from bus stops and flags 24h places", () => {
-    expect(toPois("rail", answer(["ایستگاه مترو صدف", "ایستگاه اتوبوس صدف"])).map((p) => p.n)).toEqual(["ایستگاه مترو صدف"]);
-    expect(toPois("pharmacy", answer(["داروخانه شبانه روزی دکتر نبوی"]))[0].h24).toBe(1);
+  it("keeps unnamed layer hits without a name", () => {
+    expect(fromNearby("bus", nearbyAnswer([""]))[0]).toEqual({ c: "bus", lat: 36.3345, lng: 59.4875, s: "neshan" });
   });
 
-  it("survives junk answers", () => {
-    expect(toPois("park", null)).toEqual([]);
-    expect(toPois("park", { items: [{ title: "پارک ملت" }] })).toEqual([]);
+  it("survives junk and error bodies", () => {
+    expect(fromNearby("park", null)).toEqual([]);
+    expect(fromNearby("park", { status: "ERROR", code: 485, message: "Api Key services not match." })).toEqual([]);
+  });
+});
+
+describe("fromSearch (/v3/search)", () => {
+  it("keeps places by Neshan type or by name, drops streets and regions", () => {
+    const pois = fromSearch(
+      "pharmacy",
+      searchAnswer([
+        { title: "داروخانه دکتر احمدی", type: "pharmacy" },
+        { title: "دکتر نبوی", type: "pharmacy" },
+        { title: "خیابان داروخانه", type: "street", category: "municipal" },
+        { title: "داروخانه شبانه روزی سینا" },
+      ]),
+    );
+    expect(pois.map((p) => p.n)).toEqual(["داروخانه دکتر احمدی", "دکتر نبوی", "داروخانه شبانه روزی سینا"]);
+    expect(pois[2].h24).toBe(1);
   });
 
-  it("marks advantages found through Neshan", () => {
-    const [item] = nearbyItems({ lat: 36.3345, lng: 59.4875 }, toPois("pharmacy", answer(["داروخانه دکتر احمدی"])));
-    expect(item).toMatchObject({ key: "pharmacy", name: "داروخانه دکتر احمدی", source: "neshan" });
+  it("feeds nearbyItems with the source marked", () => {
+    const [item] = nearbyItems({ lat: 36.3345, lng: 59.4875 }, fromSearch("supermarket", searchAnswer([{ title: "هایپرمارکت جهانی" }])));
+    expect(item).toMatchObject({ key: "supermarket", name: "هایپرمارکت جهانی", source: "neshan", minutes: 1 });
   });
 });

@@ -34,6 +34,8 @@ export interface NearbyApiResponse {
   items: (NearbyItem & { text: string })[];
   /** Where the places came from: Neshan live search + baked OSM, or OSM only (no key / Neshan down). */
   places: "neshan+osm" | "osm";
+  /** Neshan health for debugging: "ok", "off" (no key) or "error <HTTP status>" (e.g. 485 = service not enabled). */
+  neshan: string;
   source: "ai" | "rules";
   ms: number;
 }
