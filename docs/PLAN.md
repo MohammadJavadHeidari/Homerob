@@ -93,6 +93,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Call findings saved: `docs/research/call-2026-09-25-mohammad.md`.
   - PR #13 (nationwide scale + real-data rule + Iran-only landing) merged 2026-09-26; Production live
     (title «… در ایران», `/api/geo` gone, Tehran query → «در مشهد ۹۴ آگهی هست»).
+  - Owner request (2026-09-27) — **"where is the user looking?"**: `src/lib/where.ts` (`detectPlace`: city →
+    neighborhood/landmark → ambiguous/none; hand list of well-known Tehran/Mashhad/Isfahan/Shiraz/Karaj/Tabriz
+    areas), ~80 cities (Kish, Qeshm, north coast, satellite cities, Finglish), «،» no longer breaks city matching,
+    moving "از X به Y" → Y. Live line under the search box + focus pin(s) on the home map; one-tap city chips
+    that write the city into the query; results page asks when no city / ambiguous. Server: text city beats the
+    LLM, landmarks fill a missed city, unknown cities kept (Kish used to return Mashhad listings). 79 tests.
+    Research + design: `docs/research/location-intent.md`; screenshots `docs/screenshots/where-*.png`.
   - Owner request (2026-09-27) — **real-estate categories** (Divar's six: residential rent/sale, office &
     commercial rent/sale, short-term, construction projects). `src/lib/categories.ts` (registry, price model
     per category, `comparablePrice`, keyword `detectCategory`). `Listing.category` / `price` / `nightlyPrice`,
@@ -230,6 +237,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Rules: "real data only" replaces "sample data / no live scraping" (CLAUDE.md, DECISIONS.md)
 - [x] Landing: no location prompt, map stays on Iran, "new ad" pins across Iran, only logo + search (2026-09-26)
 - [x] Save the call findings (Mohammad, 2026-09-25) in `docs/research/call-2026-09-25-mohammad.md`
+- [x] Know where the user is looking from the prompt (city / neighborhood / landmark, ask when unclear) (2026-09-27)
 - [x] Real-estate categories in search + filters (Divar's six; tabs on results, AI detects the category) (2026-09-27)
 - [ ] Real-data importer + replace the Mashhad sample set — **blocked** on "real data source" (Open questions)
 - [ ] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data (after real data lands)
