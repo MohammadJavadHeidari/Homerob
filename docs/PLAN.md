@@ -110,6 +110,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     category + price chips, filter panel hides rooms for offices/shops and the rahn/ejare switch outside
     rentals, per-model slider steps. Empty state «هنوز آگهی «X» در Y نداریم» + one click back to a category with
     results. Home page unchanged. 88 tests. Research: `docs/research/categories.md`. Checked at 390 and 1280 px.
+  - Owner request (2026-09-27) — **mobile home research** (Torob's mobile home as reference): `docs/research/mobile-home.md`
+    + interactive mockup https://claude.ai/artifact/EVasBzUqdWVC3t8SdiJeay. Proposal: search first, then scrollable rails
+    («پیشنهاد برای تو» from on-device saves/views with a reason line, «ادامهٔ جستجو», «زیر قیمت محله», «تازه‌ترین‌ها»,
+    «اخیراً دیدی»), ♥ saves, bottom nav. Waiting on the owner's pick (Open questions). No code yet.
 - **Next:** owner answers "real data source" (Open questions) → build the importer (**all six categories**:
   set `category`, `price` / `nightlyPrice`, see `docs/DATA.md`), replace the sample set.
   Then: owner approves demo queries/script (+ demo cache question) → record video. Filter panel + Neshan map merged (PR #9) and live on Production; Neshan key is inlined in the prod bundle (`web.` key), but tiles can't be viewed from the sandbox → owner eyeballs the map on homerob.vercel.app.
@@ -139,6 +143,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **خانهٔ موبایل (ردیف‌های افقی + «پیشنهاد برای تو»)** — جزئیات: `docs/research/mobile-home.md` و
+  https://claude.ai/artifact/EVasBzUqdWVC3t8SdiJeay. تصمیم «صفحهٔ اول فقط لوگو و جستجو» رو روی موبایل عوض می‌کنه.
+  (الف) **پیشنهاد من:** خانهٔ کامل موبایل: ۵ ردیف، ذخیره با ♥، نوار پایین (خانه · دستیار هوشمند · ذخیره‌شده‌ها)، فید روی نقشه.
+  ~۴–۵ ساعت؛ برای جلسهٔ دوشنبه مثل اپ واقعیه. (ب) فقط ذخیره + دو ردیف شخصی زیر جستجوی فعلی: ~۲ ساعت، بار اول تغییری دیده نمی‌شه.
+  (ج) ساختار کامل محمد (ورود کاربر، قفل تحلیل، معرفی دستیار): بیش از یک روز، حساب کاربری لازم داره.
 - **داده‌ی واقعی — از کجا بیاریم؟** سندباکس من به دیوار دسترسی نداره (درخواست شبکه بسته شد). گزینه‌ها:
   (الف) **پیشنهاد من:** خودت با Claude in Chrome از divar.ir آگهی‌های رهن و اجاره رو برای چند شهر
   (مثلاً ۵۰–۱۰۰ تا برای هر شهر) به JSON خروجی بگیری؛ من importer، تمیزکاری و حذف تکراری‌ها رو می‌سازم.
