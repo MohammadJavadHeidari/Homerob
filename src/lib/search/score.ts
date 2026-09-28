@@ -2,6 +2,7 @@ import { listings as ALL_LISTINGS } from "@/data/listings";
 import { AMENITIES, amenityKnown, amenityNo, amenityUnstated, amenityYes, type AmenityKey } from "@/lib/amenities";
 import { categoryOf, priceModelOf, unitPrice } from "@/lib/categories";
 import type { SearchIntent } from "@/lib/intent/schema";
+import { accessText, nearLines } from "@/lib/metro";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { adjacentHoods } from "@/lib/places";
 import { isComparable } from "@/lib/quality";
@@ -178,12 +179,17 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
   }
 
   // amenities the user asked for
+  // the metro: say which station, which line and how far («۸ دقیقه پیاده تا ایستگاه صدف (خط ۱)»)
+  const metro = intent.mustHave.includes("nearMetro") || intent.niceToHave.includes("nearMetro") ? nearLines(l, intent.metroLines) : null;
+  if (metro) add("pro", accessText(metro), intent.mustHave.includes("nearMetro") ? 8 : 5);
   for (const k of intent.mustHave) {
+    if (k === "nearMetro" && metro) continue;
     if (AMENITIES[k].has(l)) add("pro", amenityYes(k), 4);
     else if (amenityKnown(k, l)) add("con", amenityNo(k), 10);
     else add("con", amenityUnstated(k), 6);
   }
   for (const k of intent.niceToHave) {
+    if (k === "nearMetro" && metro) continue;
     if (AMENITIES[k].has(l)) add("pro", amenityYes(k), 3);
   }
 

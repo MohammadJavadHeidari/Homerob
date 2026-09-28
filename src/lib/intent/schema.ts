@@ -24,6 +24,11 @@ export const SearchIntentSchema = z.object({
   minArea: z.number().positive().nullable(),
   mustHave: z.array(z.enum(AMENITY_KEYS)),
   niceToHave: z.array(z.enum(AMENITY_KEYS)),
+  /**
+   * Metro lines (OSM refs, e.g. ["1"]) the home must be a short walk from. Empty = any line / not asked.
+   * Set from the text («خط ۱ مترو») or from the "which line?" question on the results page.
+   */
+  metroLines: z.array(z.string().max(4)).max(10).default([]),
   /** User wants a room in a shared flat (همخونه / اجاره اتاق). Default false = whole units only. */
   sharedRoom: z.boolean(),
   /** Anything else worth keeping, in Persian (e.g. "خانواده سه نفره"). */
@@ -50,6 +55,7 @@ export const EMPTY_INTENT: SearchIntent = {
   minArea: null,
   mustHave: [],
   niceToHave: [],
+  metroLines: [],
   sharedRoom: false,
   freeTextNotes: null,
   nearMe: null,
