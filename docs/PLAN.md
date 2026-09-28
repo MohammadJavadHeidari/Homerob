@@ -213,6 +213,12 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Moved right **under the search box** (owner, 2026-09-28), full input width, spring slide-in (motion, transform +
     opacity, reduced-motion respected), press feedback on rows, tinted shadow — per the project skill
     `.claude/skills/design-taste-frontend-v1` (kept Vazirmatn, lucide and brand colors from DECISIONS/BRAND).
+  - Owner request (2026-09-28) — **«جدید» badge on new ads** (Divar-style, from the owner's screenshot): `isNewListing`
+    in `src/lib/search/score.ts` (posted within a day of the newest ad — the same rule as the «آگهی امروز» highlight, so
+    the demo doesn't age) → `SearchResult.isNew`. Map pins get a white «جدید» tag over the corner (a small brand dot on
+    bare-dot pins; it grows into the tag when the price label shows; pops in after the pin, reduced-motion respected);
+    cards and the map's floating card get `new-badge.tsx`. Real data: 22 of 50 ads (پورسینا 4/10, وکیل‌آباد 2/12).
+    Checked at 1440 and 390 px, no page errors. Card time stays wall-clock («دیروز» next to «جدید»).
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,

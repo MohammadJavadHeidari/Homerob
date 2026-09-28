@@ -10,6 +10,7 @@ import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { NEARBY_ICON, NearbyAdvantages, useNearby } from "@/components/nearby-advantages";
+import { NewBadge } from "@/components/new-badge";
 import type { NearbyApiResponse, SearchResult } from "@/lib/api-types";
 import { focusArea, type FocusArea } from "@/lib/focus-area";
 import { priceLineFa, roundPrice } from "@/lib/format";
@@ -437,7 +438,10 @@ export default function ListingMap(props: ListingMapProps) {
           >
             <div className="flex items-start gap-3">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <p className="truncate text-sm font-bold">{selected.listing.title}</p>
+                <p className="flex items-center gap-1.5 text-sm font-bold">
+                  {selected.isNew && <NewBadge className="shrink-0" />}
+                  <span className="truncate">{selected.listing.title}</span>
+                </p>
                 <p className="text-muted-foreground truncate text-xs">
                   {selected.listing.street ? `${selected.listing.neighborhood}، ${selected.listing.street}` : selected.listing.neighborhood}
                 </p>
@@ -492,7 +496,7 @@ function pinElement(r: SearchResult, i: number): HTMLElement {
   pin.className = "hr-pin";
   pin.style.setProperty("--pin", tone(r.score));
   pin.style.setProperty("--d", `${Math.min(i, 30) * 18}ms`);
-  pin.setAttribute("aria-label", `${r.listing.title}، ${formatToman(r.price)}`);
+  pin.setAttribute("aria-label", `${r.isNew ? "آگهی جدید، " : ""}${r.listing.title}، ${formatToman(r.price)}`);
   const body = document.createElement("span");
   body.className = "hr-pin__body";
   const dot = document.createElement("span");
@@ -501,8 +505,26 @@ function pinElement(r: SearchResult, i: number): HTMLElement {
   label.className = "hr-pin__label";
   label.textContent = formatToman(roundPrice(r.price)); // ۸۳۰ میلیون, not ۸۳۳٫۳
   body.append(dot, label);
+  if (r.isNew) body.append(newBadgeElement());
   pin.append(body);
   el.append(pin);
+  return el;
+}
+
+/**
+ * Divar-style «جدید» tag over the pin's corner. On a bare dot pin it is a small brand dot (a pill
+ * would be bigger than the pin); it grows into the pill when the price label shows.
+ */
+function newBadgeElement(): HTMLElement {
+  const el = document.createElement("span");
+  el.className = "hr-pin__new";
+  el.setAttribute("aria-hidden", "true");
+  const tag = document.createElement("span");
+  tag.className = "hr-pin__new-tag";
+  tag.textContent = "جدید";
+  const mark = document.createElement("span");
+  mark.className = "hr-pin__new-dot";
+  el.append(mark, tag);
   return el;
 }
 

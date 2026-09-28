@@ -239,6 +239,78 @@ html:root {
 .hr-pin:hover .hr-pin__body {
   transform: scale(1.08) translateY(-2px);
 }
+/* «جدید» on new ads, Divar-style: a white tag over the pin's corner. A bare dot pin gets a small
+   brand dot instead (the tag would dwarf it); the tag grows in when the price label shows.
+   The wrapper owns the pop-in animation so the children can still transition between states. */
+.hr-pin__new {
+  position: absolute;
+  top: -12px;
+  left: -11px;
+  pointer-events: none;
+  animation: hr-new-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--d, 0ms) + 260ms);
+}
+.hr-pin__new-dot,
+.hr-pin__new-tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition:
+    opacity 0.16s,
+    transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hr-pin__new-dot {
+  top: 8px;
+  left: 8px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.3);
+}
+.hr-pin__new-tag {
+  padding: 3px 6px 4px;
+  border: 1px solid rgb(15 23 42 / 0.08);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--foreground);
+  box-shadow: 0 2px 6px rgb(15 23 42 / 0.22);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  transform-origin: 75% 100%;
+  opacity: 0;
+  transform: scale(0.4);
+}
+.hr-pin.is-labeled .hr-pin__new-tag,
+.hr-pin.is-active .hr-pin__new-tag {
+  opacity: 1;
+  transform: none;
+}
+.hr-pin.is-labeled .hr-pin__new-dot,
+.hr-pin.is-active .hr-pin__new-dot {
+  opacity: 0;
+  transform: scale(0.3);
+}
+@keyframes hr-new-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.2);
+  }
+}
+/* card badge (new-badge.tsx): the dot pings a few times, then rests */
+.hr-new-badge__ping {
+  animation: hr-new-ping 1.6s cubic-bezier(0, 0, 0.2, 1) 0.4s 3 both;
+}
+@keyframes hr-new-ping {
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
 @keyframes hr-pin-in {
   from {
     opacity: 0;
@@ -327,8 +399,13 @@ html:root {
   .hr-pin,
   .hr-pin.is-leaving,
   .hr-hood__label,
-  .hr-poi__dot {
+  .hr-poi__dot,
+  .hr-pin__new,
+  .hr-new-badge__ping {
     animation: none;
+  }
+  .hr-new-badge__ping {
+    opacity: 0;
   }
 }
 

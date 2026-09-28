@@ -21,6 +21,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 import { NearbyAdvantages } from "@/components/nearby-advantages";
+import { NewBadge } from "@/components/new-badge";
 import { SaveButton } from "@/components/save-button";
 import type { SearchResult } from "@/lib/api-types";
 import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
@@ -67,6 +68,7 @@ export function ListingCard({
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {rank !== undefined && <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>}
+            {result.isNew && <NewBadge />}
             {isSharedHousing(l) && categoryOf(l) === "residential-rent" && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
