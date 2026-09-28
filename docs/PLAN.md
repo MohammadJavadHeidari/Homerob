@@ -182,7 +182,37 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     «وکیل آباد» is a different area in the far west —, هاشمیه, قاسم‌آباد, سجاد) → dashed circle, so approximate never
     looks exact. Pins without ad coordinates now land inside the real boundary (`listingLatLng`). Camera: frames the
     outline + pins within ~1.5 km, and refits when the map column finishes animating in (it used to stay at minZoom).
-    Checked at 1440 and 390 px (`docs/screenshots/desktop-map-outline.png`). 133 tests.
+    Checked at 1440 and 390 px (`docs/screenshots/desktop-map-outline.png`).
+    Divar districts spanning several municipal neighborhoods (`DISTRICT_PARTS` in the script, lists from Divar's
+    neighborhood picker, sent by the owner) are drawn as their union: طلاب = طلاب + وحید + ایثار + ابوذر + تلگرد
+    (طبرسی and علامه طباطبایی aren't in OSM). وکیل‌آباد: waiting for the owner's Divar list (Open questions).
+  - Owner request (2026-09-28, from the second call with Mohammad — `docs/research/call-2026-09-27-mohammad.md`) —
+    **"which metro line?"**: `scripts/build-metro.mjs` bakes the lines in service per covered city from OSM route
+    relations (Mashhad: خط ۱ وکیل‌آباد ↔ فرودگاه 24 stations, خط ۲ طبرسی ↔ شهید فکوری 13, خط ۳ شهدا ↔ امام رضا 3 in
+    service; lines under construction / proposed skipped) → `src/data/metro.json`. `src/lib/metro.ts` (pure, tested):
+    walk minutes to the nearest station per line (≤ 15 min, ×1.3 detour, «حدود» when the ad has no exact position),
+    `findMetroLines` («خط ۱ مترو», «خط یک و سه»), intent `metroLines` (hard filter; set from the text or the question).
+    `nearMetro` now uses real distance (not only the ad's tag). Results page: `metro-question.tsx` (shadcn
+    **Questionnaire**, `npx shadcn add questionnaire` → `@shadcn/react`) asks «نزدیک کدوم خط مترو؟» when the metro is
+    wanted and the city has 2+ lines: line color, ends, station count, results near it (0 → disabled), multi-select,
+    «فرقی نمی‌کنه». Picking re-searches without the LLM; chip «نزدیک خط ۱ مترو»; cards say «حدود ۴ دقیقه پیاده تا
+    ایستگاه صدف (خط ۱)». Real data: line 1 → 10 ads, line 2 → 6, line 3 → 0. Checked at 390 and 1280 px
+    (`docs/screenshots/metro-*.png`), no page errors. 139 tests. Not yet: bus lines, student mode, Tehran lines
+    (no Tehran ads yet; re-run the script once a Tehran export lands).
+    **PR #23 merged 2026-09-28 → live on Production:** «دوخوابه نزدیک خط ۲ مترو مشهد» → 6 results, «حدود ۳ دقیقه پیاده تا
+    ایستگاه نبوت (خط ۲)»; «خونه نزدیک مترو در مشهد» → `nearMetro` with no line → the question shows.
+    Owner saw Next's full-page «This page couldn't load» after picking line 1 on Production. Not reproduced here
+    (prod build + the Neshan map key + Production API responses; 1816/1440/390 px; mouse, keyboard, 2 lines, skip).
+    Added `results-boundary.tsx` (`catchError` from `next/error`) around the results: a crash there now keeps the
+    search box, shows the error text and a retry. Waiting for the owner to send that text.
+    Owner asked for the question to look like **Claude's question box** (2026-09-28): `metro-question.tsx` rebuilt on the
+    `@shadcn/react/questionnaire` primitive — title + ✕, numbered rows (line-colored badges, divider lines), one click /
+    a number key (Latin or Persian) / ↑↓ + Enter answers, a «یه چیز دیگه…» row (free text is added to the query and
+    searched again), «فرقی نمی‌کنه» / Esc / ✕ skip, key hints under the box (desktop). Single line per answer now
+    (typing «خط ۱ و ۲» still gives both). All paths checked in the browser, no page errors.
+    Moved right **under the search box** (owner, 2026-09-28), full input width, spring slide-in (motion, transform +
+    opacity, reduced-motion respected), press feedback on rows, tinted shadow — per the project skill
+    `.claude/skills/design-taste-frontend-v1` (kept Vazirmatn, lucide and brand colors from DECISIONS/BRAND).
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
@@ -214,6 +244,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **مرز وکیل‌آباد روی نقشه:** مرز «وکیل آباد» در OSM یه محله‌ی دیگه (غرب شهره)، برای همین دایره‌ی خط‌چین نشون می‌دیم.
+  لیست زیرمحله‌هایی که دیوار زیر «وکیل‌آباد» نشون می‌ده (مثل طلاب) رو بفرستید تا مرزش از جمع اون‌ها ساخته بشه. (هاشمیه،
+  قاسم‌آباد، سجاد هم همین‌طور.) تا جواب: دایره‌ی خط‌چین.
 - **نشان برای مکان‌های اطراف (هزینه دارد):** کلید سرویس `homerob-server` ساخته شده، ولی Search و Nearby روش فعال
   نیست (۴۸۵) و فقط با تیکت فعال می‌شن؛ اعتبار حساب صفره. هزینه‌ی تقریبی: حدود ۱٬۰۰۰ تومان برای هر آگهی‌ای که باز
   می‌شه (بعدش کش می‌شه). (الف) **پیشنهاد من:** تیکت بزن، کوچک‌ترین بسته‌ی اعتبار رو بخر، `NESHAN_API_KEY` رو در

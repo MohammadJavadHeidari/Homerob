@@ -1,3 +1,4 @@
+import { metroAccess, metroLinesIn } from "./metro";
 import type { Listing } from "./types";
 
 /** Canonical amenity keys the AI may put in `mustHave` / `niceToHave`. */
@@ -51,7 +52,9 @@ export const AMENITIES: Record<
   nearMetro: {
     label: "نزدیک قطار شهری",
     aliases: ["مترو", "قطار شهری", "ایستگاه"],
-    has: (l) => l.tags.includes("نزدیک قطار شهری"),
+    // the ad says so, or a station (OSM, src/data/metro.json) is a short walk away
+    has: (l) => l.tags.includes("نزدیک قطار شهری") || metroAccess(l).length > 0,
+    known: (l) => l.tags.includes("نزدیک قطار شهری") || metroLinesIn(l.city).length > 0,
     yes: "نزدیک قطار شهری است",
     no: "به قطار شهری نزدیک نیست",
   },

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { parseIntent } from "@/lib/intent";
 import { applyPlace, fillNeighborhoods, resolvePlace } from "@/lib/intent/place";
 import { SearchIntentSchema } from "@/lib/intent/schema";
+import { applyMetroText } from "@/lib/metro";
 import { hoodInfo } from "@/lib/places";
 import { DEFAULT_CATEGORY } from "@/lib/categories";
 import { search } from "@/lib/search";
@@ -35,7 +36,10 @@ export async function POST(request: Request) {
   // Where the text says they're looking (instant, offline); the UI shows it and asks when unclear.
   const where = detectPlace(body.data.query);
   // An edited intent (a removed chip) is kept as is; a fresh one gets the place the text names.
-  const placed = body.data.intent ? parsed.intent : fillNeighborhoods(applyPlace(parsed.intent, where), body.data.query);
+  // «خط ۱ مترو» in the text → only homes near line 1 (read from the text, not left to the LLM).
+  const placed = body.data.intent
+    ? parsed.intent
+    : applyMetroText(fillNeighborhoods(applyPlace(parsed.intent, where), body.data.query), body.data.query);
   // resolvePlace drops "near me" when the query names another city.
   const intent = resolvePlace(!body.data.intent && near && !placed.neighborhoods.length ? { ...placed, nearMe: near } : placed);
   const { results, total, excluded } = search(intent, undefined, Infinity);

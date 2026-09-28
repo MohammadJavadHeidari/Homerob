@@ -8,14 +8,17 @@ import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
 import { HomeFeed, useIsPhone } from "@/components/home-feed";
 import { IntentChips } from "@/components/intent-chips";
+import { asksMetroLine, MetroQuestion } from "@/components/metro-question";
 import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
+import { ResultsBoundary } from "@/components/results-boundary";
 import { ResultsView } from "@/components/results-view";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { CATEGORIES, DEFAULT_CATEGORY, priceModelOf } from "@/lib/categories";
 import { withCategory } from "@/lib/intent/category";
+import { withMetroLines } from "@/lib/metro";
 import { toFaDigits } from "@/lib/persian";
 import { isCovered } from "@/lib/places";
 import { clampRanges, domains, EMPTY_REFINE, type Refine, type SortKey } from "@/lib/search/refine";
@@ -34,6 +37,8 @@ export function SearchApp() {
   const [refine, setRefine] = useState<Refine>(EMPTY_REFINE);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  // «فرقی نمی‌کنه» to "which metro line?" — don't ask again for this query
+  const [anyLineFor, setAnyLineFor] = useState<string | null>(null);
   const requestId = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const phone = useIsPhone();
@@ -206,43 +211,59 @@ export function SearchApp() {
               className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
             />
           )}
+          {/* "which metro line?" sits right under the search box, like a follow-up to what was typed */}
+          {status === "done" && data && anyLineFor !== data.query && asksMetroLine(data) && (
+            <MetroQuestion
+              key={data.query}
+              data={data}
+              onPick={(refs) => run(data.query, withMetroLines(data.intent, refs))}
+              onText={(text) => {
+                const next = `${data.query.trim().replace(/[،,.؟?]+$/, "")}، ${text}`;
+                setQuery(next);
+                void run(next);
+              }}
+              onAnyLine={() => setAnyLineFor(data.query)}
+            />
+          )}
         </div>
 
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
         {status === "done" && data && (
-          <section className="flex flex-col gap-5">
-            <CategoryTabs
-              value={data.intent.category ?? DEFAULT_CATEGORY}
-              onChange={(k) => run(data.query, withCategory(data.intent, k))}
-            />
-            <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
-            <PlaceQuestion
-              data={data}
-              onAddCity={(city) => {
-                const next = withCity(data.query, city);
-                setQuery(next);
-                void run(next);
-              }}
-            />
-            <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
-            {data.total === 0 ? (
-              <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
-            ) : (
-              <ResultsView
-                key={data.query + JSON.stringify(data.intent)}
-                data={data}
-                refine={refine}
-                onRefine={setRefine}
-                onIntentChange={(next) => run(data.query, next)}
-                compareIds={compareIds}
-                compareMax={COMPARE_MAX}
-                onToggleCompare={(id) =>
-                  setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
-                }
+          <ResultsBoundary key={data.query + JSON.stringify(data.intent)} onRetry={() => run(data.query, data.intent)}>
+            <section className="flex flex-col gap-5">
+              <CategoryTabs
+                value={data.intent.category ?? DEFAULT_CATEGORY}
+                onChange={(k) => run(data.query, withCategory(data.intent, k))}
               />
-            )}
-          </section>
+              <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+              <PlaceQuestion
+                data={data}
+                onAddCity={(city) => {
+                  const next = withCity(data.query, city);
+                  setQuery(next);
+                  void run(next);
+                }}
+              />
+              <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
+              {data.total === 0 ? (
+                <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
+              ) : (
+                <ResultsView
+                  key={data.query + JSON.stringify(data.intent)}
+                  data={data}
+                  refine={refine}
+                  onRefine={setRefine}
+                  onIntentChange={(next) => run(data.query, next)}
+                  compareIds={compareIds}
+                  compareMax={COMPARE_MAX}
+                  onToggleCompare={(id) =>
+                    setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
+                  }
+                />
+              )}
+            </section>
+          </ResultsBoundary>
         )}
 
         {status === "done" && data && compareIds.length > 0 && (

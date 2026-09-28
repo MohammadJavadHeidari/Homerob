@@ -1,10 +1,11 @@
 "use client";
 
-import { MapPin, Sparkles, Tag, X, type LucideIcon } from "lucide-react";
+import { MapPin, Sparkles, Tag, TramFront, X, type LucideIcon } from "lucide-react";
 
 import { AMENITIES } from "@/lib/amenities";
 import type { SearchIntent } from "@/lib/api-types";
 import { CATEGORIES, priceModelOf } from "@/lib/categories";
+import { linesLabel } from "@/lib/metro";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +79,11 @@ export function intentToChips(intent: SearchIntent): Chip[] {
     chips.push({ id: "area", label: `حداقل ${toFaDigits(intent.minArea)} متر`, tone: "home", remove: (i) => ({ ...i, minArea: null }) });
   }
   for (const k of intent.mustHave) {
+    // «خط ۱ مترو» says more than «نزدیک قطار شهری»; removing it goes back to "any line" (asks again)
+    if (k === "nearMetro" && intent.metroLines.length) {
+      chips.push({ id: "metro-lines", label: `نزدیک ${linesLabel(intent.metroLines)}`, tone: "must", icon: TramFront, remove: (i) => ({ ...i, metroLines: [] }) });
+      continue;
+    }
     chips.push({
       id: `must-${k}`,
       label: AMENITIES[k].label,
