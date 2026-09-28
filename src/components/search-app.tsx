@@ -11,6 +11,7 @@ import { IntentChips } from "@/components/intent-chips";
 import { asksMetroLine, MetroQuestion } from "@/components/metro-question";
 import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
+import { ResultsBoundary } from "@/components/results-boundary";
 import { ResultsView } from "@/components/results-view";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -215,46 +216,48 @@ export function SearchApp() {
         {status === "loading" && <LoadingState />}
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
         {status === "done" && data && (
-          <section className="flex flex-col gap-5">
-            <CategoryTabs
-              value={data.intent.category ?? DEFAULT_CATEGORY}
-              onChange={(k) => run(data.query, withCategory(data.intent, k))}
-            />
-            <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
-            {anyLineFor !== data.query && asksMetroLine(data) && (
-              <MetroQuestion
-                key={data.query}
-                data={data}
-                onPick={(refs) => run(data.query, withMetroLines(data.intent, refs))}
-                onAnyLine={() => setAnyLineFor(data.query)}
+          <ResultsBoundary key={data.query + JSON.stringify(data.intent)} onRetry={() => run(data.query, data.intent)}>
+            <section className="flex flex-col gap-5">
+              <CategoryTabs
+                value={data.intent.category ?? DEFAULT_CATEGORY}
+                onChange={(k) => run(data.query, withCategory(data.intent, k))}
               />
-            )}
-            <PlaceQuestion
-              data={data}
-              onAddCity={(city) => {
-                const next = withCity(data.query, city);
-                setQuery(next);
-                void run(next);
-              }}
-            />
-            <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
-            {data.total === 0 ? (
-              <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
-            ) : (
-              <ResultsView
-                key={data.query + JSON.stringify(data.intent)}
+              <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+              {anyLineFor !== data.query && asksMetroLine(data) && (
+                <MetroQuestion
+                  key={data.query}
+                  data={data}
+                  onPick={(refs) => run(data.query, withMetroLines(data.intent, refs))}
+                  onAnyLine={() => setAnyLineFor(data.query)}
+                />
+              )}
+              <PlaceQuestion
                 data={data}
-                refine={refine}
-                onRefine={setRefine}
-                onIntentChange={(next) => run(data.query, next)}
-                compareIds={compareIds}
-                compareMax={COMPARE_MAX}
-                onToggleCompare={(id) =>
-                  setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
-                }
+                onAddCity={(city) => {
+                  const next = withCity(data.query, city);
+                  setQuery(next);
+                  void run(next);
+                }}
               />
-            )}
-          </section>
+              <ExcludedNote data={data} onShowShared={() => run(data.query, { ...data.intent, sharedRoom: true })} />
+              {data.total === 0 ? (
+                <EmptyState data={data} onApply={(intent) => run(data.query, intent)} />
+              ) : (
+                <ResultsView
+                  key={data.query + JSON.stringify(data.intent)}
+                  data={data}
+                  refine={refine}
+                  onRefine={setRefine}
+                  onIntentChange={(next) => run(data.query, next)}
+                  compareIds={compareIds}
+                  compareMax={COMPARE_MAX}
+                  onToggleCompare={(id) =>
+                    setCompareIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(0, COMPARE_MAX)))
+                  }
+                />
+              )}
+            </section>
+          </ResultsBoundary>
         )}
 
         {status === "done" && data && compareIds.length > 0 && (
