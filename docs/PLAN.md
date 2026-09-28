@@ -183,9 +183,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     looks exact. Pins without ad coordinates now land inside the real boundary (`listingLatLng`). Camera: frames the
     outline + pins within ~1.5 km, and refits when the map column finishes animating in (it used to stay at minZoom).
     Checked at 1440 and 390 px (`docs/screenshots/desktop-map-outline.png`).
-    Divar districts spanning several municipal neighborhoods (`DISTRICT_PARTS` in the script, lists from Divar's
-    neighborhood picker, sent by the owner) are drawn as their union: طلاب = طلاب + وحید + ایثار + ابوذر + تلگرد
-    (طبرسی and علامه طباطبایی aren't in OSM). وکیل‌آباد: waiting for the owner's Divar list (Open questions).
+    Divar's districts ≠ OSM's municipal neighborhoods (the names under a district in Divar's picker are nearby areas,
+    not parts). `DIVAR_TRACED` in the script holds Divar's own outline, traced from the owner's screenshot of divar.ir
+    with the district selected (the URL's `bbox` pins the extent) and wins over OSM: طلاب (2026-09-28).
+    Neshan has no boundary API (reverse geocoding only names a point's neighbourhood). وکیل‌آباد: waiting for a Divar
+    screenshot + URL (Open questions).
   - Owner request (2026-09-28, from the second call with Mohammad — `docs/research/call-2026-09-27-mohammad.md`) —
     **"which metro line?"**: `scripts/build-metro.mjs` bakes the lines in service per covered city from OSM route
     relations (Mashhad: خط ۱ وکیل‌آباد ↔ فرودگاه 24 stations, خط ۲ طبرسی ↔ شهید فکوری 13, خط ۳ شهدا ↔ امام رضا 3 in
@@ -251,8 +253,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 
 ## Open questions
 - **مرز وکیل‌آباد روی نقشه:** مرز «وکیل آباد» در OSM یه محله‌ی دیگه (غرب شهره)، برای همین دایره‌ی خط‌چین نشون می‌دیم.
-  لیست زیرمحله‌هایی که دیوار زیر «وکیل‌آباد» نشون می‌ده (مثل طلاب) رو بفرستید تا مرزش از جمع اون‌ها ساخته بشه. (هاشمیه،
-  قاسم‌آباد، سجاد هم همین‌طور.) تا جواب: دایره‌ی خط‌چین.
+  مثل طلاب، از دیوار با همون محله‌ی انتخاب‌شده یه اسکرین‌شات به‌همراه لینک صفحه (که `bbox` داره) بفرستید تا مرز دیوار
+  کشیده بشه. (هاشمیه، قاسم‌آباد، سجاد و اگه خواستید بقیه‌ی محله‌های دمو هم همین‌طور.) تا جواب: دایره‌ی خط‌چین.
 - **نشان برای مکان‌های اطراف (هزینه دارد):** کلید سرویس `homerob-server` ساخته شده، ولی Search و Nearby روش فعال
   نیست (۴۸۵) و فقط با تیکت فعال می‌شن؛ اعتبار حساب صفره. هزینه‌ی تقریبی: حدود ۱٬۰۰۰ تومان برای هر آگهی‌ای که باز
   می‌شه (بعدش کش می‌شه). (الف) **پیشنهاد من:** تیکت بزن، کوچک‌ترین بسته‌ی اعتبار رو بخر، `NESHAN_API_KEY` رو در

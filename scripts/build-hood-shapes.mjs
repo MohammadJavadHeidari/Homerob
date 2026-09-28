@@ -9,11 +9,10 @@
 //
 // A registered neighborhood (HOODS in src/lib/places.ts) gets a shape only when an OSM boundary has its
 // name (or an alias) AND lies near its registered center; the rest keep the map's circle fallback.
-// A Divar district that spans several municipal neighborhoods (DISTRICT_PARTS) is the union of them.
+// Divar's districts don't always match OSM's municipal neighborhoods: DIVAR_TRACED holds Divar's own
+// outline for a district (traced from its map) and wins over OSM.
 // Re-run after adding a city or neighborhood to HOODS.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-
-import polygonClipping from "polygon-clipping";
 
 const ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
@@ -25,15 +24,19 @@ const HEADERS = { "User-Agent": "homerob-build/1.0 (github.com/MohammadJavadHeid
 const MARGIN = 0.035;
 /** A same-name boundary farther than this from the registered center is another place. */
 const MAX_KM = 2.5;
-/** Parts of a district may sit this far from its registered center. */
-const PART_MAX_KM = 4;
 /**
- * Divar districts made of several municipal neighborhoods, as Divar's neighborhood picker lists them
- * under the district name (captured by the owner). Parts missing from OSM are reported and skipped.
+ * Divar's own outline of a district, [lng, lat] corners, traced from divar.ir's map with the district
+ * selected (the URL's bbox pins the extent: the corners touch its four sides). Captured by the owner.
+ *   طلاب: divar.ir/s/mashhad/rent-residential/tollab, bbox 59.6324196,36.2930908,59.6541748,36.310451 (2026-09-28)
  */
-const DISTRICT_PARTS = {
+const DIVAR_TRACED = {
   مشهد: {
-    طلاب: ["طلاب", "وحید", "ایثار", "طبرسی", "ابوذر", "تلگرد", "علامه طباطبایی"],
+    طلاب: [
+      [59.64668, 36.31045],
+      [59.65417, 36.30184],
+      [59.64076, 36.29309],
+      [59.63242, 36.30206],
+    ],
   },
 };
 /** Douglas–Peucker tolerance in degrees (~8 m): keeps street corners, drops GPS noise. */
@@ -202,37 +205,11 @@ for (const [city, hs] of cities) {
 
   for (const h of hs) {
     const center = [h.lng, h.lat];
-    const parts = DISTRICT_PARTS[city]?.[h.name];
-    if (parts) {
-      const found = [];
-      const missing = [];
-      for (const part of parts) {
-        const hit = rels
-          .filter((r) => norm(r.tags.name) === norm(part))
-          .map((r) => ({ r, polys: rings(r) }))
-          .filter((c) => c.polys.length)
-          .map((c) => ({ ...c, dist: Math.min(...c.polys.map((ring) => km(centroid(ring), center))) }))
-          .filter((c) => c.dist <= PART_MAX_KM)
-          .sort((a, b) => a.dist - b.dist)[0];
-        if (hit) found.push(hit);
-        else missing.push(part);
-      }
-      if (!found.length) {
-        console.log(`  ✗ ${h.name}: none of its parts are in OSM (circle fallback)`);
-        continue;
-      }
-      // union of the raw rings (shared edges cancel out), then the same tidy-up as a single boundary
-      const merged = polygonClipping.union(...found.map((f) => f.polys.map((ring) => [ring])));
-      const polys = merged
-        .map((poly) => [tidy(poly[0])])
-        .map(([ring]) => [area(ring) < 0 ? ring.reverse() : ring])
-        .sort((a, b) => Math.abs(area(b[0])) - Math.abs(area(a[0])));
-      (out[city] ??= {})[h.name] = polys;
-      const pts = polys.reduce((s, p) => s + p[0].length, 0);
-      console.log(
-        `  ✓ ${h.name} ← union of ${found.map((f) => `«${f.r.tags.name}»`).join("، ")} (${polys.length} polygon(s), ${pts} points)` +
-          (missing.length ? ` — not in OSM: ${missing.join("، ")}` : ""),
-      );
+    const traced = DIVAR_TRACED[city]?.[h.name];
+    if (traced) {
+      const ring = [...traced, traced[0]];
+      (out[city] ??= {})[h.name] = [[area(ring) < 0 ? ring.reverse() : ring]];
+      console.log(`  ✓ ${h.name} ← Divar's outline (traced, ${traced.length} corners)`);
       continue;
     }
     const names = new Set([h.name, ...h.aliases].map(norm));
