@@ -228,6 +228,11 @@ export function SearchApp() {
                   key={data.query}
                   data={data}
                   onPick={(refs) => run(data.query, withMetroLines(data.intent, refs))}
+                  onText={(text) => {
+                    const next = `${data.query.trim().replace(/[،,.؟?]+$/, "")}، ${text}`;
+                    setQuery(next);
+                    void run(next);
+                  }}
                   onAnyLine={() => setAnyLineFor(data.query)}
                 />
               )}
