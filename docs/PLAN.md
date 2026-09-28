@@ -187,6 +187,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     ایستگاه صدف (خط ۱)». Real data: line 1 → 10 ads, line 2 → 6, line 3 → 0. Checked at 390 and 1280 px
     (`docs/screenshots/metro-*.png`), no page errors. 139 tests. Not yet: bus lines, student mode, Tehran lines
     (no Tehran ads yet; re-run the script once a Tehran export lands).
+    **PR #23 merged 2026-09-28 → live on Production:** «دوخوابه نزدیک خط ۲ مترو مشهد» → 6 results, «حدود ۳ دقیقه پیاده تا
+    ایستگاه نبوت (خط ۲)»; «خونه نزدیک مترو در مشهد» → `nearMetro` with no line → the question shows.
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
