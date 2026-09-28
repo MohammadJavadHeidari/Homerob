@@ -9,7 +9,7 @@ import type { Listing, ListingSource } from "@/lib/types";
 
 import { fitBudget, type BudgetFit } from "./budget";
 import { dedupe } from "./dedup";
-import { highlights, ruleExplanation, scoreListing, type Highlight, type ScoreBreakdown } from "./score";
+import { highlights, isNewListing, ruleExplanation, scoreListing, type Highlight, type ScoreBreakdown } from "./score";
 
 export interface SearchResult {
   listing: Listing;
@@ -23,6 +23,8 @@ export interface SearchResult {
   price: number;
   /** 0–100 match score. */
   score: number;
+  /** Posted within a day of the newest ad (see isNewListing) → «جدید» badge. */
+  isNew: boolean;
   breakdown: ScoreBreakdown;
   highlights: Highlight[];
   /** Rule-based explanation; the UI swaps in the AI one from /api/explain when it arrives. */
@@ -81,6 +83,7 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
       budget,
       price: comparablePrice(listing),
       score,
+      isNew: isNewListing(listing),
       breakdown,
       highlights: hl,
       explanation: ruleExplanation(hl),

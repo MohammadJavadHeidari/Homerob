@@ -63,6 +63,9 @@ export const HOOD_SAMPLE_SIZE: Record<string, number> = Object.fromEntries(
 /** "Now" for recency = newest listing, so the demo doesn't age. */
 const REFERENCE_TIME = Math.max(...ALL_LISTINGS.map((l) => Date.parse(l.postedAt)));
 
+/** Posted within a day of the newest ad: «آگهی امروز» in the highlights, «جدید» badge on pins and cards. */
+export const isNewListing = (l: Listing) => REFERENCE_TIME - Date.parse(l.postedAt) < 864e5;
+
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
 // ---------- scoring ----------
@@ -205,7 +208,7 @@ export function highlights(l: Listing, intent: SearchIntent, fit: BudgetFit): Hi
     add("con", "پارکینگ ندارد", 4);
   if (l.elevator === false && (l.floor ?? 0) >= 3) add("con", `طبقه ${toFaDigits(l.floor ?? 0)} بدون آسانسور`, 4);
   if (l.buildingAge !== undefined && l.buildingAge <= 2 && !intent.mustHave.includes("newBuilding")) add("pro", "نوساز", 2);
-  if (REFERENCE_TIME - Date.parse(l.postedAt) < 864e5) add("info", "آگهی امروز", 1);
+  if (isNewListing(l)) add("info", "آگهی امروز", 1);
 
   return out.sort((a, b) => b.weight - a.weight);
 }
