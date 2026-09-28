@@ -198,6 +198,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     a number key (Latin or Persian) / ↑↓ + Enter answers, a «یه چیز دیگه…» row (free text is added to the query and
     searched again), «فرقی نمی‌کنه» / Esc / ✕ skip, key hints under the box (desktop). Single line per answer now
     (typing «خط ۱ و ۲» still gives both). All paths checked in the browser, no page errors.
+    Moved right **under the search box** (owner, 2026-09-28), full input width, spring slide-in (motion, transform +
+    opacity, reduced-motion respected), press feedback on rows, tinted shadow — per the project skill
+    `.claude/skills/design-taste-frontend-v1` (kept Vazirmatn, lucide and brand colors from DECISIONS/BRAND).
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,

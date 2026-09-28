@@ -211,6 +211,20 @@ export function SearchApp() {
               className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
             />
           )}
+          {/* "which metro line?" sits right under the search box, like a follow-up to what was typed */}
+          {status === "done" && data && anyLineFor !== data.query && asksMetroLine(data) && (
+            <MetroQuestion
+              key={data.query}
+              data={data}
+              onPick={(refs) => run(data.query, withMetroLines(data.intent, refs))}
+              onText={(text) => {
+                const next = `${data.query.trim().replace(/[،,.؟?]+$/, "")}، ${text}`;
+                setQuery(next);
+                void run(next);
+              }}
+              onAnyLine={() => setAnyLineFor(data.query)}
+            />
+          )}
         </div>
 
         {status === "loading" && <LoadingState />}
@@ -223,19 +237,6 @@ export function SearchApp() {
                 onChange={(k) => run(data.query, withCategory(data.intent, k))}
               />
               <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
-              {anyLineFor !== data.query && asksMetroLine(data) && (
-                <MetroQuestion
-                  key={data.query}
-                  data={data}
-                  onPick={(refs) => run(data.query, withMetroLines(data.intent, refs))}
-                  onText={(text) => {
-                    const next = `${data.query.trim().replace(/[،,.؟?]+$/, "")}، ${text}`;
-                    setQuery(next);
-                    void run(next);
-                  }}
-                  onAnyLine={() => setAnyLineFor(data.query)}
-                />
-              )}
               <PlaceQuestion
                 data={data}
                 onAddCity={(city) => {
