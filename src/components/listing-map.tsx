@@ -11,10 +11,10 @@ import { createRoot } from "react-dom/client";
 
 import { NEARBY_ICON, NearbyAdvantages, useNearby } from "@/components/nearby-advantages";
 import type { NearbyApiResponse, SearchResult } from "@/lib/api-types";
+import { focusArea, type FocusArea } from "@/lib/focus-area";
 import { priceLineFa, roundPrice } from "@/lib/format";
 import { listingLatLng, type BBox } from "@/lib/geo";
 import type { PoiCat } from "@/lib/nearby/facts";
-import { hoodCenter } from "@/lib/places";
 import { formatToman, toFaDigits } from "@/lib/persian";
 import type { Neighborhood } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -66,11 +66,10 @@ export default function ListingMap(props: ListingMapProps) {
   const [engine, setEngine] = useState<Engine>(NESHAN_KEY ? "neshan" : "fallback");
   const [ready, setReady] = useState(false);
   const [moved, setMoved] = useState(false);
+  /** The camera follows the results until the user drags or zooms. */
+  const autoFit = useRef(true);
   // latest props for map event handlers
-  const live = useRef(props);
-  useEffect(() => {
-    live.current = props;
-  });
+  const live = useRef({ ...props, area: focusArea([]) });
 
   // ---------- create the map ----------
   useEffect(() => {
@@ -107,13 +106,45 @@ export default function ListingMap(props: ListingMapProps) {
       loaded = true;
       clearTimeout(timer);
       if (map.getSource("focus")) return;
-      map.addSource("focus", { type: "geojson", data: circles(live.current.focus, live.current.results) });
-      map.addLayer({ id: "focus-fill", type: "fill", source: "focus", paint: { "fill-color": "#d73948", "fill-opacity": 0.09 } });
+      // neighborhoods in focus, Divar-style: real street boundary, the rest of the city dimmed
+      map.addSource("focus", { type: "geojson", data: live.current.area.features });
+      map.addLayer({
+        id: "focus-mask",
+        type: "fill",
+        source: "focus",
+        filter: ["==", ["get", "kind"], "mask"],
+        paint: { "fill-color": "#15202b", "fill-opacity": 0.22 },
+      });
+      map.addLayer({
+        id: "focus-fill",
+        type: "fill",
+        source: "focus",
+        filter: ["==", ["get", "kind"], "area"],
+        paint: { "fill-color": "#d73948", "fill-opacity": 0.04 },
+      });
+      map.addLayer({
+        id: "focus-casing",
+        type: "line",
+        source: "focus",
+        filter: ["==", ["get", "kind"], "area"],
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#ffffff", "line-width": 6.5, "line-opacity": 0.9 },
+      });
       map.addLayer({
         id: "focus-line",
         type: "line",
         source: "focus",
-        paint: { "line-color": "#d73948", "line-width": 2, "line-dasharray": [2, 1.5], "line-opacity": 0.7 },
+        filter: ["all", ["==", ["get", "kind"], "area"], ["==", ["get", "exact"], true]],
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#d73948", "line-width": 3 },
+      });
+      // no real boundary for one of them → dashed, so an approximate circle never looks exact
+      map.addLayer({
+        id: "focus-line-approx",
+        type: "line",
+        source: "focus",
+        filter: ["all", ["==", ["get", "kind"], "area"], ["==", ["get", "exact"], false]],
+        paint: { "line-color": "#d73948", "line-width": 2.5, "line-dasharray": [2, 1.5] },
       });
       // selected home → its nearby advantages: a 5-minute walk ring and a line to each place
       map.addSource("nearby", { type: "geojson", data: EMPTY_FC });
@@ -133,15 +164,27 @@ export default function ListingMap(props: ListingMapProps) {
       });
       setReady(true);
     });
-    map.on("dragstart", () => setMoved(true));
-    map.on("zoomstart", (e: { originalEvent?: unknown }) => e.originalEvent && setMoved(true));
+    map.on("dragstart", () => {
+      autoFit.current = false;
+      setMoved(true);
+    });
+    map.on("zoomstart", (e: { originalEvent?: unknown }) => {
+      if (!e.originalEvent) return;
+      autoFit.current = false;
+      setMoved(true);
+    });
     map.on("moveend", () => {
       if (live.current.bbox) live.current.onBBox(boundsOf(map));
     });
     map.on("click", () => live.current.onSelect(null));
 
     // the map column animates in and the layout can change without a window resize
-    const ro = new ResizeObserver(() => map.resize());
+    // ...and a fit made while it was still tiny clamps to minZoom: refit until the user takes over
+    const ro = new ResizeObserver(() => {
+      map.resize();
+      const { results: rs, area: a, bbox: box } = live.current;
+      if (autoFit.current && !box && rs.length) map.fitBounds(framing(rs, a), { padding: FIT_PADDING, maxZoom: 14.5, duration: 0 });
+    });
     ro.observe(box.current);
 
     const markerMap = markers.current;
@@ -155,6 +198,17 @@ export default function ListingMap(props: ListingMapProps) {
       setReady(false);
     };
   }, [engine]);
+
+  // ---------- neighborhoods in focus ----------
+  // names can repeat across cities: take the city from a result in that neighborhood
+  const focusKey = focus.map((h) => `${h}@${results.find((r) => r.listing.neighborhood === h)?.listing.city ?? ""}`).join("|");
+  const area = useMemo(
+    () => focusArea(focusKey ? focusKey.split("|").map((k) => ({ name: k.split("@")[0], city: k.split("@")[1] || null })) : []),
+    [focusKey],
+  );
+  useEffect(() => {
+    live.current = { ...props, area };
+  });
 
   // ---------- pins ----------
   const order = useMemo(() => new Map(results.map((r, i) => [r.listing.id, i])), [results]);
@@ -204,15 +258,11 @@ export default function ListingMap(props: ListingMapProps) {
     const map = mapRef.current;
     if (!map || !ready || bbox || !results.length) return;
     map.resize();
-    const b = new nmp.LngLatBounds();
-    results.forEach((r) => {
-      const { lat, lng } = listingLatLng(r.listing);
-      b.extend([lng, lat]);
-    });
-    map.fitBounds(b, { padding: { top: 70, bottom: 60, left: 90, right: 90 }, maxZoom: 14.5, duration: fitted.current ? 900 : 0 });
+    autoFit.current = true;
+    map.fitBounds(framing(results, area), { padding: FIT_PADDING, maxZoom: 14.5, duration: fitted.current ? 900 : 0 });
     fitted.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- refit only when the set of pins changes
-  }, [idsKey, ready]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refit only when the pins or the outline change
+  }, [idsKey, area, ready]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -263,9 +313,23 @@ export default function ListingMap(props: ListingMapProps) {
 
   // ---------- focus outline ----------
   useEffect(() => {
-    const src = mapRef.current?.getSource("focus") as GeoJSONSource | undefined;
-    if (ready && src) src.setData(circles(focus, results));
-  }, [focus, results, ready]);
+    const map = mapRef.current;
+    const src = map?.getSource("focus") as GeoJSONSource | undefined;
+    if (!map || !ready || !src) return;
+    src.setData(area.features);
+    // neighborhood names sit on the outline like tabs
+    const tags = area.labels.map(({ name, lng, lat }, i) => {
+      const el = document.createElement("div");
+      el.className = "hr-hood";
+      el.style.setProperty("--d", `${i * 80}ms`);
+      const label = document.createElement("span");
+      label.className = "hr-hood__label";
+      label.textContent = name;
+      el.append(label);
+      return new nmp.Marker({ element: el, anchor: "bottom" }).setLngLat([lng, lat]).addTo(map);
+    });
+    return () => tags.forEach((m) => m.remove());
+  }, [area, ready]);
 
   const zoom = (d: number) => mapRef.current?.easeTo({ zoom: mapRef.current.getZoom() + d, duration: 300 });
 
@@ -442,6 +506,28 @@ function pinElement(r: SearchResult, i: number): HTMLElement {
   return el;
 }
 
+const FIT_PADDING = { top: 70, bottom: 60, left: 90, right: 90 };
+/** Pins farther than this (degrees, ~1.5 km) outside the outline don't pull the camera out of it. */
+const NEAR_AREA = 0.015;
+
+/**
+ * What the camera frames: every pin, or — when neighborhoods are outlined — the whole outline plus
+ * the pins around it, so a couple of far-off results never shrink the outline to a dot.
+ */
+function framing(results: SearchResult[], area: FocusArea): [[number, number], [number, number]] {
+  const pts = results.map((r) => listingLatLng(r.listing));
+  let [w, s, e, n] = area.bounds ?? [Infinity, Infinity, -Infinity, -Infinity];
+  const [aw, as, ae, an] = area.bounds ?? [-Infinity, -Infinity, Infinity, Infinity];
+  for (const p of pts) {
+    if (p.lng < aw - NEAR_AREA || p.lng > ae + NEAR_AREA || p.lat < as - NEAR_AREA || p.lat > an + NEAR_AREA) continue;
+    [w, s, e, n] = [Math.min(w, p.lng), Math.min(s, p.lat), Math.max(e, p.lng), Math.max(n, p.lat)];
+  }
+  return [
+    [w, s],
+    [e, n],
+  ];
+}
+
 const EMPTY_FC = { type: "FeatureCollection" as const, features: [] };
 /** 5 minutes' walk, as the crow flies (see walkMeters in src/lib/nearby/facts.ts). */
 const WALK_RING_M = 310;
@@ -481,21 +567,4 @@ function poiElement(item: NearbyApiResponse["items"][number], i: number): HTMLEl
   label.textContent = item.name ?? item.label;
   el.append(dot, label);
   return el;
-}
-
-/** ~1.2 km circles around neighborhood centers, as GeoJSON polygons. */
-function circles(hoods: Neighborhood[], results: SearchResult[]) {
-  return {
-    type: "FeatureCollection" as const,
-    features: hoods.flatMap((h) => {
-      // names can repeat across cities: take the city from a result in that neighborhood
-      const c = hoodCenter(h, results.find((r) => r.listing.neighborhood === h)?.listing.city);
-      if (!c) return [];
-      const ring = Array.from({ length: 65 }, (_, i) => {
-        const a = (i / 64) * 2 * Math.PI;
-        return [c.lng + (0.0115 * Math.cos(a)) / Math.cos((c.lat * Math.PI) / 180), c.lat + 0.0115 * Math.sin(a)];
-      });
-      return { type: "Feature" as const, properties: { name: h }, geometry: { type: "Polygon" as const, coordinates: [ring] } };
-    }),
-  };
 }

@@ -251,6 +251,26 @@ html:root {
     transform: scale(0.3);
   }
 }
+/* neighborhood name on its outline (results map), like a tab on the boundary */
+.hr-hood {
+  z-index: 1;
+  pointer-events: none;
+}
+.hr-hood__label {
+  display: block;
+  margin-bottom: 4px;
+  padding: 3px 10px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #d73948;
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: hr-pin-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--d, 0ms);
+}
 /* nearby places of the selected home; mapbox-gl owns .hr-poi's transform, so only children animate */
 .hr-poi {
   position: relative;
@@ -306,6 +326,7 @@ html:root {
 @media (prefers-reduced-motion: reduce) {
   .hr-pin,
   .hr-pin.is-leaving,
+  .hr-hood__label,
   .hr-poi__dot {
     animation: none;
   }

@@ -174,6 +174,18 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Gemini filed «مفتح» under notes (no ایثار chip) → `fillNeighborhoods` (`src/lib/intent/place.ts`): when the
     LLM names no neighborhood, the registered ones the text mentions are filled in (fresh queries only; an
     edited intent / removed chip is kept). 125 tests.
+  - Owner request (2026-09-27) — **Divar-style neighborhood outline on the results map:** instead of a dashed circle,
+    the neighborhoods in focus are drawn along their real street boundaries (OSM municipal neighborhoods, admin_level 11,
+    baked by `scripts/build-hood-shapes.mjs` → `src/data/hood-shapes.json`, 14 of 17 Mashhad neighborhoods incl. ایثار
+    «مفتح» and پورسینا). `src/lib/focus-area.ts` merges touching neighborhoods into one outline (`polygon-clipping`) and
+    dims the rest of the map; white-cased brand line + name tab on the outline. No OSM boundary (وکیل‌آباد — OSM's
+    «وکیل آباد» is a different area in the far west —, هاشمیه, قاسم‌آباد, سجاد) → dashed circle, so approximate never
+    looks exact. Pins without ad coordinates now land inside the real boundary (`listingLatLng`). Camera: frames the
+    outline + pins within ~1.5 km, and refits when the map column finishes animating in (it used to stay at minZoom).
+    Checked at 1440 and 390 px (`docs/screenshots/desktop-map-outline.png`).
+    Divar districts spanning several municipal neighborhoods (`DISTRICT_PARTS` in the script, lists from Divar's
+    neighborhood picker, sent by the owner) are drawn as their union: طلاب = طلاب + وحید + ایثار + ابوذر + تلگرد
+    (طبرسی and علامه طباطبایی aren't in OSM). وکیل‌آباد: waiting for the owner's Divar list (Open questions).
   - Owner request (2026-09-28, from the second call with Mohammad — `docs/research/call-2026-09-27-mohammad.md`) —
     **"which metro line?"**: `scripts/build-metro.mjs` bakes the lines in service per covered city from OSM route
     relations (Mashhad: خط ۱ وکیل‌آباد ↔ فرودگاه 24 stations, خط ۲ طبرسی ↔ شهید فکوری 13, خط ۳ شهدا ↔ امام رضا 3 in
@@ -232,6 +244,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **مرز وکیل‌آباد روی نقشه:** مرز «وکیل آباد» در OSM یه محله‌ی دیگه (غرب شهره)، برای همین دایره‌ی خط‌چین نشون می‌دیم.
+  لیست زیرمحله‌هایی که دیوار زیر «وکیل‌آباد» نشون می‌ده (مثل طلاب) رو بفرستید تا مرزش از جمع اون‌ها ساخته بشه. (هاشمیه،
+  قاسم‌آباد، سجاد هم همین‌طور.) تا جواب: دایره‌ی خط‌چین.
 - **نشان برای مکان‌های اطراف (هزینه دارد):** کلید سرویس `homerob-server` ساخته شده، ولی Search و Nearby روش فعال
   نیست (۴۸۵) و فقط با تیکت فعال می‌شن؛ اعتبار حساب صفره. هزینه‌ی تقریبی: حدود ۱٬۰۰۰ تومان برای هر آگهی‌ای که باز
   می‌شه (بعدش کش می‌شه). (الف) **پیشنهاد من:** تیکت بزن، کوچک‌ترین بسته‌ی اعتبار رو بخر، `NESHAN_API_KEY` رو در
