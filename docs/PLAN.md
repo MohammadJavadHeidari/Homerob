@@ -193,6 +193,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     (prod build + the Neshan map key + Production API responses; 1816/1440/390 px; mouse, keyboard, 2 lines, skip).
     Added `results-boundary.tsx` (`catchError` from `next/error`) around the results: a crash there now keeps the
     search box, shows the error text and a retry. Waiting for the owner to send that text.
+    Owner asked for the question to look like **Claude's question box** (2026-09-28): `metro-question.tsx` rebuilt on the
+    `@shadcn/react/questionnaire` primitive — title + ✕, numbered rows (line-colored badges, divider lines), one click /
+    a number key (Latin or Persian) / ↑↓ + Enter answers, a «یه چیز دیگه…» row (free text is added to the query and
+    searched again), «فرقی نمی‌کنه» / Esc / ✕ skip, key hints under the box (desktop). Single line per answer now
+    (typing «خط ۱ و ۲» still gives both). All paths checked in the browser, no page errors.
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
