@@ -189,6 +189,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     (no Tehran ads yet; re-run the script once a Tehran export lands).
     **PR #23 merged 2026-09-28 → live on Production:** «دوخوابه نزدیک خط ۲ مترو مشهد» → 6 results, «حدود ۳ دقیقه پیاده تا
     ایستگاه نبوت (خط ۲)»; «خونه نزدیک مترو در مشهد» → `nearMetro` with no line → the question shows.
+    Owner saw Next's full-page «This page couldn't load» after picking line 1 on Production. Not reproduced here
+    (prod build + the Neshan map key + Production API responses; 1816/1440/390 px; mouse, keyboard, 2 lines, skip).
+    Added `results-boundary.tsx` (`catchError` from `next/error`) around the results: a crash there now keeps the
+    search box, shows the error text and a retry. Waiting for the owner to send that text.
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
