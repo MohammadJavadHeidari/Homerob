@@ -8,6 +8,7 @@ import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
 import { HomeFeed, useIsPhone } from "@/components/home-feed";
 import { IntentChips } from "@/components/intent-chips";
+import { asksMetroLine, MetroQuestion } from "@/components/metro-question";
 import { PlaceLine, PlaceQuestion, rememberCity, withCity } from "@/components/place-hint";
 import { TorobLogo } from "@/components/torob-logo";
 import { ResultsView } from "@/components/results-view";
@@ -16,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { CATEGORIES, DEFAULT_CATEGORY, priceModelOf } from "@/lib/categories";
 import { withCategory } from "@/lib/intent/category";
+import { withMetroLines } from "@/lib/metro";
 import { toFaDigits } from "@/lib/persian";
 import { isCovered } from "@/lib/places";
 import { clampRanges, domains, EMPTY_REFINE, type Refine, type SortKey } from "@/lib/search/refine";
@@ -34,6 +36,8 @@ export function SearchApp() {
   const [refine, setRefine] = useState<Refine>(EMPTY_REFINE);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  // «فرقی نمی‌کنه» to "which metro line?" — don't ask again for this query
+  const [anyLineFor, setAnyLineFor] = useState<string | null>(null);
   const requestId = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const phone = useIsPhone();
@@ -217,6 +221,14 @@ export function SearchApp() {
               onChange={(k) => run(data.query, withCategory(data.intent, k))}
             />
             <IntentChips intent={data.intent} source={data.meta.intentSource} onChange={(next) => run(data.query, next)} />
+            {anyLineFor !== data.query && asksMetroLine(data) && (
+              <MetroQuestion
+                key={data.query}
+                data={data}
+                onPick={(refs) => run(data.query, withMetroLines(data.intent, refs))}
+                onAnyLine={() => setAnyLineFor(data.query)}
+              />
+            )}
             <PlaceQuestion
               data={data}
               onAddCity={(city) => {

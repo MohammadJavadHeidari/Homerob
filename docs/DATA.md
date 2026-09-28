@@ -91,5 +91,7 @@ prices («توافقی», ۱٬۰۰۰ تومان) are fine — `src/lib/quality.t
 3. Re-bake the nearby places for "neighborhood advantages": `node scripts/build-nearby.mjs [cacheDir]`
    (Overpass API / OpenStreetMap; writes `src/data/pois.json`, server-side only). Without it, listings
    in the new city show «هنوز اطلاعات کافی از اطراف این خونه نداریم».
+   Also bake its metro lines: `node scripts/build-metro.mjs [cacheDir]` (lines in service only, ordered
+   stations; writes `src/data/metro.json`). A city with 2+ lines gets the «نزدیک کدوم خط مترو؟» question.
 4. Optional: its province name in `PROVINCE_OF` (`src/components/hero-map/hero-map.tsx`) and baked
    roads (`scripts/build-hero-map.mjs`, needs Overpass access).

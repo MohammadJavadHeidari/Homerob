@@ -174,6 +174,19 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     Gemini filed «مفتح» under notes (no ایثار chip) → `fillNeighborhoods` (`src/lib/intent/place.ts`): when the
     LLM names no neighborhood, the registered ones the text mentions are filled in (fresh queries only; an
     edited intent / removed chip is kept). 125 tests.
+  - Owner request (2026-09-28, from the second call with Mohammad — `docs/research/call-2026-09-27-mohammad.md`) —
+    **"which metro line?"**: `scripts/build-metro.mjs` bakes the lines in service per covered city from OSM route
+    relations (Mashhad: خط ۱ وکیل‌آباد ↔ فرودگاه 24 stations, خط ۲ طبرسی ↔ شهید فکوری 13, خط ۳ شهدا ↔ امام رضا 3 in
+    service; lines under construction / proposed skipped) → `src/data/metro.json`. `src/lib/metro.ts` (pure, tested):
+    walk minutes to the nearest station per line (≤ 15 min, ×1.3 detour, «حدود» when the ad has no exact position),
+    `findMetroLines` («خط ۱ مترو», «خط یک و سه»), intent `metroLines` (hard filter; set from the text or the question).
+    `nearMetro` now uses real distance (not only the ad's tag). Results page: `metro-question.tsx` (shadcn
+    **Questionnaire**, `npx shadcn add questionnaire` → `@shadcn/react`) asks «نزدیک کدوم خط مترو؟» when the metro is
+    wanted and the city has 2+ lines: line color, ends, station count, results near it (0 → disabled), multi-select,
+    «فرقی نمی‌کنه». Picking re-searches without the LLM; chip «نزدیک خط ۱ مترو»; cards say «حدود ۴ دقیقه پیاده تا
+    ایستگاه صدف (خط ۱)». Real data: line 1 → 10 ads, line 2 → 6, line 3 → 0. Checked at 390 and 1280 px
+    (`docs/screenshots/metro-*.png`), no page errors. 139 tests. Not yet: bus lines, student mode, Tehran lines
+    (no Tehran ads yet; re-run the script once a Tehran export lands).
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,

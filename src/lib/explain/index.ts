@@ -6,6 +6,7 @@ import { activeProvider, chatJson } from "@/lib/ai/client";
 import { CATEGORIES, categoryOf } from "@/lib/categories";
 import { priceLineFa } from "@/lib/format";
 import type { SearchIntent } from "@/lib/intent/schema";
+import { linesLabel } from "@/lib/metro";
 import { formatToman, toEnDigits, toFaDigits } from "@/lib/persian";
 import type { SearchResult } from "@/lib/search";
 
@@ -91,6 +92,7 @@ function summarizeIntent(i: SearchIntent) {
     minArea: i.minArea,
     mustHave: i.mustHave,
     niceToHave: i.niceToHave,
+    metroLines: i.metroLines.length ? linesLabel(i.metroLines) : null,
     sharedRoom: i.sharedRoom,
     notes: i.freeTextNotes,
   };

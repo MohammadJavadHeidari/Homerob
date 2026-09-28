@@ -2,6 +2,7 @@ import { listings as ALL_LISTINGS } from "@/data/listings";
 import { categoryOf, comparablePrice, DEFAULT_CATEGORY } from "@/lib/categories";
 import { areaAround } from "@/lib/geo";
 import { searchCity } from "@/lib/intent/place";
+import { nearLines } from "@/lib/metro";
 import type { SearchIntent } from "@/lib/intent/schema";
 import { isPlaceholderPrice, isSharedHousing } from "@/lib/quality";
 import type { Listing, ListingSource } from "@/lib/types";
@@ -59,6 +60,8 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
     if (categoryOf(listing) !== category) continue;
     if (city && listing.city !== city) continue;
     if (area && !area.includes(listing.neighborhood)) continue;
+    // "which line?" answered (or «خط ۱ مترو» typed): only homes a short walk from those lines
+    if (intent.metroLines.length && !nearLines(listing, intent.metroLines)) continue;
     if (isPlaceholderPrice(listing)) {
       if (relevant(listing)) excluded.placeholderPrice++;
       continue;
