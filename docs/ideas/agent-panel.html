@@ -1,0 +1,428 @@
+<title>مشتری، قبل از آگهی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: a stack of 16:9 slides (Homerob's Torob-family slate + red), headline column on the
+   reading side (right, RTL), a working mockup on the other; slides reflow to one column on phones. */
+:root {
+  --bg: #e9eef4;
+  --slide: #f8fafc;
+  --surface: #ffffff;
+  --ink: #1e293b;
+  --muted: #5b6b80;
+  --line: #dde4ec;
+  --brand: #d73948;
+  --brand-soft: #fff0f2;
+  --brand-ink: #9f1239;
+  --ok: #15803d;
+  --ok-soft: #e8f6ec;
+  --warn: #b45309;
+  --warn-soft: #fdf3e4;
+  --shadow: 0 1px 2px rgb(15 23 42 / .06), 0 8px 24px rgb(15 23 42 / .07);
+  --font: "Vazirmatn", "Tahoma", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1822; --slide: #15202b; --surface: #1c2a38; --ink: #f1f5f9; --muted: #9fb0c3;
+    --line: #2a3a4b; --brand: #e5566a; --brand-soft: #3b1d27; --brand-ink: #fecdd3;
+    --ok: #4ade80; --ok-soft: #173826; --warn: #fbbf24; --warn-soft: #3a2c12;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1822; --slide: #15202b; --surface: #1c2a38; --ink: #f1f5f9; --muted: #9fb0c3;
+  --line: #2a3a4b; --brand: #e5566a; --brand-soft: #3b1d27; --brand-ink: #fecdd3;
+  --ok: #4ade80; --ok-soft: #173826; --warn: #fbbf24; --warn-soft: #3a2c12;
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
+  color-scheme: dark;
+}
+
+body { background: var(--bg); color: var(--ink); }
+.deck {
+  font-family: var(--font);
+  display: grid; gap: 28px; justify-items: center;
+  padding-inline: 16px; padding-block: 28px 48px;
+}
+.slide {
+  container-type: inline-size;
+  width: min(1200px, 100%);
+  aspect-ratio: 16 / 9;
+  background: var(--slide);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.frame {
+  --px: calc(100cqi / 1280);
+  box-sizing: border-box;
+  height: 100%;
+  padding: calc(56 * var(--px)) calc(72 * var(--px)) calc(44 * var(--px));
+  display: flex; flex-direction: column; gap: calc(26 * var(--px));
+  font-size: calc(19 * var(--px));
+  line-height: 1.75;
+}
+.top { display: flex; justify-content: space-between; align-items: center; color: var(--muted);
+  font-size: calc(14 * var(--px)); letter-spacing: .02em; }
+.brandmark { display: inline-flex; align-items: center; gap: calc(8 * var(--px)); font-weight: 700; color: var(--ink); }
+.brandmark i { width: calc(10 * var(--px)); height: calc(10 * var(--px)); border-radius: 50%; background: var(--brand); }
+.num { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font-weight: 900; font-size: calc(74 * var(--px)); line-height: 1.2; letter-spacing: -.01em; }
+h2 { font-weight: 900; font-size: calc(42 * var(--px)); line-height: 1.3; }
+h3 { font-weight: 700; font-size: calc(22 * var(--px)); line-height: 1.5; }
+p { margin: 0; }
+.lede { font-size: calc(22 * var(--px)); color: var(--muted); max-width: 34em; }
+.muted { color: var(--muted); }
+.hl { color: var(--brand); }
+.body { flex: 1; min-height: 0; display: grid; gap: calc(40 * var(--px)); align-items: center; }
+.two { grid-template-columns: 1fr 1fr; }
+.five-seven { grid-template-columns: 5fr 7fr; }
+.seven-five { grid-template-columns: 7fr 5fr; }
+.stack { display: grid; gap: calc(16 * var(--px)); align-content: start; min-width: 0; }
+.tag { justify-self: start; display: inline-block; padding: calc(2 * var(--px)) calc(10 * var(--px)); border-radius: 999px;
+  font-size: calc(13 * var(--px)); font-weight: 700; background: var(--brand-soft); color: var(--brand-ink); }
+.tag.plain { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 500; }
+.note { font-size: calc(13 * var(--px)); color: var(--muted); }
+
+/* cards and mock UI */
+.card { background: var(--surface); border-radius: calc(12 * var(--px)); padding: calc(20 * var(--px)) calc(22 * var(--px));
+  box-shadow: var(--shadow); min-width: 0; }
+.card.flat { box-shadow: none; border: 1px solid var(--line); }
+.icon { width: calc(40 * var(--px)); height: calc(40 * var(--px)); border-radius: calc(10 * var(--px));
+  display: grid; place-items: center; background: var(--brand-soft); color: var(--brand); flex: none; }
+.icon svg { width: 55%; height: 55%; }
+.row { display: flex; gap: calc(14 * var(--px)); align-items: flex-start; min-width: 0; }
+.btn { display: inline-flex; align-items: center; gap: calc(8 * var(--px)); padding: calc(9 * var(--px)) calc(18 * var(--px));
+  border-radius: calc(8 * var(--px)); background: var(--brand); color: #fff; font-weight: 700; font-size: calc(16 * var(--px)); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+.phone { background: var(--surface); border: calc(7 * var(--px)) solid var(--ink); border-radius: calc(30 * var(--px));
+  padding: calc(18 * var(--px)) calc(16 * var(--px)); display: grid; gap: calc(12 * var(--px)); align-content: start;
+  box-shadow: var(--shadow); font-size: calc(15 * var(--px)); line-height: 1.6; min-width: 0; }
+.phone .bar { height: calc(5 * var(--px)); width: 32%; margin-inline: auto; border-radius: 9px; background: var(--line); }
+.search { border: 1px solid var(--line); border-radius: calc(8 * var(--px)); padding: calc(10 * var(--px)) calc(12 * var(--px)); }
+.chips { display: flex; flex-wrap: wrap; gap: calc(6 * var(--px)); }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: calc(1 * var(--px)) calc(10 * var(--px));
+  font-size: calc(13 * var(--px)); white-space: nowrap; }
+.chip b { font-weight: 700; }
+.push { background: var(--slide); border-radius: calc(12 * var(--px)); padding: calc(10 * var(--px)) calc(12 * var(--px));
+  border: 1px solid var(--line); }
+.push .t { font-weight: 700; }
+.small { font-size: calc(13 * var(--px)); }
+
+/* flow slide */
+.lanes { display: grid; grid-template-columns: calc(120 * var(--px)) 1fr 1fr; gap: calc(16 * var(--px)) calc(20 * var(--px)); align-items: stretch; }
+.lanes .lh { font-weight: 700; font-size: calc(15 * var(--px)); color: var(--muted); align-self: center; }
+.lanes .day { font-weight: 700; font-size: calc(15 * var(--px)); color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: calc(6 * var(--px)); }
+.step { background: var(--surface); border-radius: calc(10 * var(--px)); padding: calc(14 * var(--px)) calc(20 * var(--px));
+  box-shadow: var(--shadow); font-size: calc(18 * var(--px)); line-height: 1.7; min-width: 0; display: grid; gap: calc(8 * var(--px)); align-content: center; }
+.step .n { display: inline-grid; place-items: center; width: calc(24 * var(--px)); height: calc(24 * var(--px)); border-radius: 50%;
+  background: var(--ink); color: var(--slide); font-size: calc(13 * var(--px)); font-weight: 700; margin-inline-end: calc(8 * var(--px)); }
+.step.key { background: var(--brand); color: #fff; }
+.step.key .n { background: #fff; color: var(--brand); }
+.empty { border: 1px dashed var(--line); border-radius: calc(10 * var(--px)); }
+
+/* charts */
+.chart { display: grid; gap: calc(14 * var(--px)); }
+.bar-row { display: grid; grid-template-columns: calc(150 * var(--px)) 1fr; gap: calc(12 * var(--px)); align-items: center; font-size: calc(15 * var(--px)); }
+.track { position: relative; height: calc(30 * var(--px)); background: repeating-linear-gradient(to left, var(--line) 0 1px, transparent 1px 25%); border-radius: 4px; }
+.fill { position: absolute; inset-block: 0; right: 0; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end;
+  padding-inline: calc(10 * var(--px)); font-weight: 700; font-size: calc(14 * var(--px)); color: #fff; box-sizing: border-box; }
+.fill.neutral { background: var(--muted); }
+.fill.brand { background: var(--brand); }
+.fill.ok { background: var(--ok); color: var(--slide); }
+.ticks { display: flex; justify-content: space-between; font-size: calc(12 * var(--px)); color: var(--muted); margin-inline-start: calc(162 * var(--px)); }
+.track.five { background: repeating-linear-gradient(to left, var(--line) 0 1px, transparent 1px 20%); }
+
+table { width: 100%; border-collapse: collapse; font-size: calc(16 * var(--px)); }
+th { text-align: right; font-weight: 500; color: var(--muted); font-size: calc(13 * var(--px)); padding: calc(6 * var(--px)) calc(10 * var(--px)); border-bottom: 1px solid var(--line); }
+td { padding: calc(9 * var(--px)) calc(10 * var(--px)); border-bottom: 1px solid var(--line); }
+td.bar-cell { width: 34%; }
+.mini { height: calc(10 * var(--px)); background: var(--line); border-radius: 9px; position: relative; overflow: hidden; }
+.mini span { position: absolute; inset-block: 0; right: 0; border-radius: 9px; background: var(--brand); }
+.pill { display: inline-block; padding: calc(1 * var(--px)) calc(10 * var(--px)); border-radius: 999px; font-size: calc(13 * var(--px)); font-weight: 700; white-space: nowrap; }
+.pill.hot { background: var(--brand-soft); color: var(--brand-ink); }
+.pill.warm { background: var(--warn-soft); color: var(--warn); }
+.pill.calm { background: var(--ok-soft); color: var(--ok); }
+
+.phase { display: grid; gap: calc(10 * var(--px)); }
+.phase ul, .list { margin: 0; padding-inline-start: 1.1em; display: grid; gap: calc(4 * var(--px)); }
+.quote { border-inline-start: calc(4 * var(--px)) solid var(--brand); padding-inline-start: calc(18 * var(--px)); font-size: calc(22 * var(--px)); font-weight: 700; }
+.cover .body { align-items: center; }
+.cover h1 .hl { display: block; }
+.ol { counter-reset: s; display: grid; gap: calc(12 * var(--px)); margin: 0; padding: 0; list-style: none; }
+.ol li { counter-increment: s; display: grid; grid-template-columns: calc(34 * var(--px)) 1fr; gap: calc(10 * var(--px)); align-items: baseline; }
+.ol li::before { content: counter(s, persian); font-weight: 900; color: var(--brand); font-size: calc(20 * var(--px)); }
+
+/* phones: reflow to one column, readable sizes */
+@media (max-width: 760px) {
+  .slide { aspect-ratio: auto; }
+  .frame { --px: 0.82px; padding: 28px 20px 24px; }
+  .body, .two, .five-seven, .seven-five { grid-template-columns: 1fr; }
+  h1 { font-size: 44px; }
+  .lanes { grid-template-columns: 1fr; }
+  .body[style*="repeat(3"] { grid-template-columns: 1fr !important; }
+  .lanes .lh, .lanes .empty, .lanes .day { display: none; }
+  .lanes > .step { order: var(--o); }
+  .bar-row { grid-template-columns: 1fr; gap: 4px; }
+  .ticks { margin-inline-start: 0; }
+  .scroll { overflow-x: auto; }
+}
+@media print {
+  @page { size: 1280px 720px; margin: 0; }
+  body { background: var(--slide); }
+  .deck { padding: 0; gap: 0; }
+  .slide { width: 1280px; height: 720px; aspect-ratio: auto; border-radius: 0; box-shadow: none; break-after: page; }
+}
+</style>
+
+<div class="deck" dir="rtl" lang="fa">
+
+<!-- 1 cover -->
+<section class="slide cover"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span>ایده‌ی بعد از دمو · مشهد · مهر ۱۴۰۵</span></div>
+  <div class="body seven-five">
+    <div class="stack">
+      <span class="tag">تقاضای برآورده‌نشده</span>
+      <h1>مشتری،<span class="hl">قبل از آگهی</span></h1>
+      <p class="lede">جستجوگر نیازش را یک بار می‌گوید. روزی که مشاوری فایل مناسبش را ثبت کند، هر دو خبردار می‌شوند.</p>
+    </div>
+    <div class="stack">
+      <div class="card row">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+        <div><h3>خانه‌ای که می‌خواستی آمد</h3><p class="muted small">دوخوابه در موسوی قوچانی ۲۵، رهن ۵۵۰ میلیون · از طریق املاک مشاور</p></div>
+      </div>
+      <div class="card row">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><h3><span class="num">۱۲</span> نفر دنبال همین واحد بودند</h3><p class="muted small">پیام به مشاور، همان لحظه‌ای که فایل را ثبت می‌کند</p></div>
+      </div>
+      <p class="note">اعداد این ارائه نمونه‌اند.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 2 problem -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۲ / ۱۰</span></div>
+  <h2>دو طرف یک معامله، <span class="hl">بی‌خبر از هم</span></h2>
+  <div class="body two">
+    <div class="card stack">
+      <span class="tag plain">جستجوگر</span>
+      <h3>«یه دوخوابه تو موسوی قوچانی ۲۵ می‌خوام.»</h3>
+      <p class="muted">امروز آگهی مناسبی نیست و می‌رود. فردا که همین واحد ثبت می‌شود، کسی به او خبر نمی‌دهد. دوباره باید هر روز سر بزند.</p>
+    </div>
+    <div class="card stack">
+      <span class="tag plain">مشاور املاک</span>
+      <h3>«فایل تازه دارم. مشتریش کیه؟»</h3>
+      <p class="muted">نمی‌داند چه کسی دنبال این واحد است. مالک قیمت را بالا می‌دهد، فایل ماه‌ها می‌ماند و کمیسیون نمی‌رسد.</p>
+    </div>
+  </div>
+  <p class="quote">نیازی که امروز پیدا نشد، جایی ثبت نمی‌شود. همین شکاف فرصت هومراب است.</p>
+</div></section>
+
+<!-- 3 why only homerob -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۳ / ۱۰</span></div>
+  <div class="body five-seven">
+    <div class="stack">
+      <h2>هر جستجو در هومراب یک <span class="hl">نیاز کامل</span> است</h2>
+      <p class="lede">کاربر جمله می‌نویسد و هوش مصنوعی آن را به محله، بودجه، تعداد خواب و ویژگی‌ها تبدیل می‌کند. این داده‌ی تقاضا را هیچ سایت آگهی دیگری ندارد.</p>
+    </div>
+    <div class="stack">
+      <div class="card stack">
+        <div class="search">یه آپارتمان دوخوابه تو موسوی قوچانی ۲۵، رهن تا ۶۰۰ میلیون، پارکینگ داشته باشه</div>
+        <div class="chips">
+          <span class="chip">محله: <b>موسوی قوچانی</b></span>
+          <span class="chip">نوع: <b>اجاره مسکونی</b></span>
+          <span class="chip">خواب: <b class="num">۲</b></span>
+          <span class="chip">رهن تا: <b class="num">۶۰۰ م</b></span>
+          <span class="chip">پارکینگ</span>
+        </div>
+      </div>
+      <div class="two body" style="gap: calc(16 * var(--px));">
+        <div class="card flat stack"><span class="tag plain">سایت آگهی</span><p>«موسوی قوچانی»<br><span class="muted small">یک کلمه؛ بعد از جستجو فراموش می‌شود</span></p></div>
+        <div class="card flat stack"><span class="tag">هومراب</span><p>نیاز ساختاریافته<br><span class="muted small">ذخیره می‌شود و با فایل‌های بعدی تطبیق می‌خورد</span></p></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 4 flow -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۴ / ۱۰</span></div>
+  <h2>«خبرم کن» از جستجو تا بازدید</h2>
+  <div class="lanes">
+    <div class="day spacer"></div>
+    <div class="day">روز اول · ۲۱:۴۰</div>
+    <div class="day">روز دوم · ۱۰:۱۵</div>
+
+    <div class="lh">محمدجواد</div>
+    <div style="--o:1" class="step"><div><span class="n">۱</span>جستجو می‌کند. نتیجه‌ای نیست. دکمه‌ی «خبرم کن» را می‌زند و نیازش ذخیره می‌شود.</div></div>
+    <div style="--o:4" class="step"><div><span class="n">۵</span>پیام می‌گیرد: «خانه‌ای که می‌خواستی آمد.» از طریق همان مشاور بازدید می‌گذارد.</div></div>
+
+    <div class="lh">هومراب</div>
+    <div class="empty"></div>
+    <div style="--o:3" class="step key"><div><span class="n">۳</span>فایل تازه را با همه‌ی نیازهای باز مقایسه می‌کند: <b class="num">۱۲</b> نفر مطابق‌اند.</div></div>
+
+    <div class="lh">مشاور</div>
+    <div class="empty"></div>
+    <div style="--o:2" class="step"><div><span class="n">۲</span>مالکی واحدش را به او می‌سپارد و فایل در پنل ثبت می‌شود.</div><div><span class="n">۴</span>دکمه‌ی «به این ۱۲ نفر خبر بده» را می‌زند.</div></div>
+  </div>
+  <p class="note">مشتری قبل از انتشار عمومی آگهی پیدا می‌شود. تماس همیشه از طریق مشاور است.</p>
+</div></section>
+
+<!-- 5 screens -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۵ / ۱۰</span></div>
+  <div class="body five-seven">
+    <div class="stack">
+      <h2>دو صفحه، <span class="hl">یک تطبیق</span></h2>
+      <p class="lede">صفحه‌ی نتیجه‌ی خالی برای جستجوگر بن‌بست نیست. یک نیاز ثبت‌شده است که به پنل مشاور می‌رسد.</p>
+      <span class="tag plain">طرح اولیه · نمونه</span>
+    </div>
+    <div class="two body" style="gap: calc(24 * var(--px)); align-items: start;">
+      <div class="phone">
+        <div class="bar"></div>
+        <div class="search small">دوخوابه موسوی قوچانی ۲۵، رهن تا ۶۰۰</div>
+        <p class="muted small">فعلاً آگهی‌ای با این مشخصات نیست.</p>
+        <span class="btn">خبرم کن</span>
+        <p class="muted small">هر وقت مشاوری فایل مطابق ثبت کرد، پیام می‌گیری.</p>
+        <div class="push"><div class="t">روز بعد · هومراب</div><div class="small">خانه‌ای که می‌خواستی آمد: دوخوابه ۸۵ متری، رهن ۵۵۰ میلیون</div></div>
+      </div>
+      <div class="phone">
+        <div class="bar"></div>
+        <div class="row" style="justify-content: space-between;"><b>فایل جدید ثبت شد</b><span class="pill calm">خصوصی</span></div>
+        <p class="small muted">موسوی قوچانی ۲۵ · ۸۵ متر · ۲ خواب · پارکینگ</p>
+        <div class="card flat" style="padding: calc(12 * var(--px));">
+          <b class="hl num" style="font-size: calc(22 * var(--px));">۱۲ نفر</b>
+          <div class="small">در ۷ روز گذشته دنبال همین واحد بوده‌اند</div>
+        </div>
+        <div class="small muted">۲ خواب · رهن تا ۶۰۰ · پارکینگ — ۱ روز پیش<br>۲ خواب · رهن تا ۵۵۰ — ۳ روز پیش</div>
+        <span class="btn">به این ۱۲ نفر خبر بده</span>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 6 price report -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۶ / ۱۰</span></div>
+  <div class="body five-seven">
+    <div class="stack">
+      <span class="tag">ابزار جلسه با مالک</span>
+      <h2>گزارش قیمت، برای <span class="hl">قانع کردن مالک</span></h2>
+      <p class="lede">بزرگ‌ترین درد مشاور مالکی است که گران می‌دهد. یک صفحه داده جای «باور کنید بازار خوابه» را می‌گیرد.</p>
+    </div>
+    <div class="card stack">
+      <h3>فروش · موسوی قوچانی · ۱۲۰ متر</h3>
+      <div class="chart">
+        <div class="muted small">قیمت هر متر (میلیون تومان)</div>
+        <div class="bar-row"><span>میانه‌ی محله</span><div class="track"><div class="fill neutral num" style="width:85%">۸۵</div></div></div>
+        <div class="bar-row"><span>پیشنهاد مالک</span><div class="track"><div class="fill brand num" style="width:98%">۹۸ (+۱۵٪)</div></div></div>
+        <div class="ticks num"><span>۰</span><span>۲۵</span><span>۵۰</span><span>۷۵</span><span>۱۰۰</span></div>
+      </div>
+      <div class="chart">
+        <div class="muted small">مدت ماندن واحدهای مشابه روی بازار (روز)</div>
+        <div class="bar-row"><span>با قیمت منصفانه</span><div class="track five"><div class="fill ok num" style="width:18%">۹</div></div></div>
+        <div class="bar-row"><span>۱۵٪ بالاتر</span><div class="track five"><div class="fill brand num" style="width:82%">۴۱</div></div></div>
+        <div class="ticks num"><span>۰</span><span>۱۰</span><span>۲۰</span><span>۳۰</span><span>۴۰</span><span>۵۰</span></div>
+      </div>
+      <div class="row" style="justify-content: space-between; align-items: center;"><b>بازه‌ی پیشنهادی: <span class="num">۸۲ تا ۸۸</span> میلیون هر متر</b><span class="note">اعداد نمونه</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 7 which files -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۷ / ۱۰</span></div>
+  <div class="body five-seven">
+    <div class="stack">
+      <h2>کدام فایل را <span class="hl">قبول کنم؟</span></h2>
+      <p class="lede">جایی که تقاضا زیاد و عرضه کم است، فایل زودتر معامله می‌شود. مشاور می‌بیند روی کدام محله و کدام نوع واحد تمرکز کند.</p>
+    </div>
+    <div class="card scroll">
+      <table>
+        <thead><tr><th>محله · اجاره دوخوابه</th><th>جستجو در هفته</th><th>آگهی فعال</th><th>تقاضا به ازای هر آگهی</th><th></th></tr></thead>
+        <tbody class="num">
+          <tr><td>موسوی قوچانی</td><td>۱۸۰</td><td>۲۲</td><td class="bar-cell"><div class="mini"><span style="width:82%"></span></div></td><td><span class="pill hot">کمبود شدید</span></td></tr>
+          <tr><td>وکیل‌آباد</td><td>۲۴۰</td><td>۶۱</td><td class="bar-cell"><div class="mini"><span style="width:39%"></span></div></td><td><span class="pill warm">کمبود</span></td></tr>
+          <tr><td>سجاد</td><td>۱۵۰</td><td>۴۸</td><td class="bar-cell"><div class="mini"><span style="width:31%"></span></div></td><td><span class="pill warm">کمبود</span></td></tr>
+          <tr><td>احمدآباد</td><td>۱۱۰</td><td>۳۵</td><td class="bar-cell"><div class="mini"><span style="width:31%"></span></div></td><td><span class="pill warm">کمبود</span></td></tr>
+          <tr><td>هاشمیه</td><td>۹۰</td><td>۴۰</td><td class="bar-cell"><div class="mini"><span style="width:23%"></span></div></td><td><span class="pill calm">متعادل</span></td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top: calc(10 * var(--px));">نوار: جستجو ÷ آگهی، مقیاس ۰ تا ۱۰. اعداد نمونه‌اند.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 8 cold start -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۸ / ۱۰</span></div>
+  <h2>روز اول کاربر نداریم. <span class="hl">گزارش‌ها باز هم کار می‌کنند.</span></h2>
+  <div class="body two" style="align-items: stretch;">
+    <div class="card phase">
+      <span class="tag plain">فاز ۱ · از روز اول</span>
+      <h3>داده‌ی بازار از آگهی‌های کرال‌شده</h3>
+      <ul class="muted">
+        <li>میانه‌ی قیمت هر متر در هر محله</li>
+        <li>مدت ماندن روی بازار: آگهی‌ای که زود حذف شد احتمالاً معامله شده</li>
+        <li>کاهش قیمت‌ها</li>
+      </ul>
+      <p>گزارش قیمت و «کدام فایل را قبول کنم» آماده‌اند.</p>
+    </div>
+    <div class="card phase">
+      <span class="tag">فاز ۲ · با آمدن کاربر</span>
+      <h3>داده‌ی تقاضا از جستجوها</h3>
+      <ul class="muted">
+        <li>«خبرم کن» و نیازهای باز</li>
+        <li>«N نفر دنبال همین واحد بودند»</li>
+        <li>جستجو در هفته برای هر محله</li>
+      </ul>
+      <p>هر جستجوی تازه گزارش مشاور را دقیق‌تر می‌کند.</p>
+    </div>
+  </div>
+  <p class="quote">«۴۰ تا از آگهی‌هات همین الان تو هومرابه. بیا مالکیتشون رو بگیر.»</p>
+</div></section>
+
+<!-- 9 trust + ingestion -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۹ / ۱۰</span></div>
+  <h2>سه قول به مشاور</h2>
+  <div class="body" style="grid-template-columns: repeat(3, 1fr); align-items: start;">
+    <div class="card stack"><h3>فایل‌ها خصوصی‌اند</h3><p class="muted">پیش‌فرض خصوصی. مشاور انتخاب می‌کند چه چیزی منتشر شود. تطبیق و گزارش روی فایل خصوصی هم کار می‌کند. آدرس دقیق فقط برای تطبیق است و عمومی نمی‌شود.</p></div>
+    <div class="card stack"><h3>کمیسیون ۱۰۰٪ مال خودت</h3><p class="muted">هومراب جای مشاور را نمی‌گیرد. مشتری و داده می‌آورد. رقیب مشاور، مشاورهای دیگرند، نه ما.</p></div>
+    <div class="card stack"><h3>تماس از طریق تو</h3><p class="muted">جستجوگر هیچ‌وقت مستقیم به مالک وصل نمی‌شود. جستجوگر خودش «خبرم کن» را انتخاب می‌کند.</p></div>
+  </div>
+  <div class="card flat row" style="align-items: center;">
+    <b style="flex: none;">ورود فایل:</b>
+    <div class="chips"><span class="chip">اکسل با هر ستون‌بندی</span><span class="chip">عکس دفتر فایل</span><span class="chip">ربات تلگرام: متن + عکس</span></div>
+    <span class="muted small" style="margin-inline-start: auto;">هوش مصنوعی آن را ساختاریافته می‌کند</span>
+  </div>
+</div></section>
+
+<!-- 10 next -->
+<section class="slide"><div class="frame">
+  <div class="top"><span class="brandmark"><i></i>هومراب</span><span class="num">۱۰ / ۱۰</span></div>
+  <div class="body two">
+    <div class="stack">
+      <span class="tag">قبل از نوشتن کد</span>
+      <h2>اعتبارسنجی در <span class="hl">یک روز</span></h2>
+      <p class="lede">برای محله‌ی یک مشاور واقعی در مشهد، از داده‌ی دیوار یک گزارش قیمت و تقاضا را دستی می‌سازیم و به ۵ مشاور نشان می‌دهیم.</p>
+      <p class="muted">می‌پرسیم کدام بخش چشمشان را گرفت و برای کدام حاضرند پول بدهند.</p>
+    </div>
+    <div class="card stack">
+      <h3>ترتیب ساخت</h3>
+      <ol class="ol">
+        <li><span><b>«خبرم کن»:</b> ذخیره‌ی نیاز از صفحه‌ی خالی، تطبیق با آگهی‌های تازه، پیام</span></li>
+        <li><span><b>پنل مشاور:</b> ورود فایل با اکسل و تلگرام، خصوصی به‌طور پیش‌فرض</span></li>
+        <li><span><b>«N نفر دنبال همین بودند»</b> هنگام ثبت فایل، با دکمه‌ی خبر دادن</span></li>
+        <li><span><b>گزارش قیمت PDF</b> از داده‌ی بازار</span></li>
+      </ol>
+    </div>
+  </div>
+</div></section>
+
+</div>

@@ -363,6 +363,15 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data
 - [ ] Importer for the other categories (sales, short-term, commercial, projects) from the same exports
 
+## Post-demo backlog (owner ideas, not in the 2-day scope)
+Details: `docs/ideas/agent-panel.md`, presentable deck `docs/ideas/agent-panel.pdf`.
+- [ ] Validate: hand-made price/demand report for one Mashhad agent's area, show to ~5 agents
+- [ ] Demand alerts «خبرم کن»: save the parsed intent on an empty search, match new listings, notify the searcher
+- [ ] Agent panel: import files (Excel + LLM column mapping / Telegram bot), private by default
+- [ ] "N people want this" on file import + notify button (agent side of demand alerts)
+- [ ] Price report for the owner meeting (median per m², days on market, suggested range)
+- [ ] Crawler + source adapters for market data (days on market, price drops) — cold-start data for reports
+
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
 - [x] "Compare" view for 2–3 listings (done via divar-mcp follow-ups)
