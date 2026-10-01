@@ -619,3 +619,11 @@ html:root {
     animation-name: none !important;
   }
 }
+
+/* Horizontal chip / nav rows that scroll on phones without showing a scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

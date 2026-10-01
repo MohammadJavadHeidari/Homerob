@@ -18,11 +18,13 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { NearbyAdvantages } from "@/components/nearby-advantages";
 import { NewBadge } from "@/components/new-badge";
 import { SaveButton } from "@/components/save-button";
+import { isPostedId } from "@/lib/account/ads";
 import type { SearchResult } from "@/lib/api-types";
 import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
 import { ageFa, floorFa, roomsFa, timeAgoFa } from "@/lib/format";
@@ -60,6 +62,8 @@ export function ListingCard({
   const model = category.priceModel;
   const cons = highlights.filter((h) => h.kind === "con").slice(0, 2);
   const pros = highlights.filter((h) => h.kind === "pro").slice(0, 2);
+  // posted on Torob from this device: not in the server data, so no nearby places for it yet
+  const posted = isPostedId(l.id);
 
   return (
     <article className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl p-4 sm:rounded-lg sm:p-5">
@@ -69,6 +73,7 @@ export function ListingCard({
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {rank !== undefined && <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>}
             {result.isNew && <NewBadge />}
+            {posted && <span className="bg-secondary border-input rounded-md border px-1.5 py-0.5 font-bold">ثبت‌شده در ترب</span>}
             {isSharedHousing(l) && categoryOf(l) === "residential-rent" && (
               <span className="rounded-md bg-warning/10 px-1.5 py-0.5 font-bold text-warning">همخونه</span>
             )}
@@ -77,7 +82,11 @@ export function ListingCard({
               {timeAgoFa(l.postedAt)}
             </span>
           </div>
-          <h3 className="text-base leading-7 font-bold">{l.title}</h3>
+          <h3 className="text-base leading-7 font-bold">
+            <Link href={`/ads/${l.id}`} className="underline-offset-4 hover:underline">
+              {l.title}
+            </Link>
+          </h3>
           <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <MapPin className="size-3.5 shrink-0" />
             {l.street ? `${l.neighborhood}، ${l.street}` : l.neighborhood}
@@ -188,34 +197,36 @@ export function ListingCard({
       </div>
 
       {/* neighborhood advantages (lazy: one AI call per opened listing) */}
-      <div className="-mt-1 rounded-xl border border-dashed">
-        <button
-          type="button"
-          onClick={() => setNearbyOpen(!showNearby)}
-          aria-expanded={showNearby}
-          className="hover:text-primary flex w-full items-center gap-2 px-3 py-2.5 text-sm font-bold transition-colors"
-        >
-          <MapPinned className="text-primary size-4" />
-          {category.residential ? "اطراف این خونه چی داره؟" : "اطراف اینجا چی داره؟"}
-          <span className="text-muted-foreground text-xs font-normal">مترو، خرید، درمانگاه…</span>
-          <ChevronDown className={cn("text-muted-foreground ms-auto size-4 transition-transform", showNearby && "rotate-180")} />
-        </button>
-        <AnimatePresence initial={false}>
-          {showNearby && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden"
-            >
-              <div className="px-3 pb-3">
-                <NearbyAdvantages id={l.id} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {!posted && (
+        <div className="-mt-1 rounded-xl border border-dashed">
+          <button
+            type="button"
+            onClick={() => setNearbyOpen(!showNearby)}
+            aria-expanded={showNearby}
+            className="hover:text-primary flex w-full items-center gap-2 px-3 py-2.5 text-sm font-bold transition-colors"
+          >
+            <MapPinned className="text-primary size-4" />
+            {category.residential ? "اطراف این خونه چی داره؟" : "اطراف اینجا چی داره؟"}
+            <span className="text-muted-foreground text-xs font-normal">مترو، خرید، درمانگاه…</span>
+            <ChevronDown className={cn("text-muted-foreground ms-auto size-4 transition-transform", showNearby && "rotate-180")} />
+          </button>
+          <AnimatePresence initial={false}>
+            {showNearby && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden"
+              >
+                <div className="px-3 pb-3">
+                  <NearbyAdvantages id={l.id} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </article>
   );
 }

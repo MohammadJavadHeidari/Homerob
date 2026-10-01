@@ -130,3 +130,9 @@
   alternative): (1) «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد», (2) «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن»,
   (3) «خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن» + remove the «پورسینا» chip. Script:
   `docs/DEMO_SCRIPT.md`. Owner asked to merge and update the live site.
+- 2026-10-01 — **Customer + agency panels (prototype)** (owner request, for a stakeholder demo; supersedes "no account" for the
+  new panels only, the phone home still works without one). Customers sign in with mobile + one-time code, post ads (photos, AI
+  form fill from pasted text) and browse every ad; agencies sign in, register once, upload files (CSV / cells pasted from Excel /
+  text / form) and see views, contacts and saves per file. No SMS service (paid) → the code is shown as an on-screen, labeled
+  "SMS". No database (2026-09-26 decision) → sessions, posted ads and view events live on the device; posted ads ride along with
+  each search request. Stats are real events only. Real ads keep no seller phone; posted ads show the poster's own number.

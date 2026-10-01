@@ -94,8 +94,8 @@ export function search(intent: SearchIntent, listings: Listing[] = ALL_LISTINGS,
 }
 
 /** Look up already-ranked results by id (used by /api/explain so the client can't forge facts). */
-export function resultsByIds(intent: SearchIntent, ids: string[]): SearchResult[] {
-  const all = search(intent, ALL_LISTINGS, Infinity);
+export function resultsByIds(intent: SearchIntent, ids: string[], extra: Listing[] = []): SearchResult[] {
+  const all = search(intent, extra.length ? [...extra, ...ALL_LISTINGS] : ALL_LISTINGS, Infinity);
   const byId = new Map(all.results.map((r) => [r.listing.id, r]));
   return ids.map((id) => byId.get(id)).filter((r): r is SearchResult => Boolean(r));
 }

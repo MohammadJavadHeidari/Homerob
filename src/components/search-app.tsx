@@ -3,6 +3,8 @@
 import { GitCompareArrows, Info, LoaderCircle, RotateCcw, Search, SearchX, TriangleAlert, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { HomeTopBar, HomeTopics } from "@/components/account/home-entry";
+import { AccountButton } from "@/components/account/site-header";
 import { CategoryTabs } from "@/components/category-tabs";
 import { CompareDialog } from "@/components/compare-dialog";
 import { HeroMap } from "@/components/hero-map/hero-map";
@@ -14,6 +16,9 @@ import { TorobLogo } from "@/components/torob-logo";
 import { ResultsBoundary } from "@/components/results-boundary";
 import { ResultsView } from "@/components/results-view";
 import { Button } from "@/components/ui/button";
+import { isPostedId, toSearchable } from "@/lib/account/ads";
+import { readPostedAds } from "@/lib/account/ads-store";
+import { trackImpressions } from "@/lib/account/events-store";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchApiResponse, SearchIntent } from "@/lib/api-types";
 import { CATEGORIES, DEFAULT_CATEGORY, priceModelOf } from "@/lib/categories";
@@ -57,7 +62,8 @@ export function SearchApp() {
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: text, intent }),
+        // ads posted on Torob from this device (no server database in the prototype) are ranked with the real ones
+        body: JSON.stringify({ query: text, intent, extra: readPostedAds().filter((a) => a.status === "published").map(toSearchable) }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: SearchApiResponse = await res.json();
@@ -66,6 +72,7 @@ export function SearchApp() {
       // typed searches feed the phone home's recent chips and «ادامهٔ جستجو» rail
       if (!intent) rememberSearch({ query: json.query, intent: json.intent, at: Date.now() });
       setData(json);
+      trackImpressions(json.results.map((r) => r.listing.id).filter(isPostedId));
       // a new query starts clean; editing the AI intent keeps the hand-set filters that still apply
       const model = priceModelOf(json.intent.category);
       const sameModel = model === priceModel.current;
@@ -132,6 +139,7 @@ export function SearchApp() {
   return (
     <>
       {!compact && <HeroMap className="z-0" focus={query.trim().length >= 3 ? guess : undefined} />}
+      {!compact && <HomeTopBar className="dark text-foreground" />}
       <div
         className={cn(
           "relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
@@ -149,7 +157,7 @@ export function SearchApp() {
             compact && "bg-card -mt-6 pt-6 pb-5 shadow-[0_0_0_100vmax_var(--color-card)] [clip-path:inset(0_-100vmax)] sm:-mt-10 sm:pt-10",
           )}
         >
-          <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
+          <header className={cn("flex gap-3 transition-all", compact ? "flex-row items-center justify-between" : "flex-col items-center pt-10 text-center sm:pt-20")}>
             <button
               type="button"
               onClick={reset}
@@ -171,6 +179,8 @@ export function SearchApp() {
                 </>
               )}
             </button>
+            {/* torob.com's results header: «ورود / ثبت نام» on the end side */}
+            {compact && <AccountButton />}
           </header>
 
           <form
@@ -211,6 +221,8 @@ export function SearchApp() {
               className={cn("-mt-3", !compact && "mx-auto w-full max-w-2xl justify-center")}
             />
           )}
+          {/* home: the two new doors (post an ad / agency panel), right under the search */}
+          {!compact && <HomeTopics className={cn(!phone && "mt-4")} />}
           {/* "which metro line?" sits right under the search box, like a follow-up to what was typed */}
           {status === "done" && data && anyLineFor !== data.query && asksMetroLine(data) && (
             <MetroQuestion
