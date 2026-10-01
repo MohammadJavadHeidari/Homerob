@@ -267,8 +267,19 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     apply to the bottom nav / pill / compare bar), no tap flash, `enterKeyHint="search"`. Home: less empty space above the
     logo so the first rail peeks; «نمایش همه» in brand red (was sky blue). Desktop unchanged. Screenshots
     `docs/screenshots/mobile-first-*.png`. 164 tests (after merging the panels).
-- **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs `python3 scripts/divar_crawler.py` (or `--probe` first) and uploads
-  `data/raw/divar-crawl.json` → import it, register the districts it names, re-bake `pois.json`.
+  - **First live crawl imported (2026-10-01):** owner's run (150 newest rent-residential ads in Mashhad, 13 min,
+    no blocks) → 148 imported (1 sale posted as rent, 1 roommate-wanted post skipped) → **198 real ads**. Fixed
+    against the live shape: location line from the `EXPANDABLE_SECTION` row, «انتشار آگهی» → exact `postedAt`
+    (it had been taken as the description — this batch has no descriptions until `--refetch`), card prices for
+    convertible ads (slider-only), «ودیعه: رایگان» = 0, «غیر قابل تبدیل», total floors row, card thumbnail
+    instead of the map snapshot. New `--refetch`. 62 Divar districts registered in `HOODS` (centers from the
+    batch's exact ad points; symmetric adjacency); 34 everyday-word names (دانشجو، گاز، انقلاب، کوثر…) are
+    `strict`: matched in a query only as «محله X» / «منطقه X» …, and an LLM pick of one is dropped unless the
+    text says so. 166 tests. Checked at 390 and 1440 px, no page errors. `pois.json` not re-baked (Overpass
+    down) → new districts show «هنوز اطلاعات کافی…» for nearby places.
+- **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs
+  `npm run crawl:divar -- --refetch` (fills descriptions of the 150) and new passes (`--every 30`), uploads
+  `data/raw/divar-crawl.json` → `npm run import:divar-crawl`. Re-bake `pois.json` when Overpass answers.
   Owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,

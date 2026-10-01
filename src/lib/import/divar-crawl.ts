@@ -13,6 +13,7 @@ import {
   WORD_NUM,
   areaFromText,
   floorFromText,
+  jalaliToIso,
   money,
   num,
   postedAtRelative,
@@ -30,6 +31,8 @@ export interface CrawledAd {
   category?: string;
   title: string;
   subtitle?: string;
+  /** «انتشار آگهی: ۳۰ شهریور ۱۴۰۵، ۱۷:۲۱» (crawler ≥ 2026-10-01; older crawls have it in `description`). */
+  published?: string;
   city?: string;
   district?: string;
   description?: string;
@@ -56,6 +59,8 @@ const CITY_BY_ID: Record<string, string> = {
 /** Divar sub-category slugs that are not homes (meta.category / breadcrumb). */
 const COMMERCIAL_SLUG = /office|shop|store|industr|commercial|business|plot|land/;
 const DESCRIPTION_MAX = 600;
+/** The ad's location line: «۱ ساعت پیش در مشهد، الهیه، خ …». */
+const WHEN_WHERE = /(?:پیش|دیروز|پریروز|لحظاتی|دقایقی)\s+در\s+\S/;
 
 /** First field whose label matches (Divar's labels vary: «ودیعه», «ودیعه (رهن)», «اجارهٔ ماهانه», «اجاره»). */
 const field = (f: Record<string, string>, re: RegExp) => Object.entries(f).find(([k]) => re.test(normalizeFa(k)))?.[1];
@@ -65,19 +70,29 @@ export function crawledToListing(ad: CrawledAd): CrawlResult {
   const f = ad.fields ?? {};
   const card = ad.card ?? {};
   const title = (ad.title || card.title || "").replace(/\s+/g, " ").trim();
-  const text = normalizeFa(`${title} ${ad.description ?? ""}`);
+  // Divar's date rows («انتشار آگهی: …», «آخرین نردبان: …») landed in `description` on the first crawl.
+  const descLines = (ad.description ?? "").split("\n");
+  const isDateLine = (l: string) => /^(?:انتشار آگهی|آخرین نردبان)/.test(l.trim());
+  const published = ad.published || descLines.filter(isDateLine).join("\n");
+  const rawDescription = descLines.filter((l) => !isDateLine(l)).join("\n");
+  const text = normalizeFa(`${title} ${rawDescription}`);
 
   if (ad.category && ad.category !== "residential-rent") return { skip: `category ${ad.category} (not imported yet)` };
   const slug = `${ad.meta?.category ?? ""} ${(ad.breadcrumb ?? []).join(" ")}`;
   const residentialSlug = /apartment|house|villa|residential|آپارتمان|خانه|مسکونی/.test(slug);
   if (COMMERCIAL_SLUG.test(slug) && !residentialSlug) return { skip: "commercial" };
   if (!residentialSlug && NOT_RESIDENTIAL.test(text)) return { skip: "commercial" };
+  // Sellers sometimes post a sale in the rent category («… باغ و ویلا فروشی»).
+  const t = normalizeFa(title);
+  if (/(?:^|\s)(?:فروش|فروشی)(?:\s|$)/.test(t) && !/رهن|اجاره|ودیعه/.test(t)) return { skip: "sale ad in the rent category" };
 
   // ---- price ----
   const depositText = field(f, /ودیعه|رهن/) ?? (/ودیعه|رهن/.test(card.top ?? "") ? card.top! : undefined);
   const rentText = field(f, /اجاره/) ?? (/اجاره/.test(card.middle ?? "") ? card.middle! : "");
   if (!depositText) return { skip: "no deposit (sale / nightly / negotiable)" };
-  const deposit = /رهن کامل/.test(depositText) && !/\d|[۰-۹]/.test(depositText) ? NaN : money(depositText);
+  // «ودیعه: توافقی» on the page can read «ودیعه: رایگان» on the card (no deposit, rent only).
+  const free = (t?: string) => /رایگان|مجانی/.test(t ?? "");
+  const deposit = free(depositText) || free(card.top) ? 0 : /\d|[۰-۹]/.test(depositText) ? money(depositText) : NaN;
   if (!Number.isFinite(deposit)) return { skip: "deposit not a number (توافقی…)" };
   const listedRent = /رهن کامل|مجانی|رایگان/.test(rentText) || !rentText ? 0 : money(rentText) || 0;
   // Divar makes sellers type some rent; full-rahn ads carry a symbolic ۱۰–۱۰۰ هزار. Next to a real deposit
@@ -86,7 +101,8 @@ export function crawledToListing(ad: CrawledAd): CrawlResult {
 
   // ---- place ----
   // subtitle: "۲ ساعت پیش در مشهد، وکیل‌آباد، خ مدرس" (the text before "در" is time or agency).
-  const where = ad.subtitle || card.bottom || "";
+  const where =
+    ad.subtitle || ad.rows?.map((r) => r[1] ?? "").find((t) => WHEN_WHERE.test(t)) || card.bottom || "";
   const parts = (where.split(/\s+در\s+|^در\s+/).pop() ?? "").split("،").map((x) => x.trim()).filter(Boolean);
   const city =
     canonicalCity(ad.city ?? "") || canonicalCity(card.city ?? "") || (parts.length > 1 && canonicalCity(parts[0])) || CITY_BY_ID[ad.city_id ?? ""];
@@ -116,7 +132,9 @@ export function crawledToListing(ad: CrawledAd): CrawlResult {
         ? -1
         : Number(floorMatch[1])
     : floorFromText(text);
-  const totalFloors = floorMatch?.[2] ? Number(floorMatch[2]) : undefined;
+  const totalFloors = floorMatch?.[2]
+    ? Number(floorMatch[2])
+    : num(field(f, /تعداد کل طبقات/) ?? "") || undefined;
 
   const yearFa = Number(toEnDigits(new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric" }).format(crawled)));
   const builtField = f["ساخت"] ?? f["سال ساخت"] ?? "";
@@ -132,12 +150,14 @@ export function crawledToListing(ad: CrawledAd): CrawlResult {
   const featureText = normalizeFa(
     [
       ...(ad.features ?? []).map((x) => (x.available === false && !/ندارد/.test(x.title) ? `${x.title} ندارد` : x.title)),
+      // rows like «مبله: هست», «استخر: دارد»
+      ...Object.entries(f).filter(([, v]) => /^(?:هست|دارد|بله)$/.test(v.trim())).map(([k]) => k),
       text,
     ].join(" "),
   );
 
   // The crawler masks phone numbers as «[شماره حذف شد]»; drop the marker on the card.
-  const description = (ad.description ?? "").replace(/\s*\[شماره حذف شد\]/g, "").trim();
+  const description = rawDescription.replace(/\s*\[شماره حذف شد\]/g, "").trim();
   const listing: Listing = {
     id: `dv-${ad.token}`,
     source: "divar",
@@ -157,10 +177,12 @@ export function crawledToListing(ad: CrawledAd): CrawlResult {
     parking: stated(featureText, "پارکینگ"),
     storage: stated(featureText, "انباری"),
     tags: TAGS.filter(([, re]) => re.test(featureText)).map(([tag]) => tag),
-    convertible: !!ad.convertible,
+    // «ودیعه و اجاره: غیر قابل تبدیل» when stated, else the deposit ↔ rent slider
+    convertible: f["ودیعه و اجاره"] ? !/غیر/.test(f["ودیعه و اجاره"]) : !!ad.convertible,
     description: description.length > DESCRIPTION_MAX ? `${description.slice(0, DESCRIPTION_MAX).trimEnd()}…` : description,
-    postedAt: postedAtRelative(where, crawled) ?? postedAtRelative(card.bottom ?? "", crawled) ?? crawled.toISOString(),
-    imageUrl: ad.images?.[0] || card.image || undefined,
+    postedAt: jalaliToIso(published) ?? postedAtRelative(where, crawled) ?? postedAtRelative(card.bottom ?? "", crawled) ?? crawled.toISOString(),
+    // the search card's photo; the page's own image list also holds Divar's map snapshot
+    imageUrl: card.image || ad.images?.find((u) => !/mapimage/.test(u)) || undefined,
     ...(typeof ad.lat === "number" && typeof ad.lng === "number" ? { lat: ad.lat, lng: ad.lng } : {}),
   };
   return { listing };

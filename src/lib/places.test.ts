@@ -33,10 +33,24 @@ describe("neighborhood registry", () => {
     }
   });
 
+  it("matches strict names (also everyday words) only after a place word", () => {
+    expect(findNeighborhoods("دانشجوام، ماهی ۵ تومن", "مشهد")).not.toContain("دانشجو");
+    expect(findNeighborhoods("یه سوئیت تو محله دانشجو", "مشهد")).toContain("دانشجو");
+    expect(findNeighborhoods("نزدیک پمپ گاز", "مشهد")).not.toContain("گاز");
+    // an LLM pick from an everyday word is dropped; a named one is kept
+    const said = (text: string, n: string) =>
+      fillNeighborhoods({ ...EMPTY_INTENT, city: "مشهد", neighborhoods: [n] }, text).neighborhoods;
+    expect(said("دانشجوام دنبال سوئیتم", "دانشجو")).toEqual([]);
+    expect(said("سوئیت در منطقه دانشجو", "دانشجو")).toEqual(["دانشجو"]);
+    expect(said("دوخوابه جاهد شهر", "جاهد شهر")).toEqual(["جاهد شهر"]);
+  });
+
   it("maps Divar's district spellings", () => {
     expect(findNeighborhoods("شهرک مهر آباد", "مشهد")).toContain("شهرک مهرآباد");
     expect(findNeighborhoods("امیر آباد ۳۴", "مشهد")).toEqual(["امیرآباد"]);
     expect(findNeighborhoods("نزدیک مفتح", "مشهد")).toEqual(["ایثار"]);
+    expect(findNeighborhoods("مشکینی (شهرک غرب)", "مشهد")).toContain("مشکینی");
+    expect(findNeighborhoods("سجاد شهر", "مشهد")).toContain("سجاد");
   });
 });
 

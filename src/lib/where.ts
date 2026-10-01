@@ -1,4 +1,4 @@
-import { findCity, HOODS, placeHits } from "./places";
+import { findCity, HOODS, placeHits, textSpellings } from "./places";
 
 /**
  * "Where is this person looking?" — read the place out of a free-text query, instantly and offline,
@@ -58,7 +58,7 @@ function areasIn(text: string, inCity?: string): AreaHit[] {
     const at = Math.min(...spellings.flatMap((s) => placeHits(text, s)));
     if (Number.isFinite(at)) hits.push({ name, city, at });
   };
-  for (const h of HOODS) scan(h.name, [h.name, ...h.aliases], h.city);
+  for (const h of HOODS) scan(h.name, textSpellings(h), h.city);
   for (const [city, names] of Object.entries(PLACE_HINTS)) for (const n of names) scan(n, [n], city);
   return hits.sort((a, b) => a.at - b.at);
 }
