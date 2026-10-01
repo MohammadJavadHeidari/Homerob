@@ -1,0 +1,87 @@
+name: Import Divar crawl
+
+# The owner's machine (in Iran — Divar answers only Iranian IPs) crawls Divar every 30 minutes and pushes
+# the ads to the `divar-data` branch (`python3 scripts/divar_crawler.py --push`, see docs/DATA.md). This job
+# normalizes everything on that branch into src/data/divar.json on main; Vercel then deploys main.
+# It runs on a schedule: a push to divar-data can't trigger a workflow that lives on main.
+on:
+  schedule:
+    - cron: "10,40 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: import-divar-crawl
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Fetch the crawl (divar-data branch)
+        id: data
+        run: |
+          if git ls-remote --exit-code --heads origin divar-data > /dev/null; then
+            git fetch --quiet --depth=1 origin divar-data
+            mkdir -p .crawl-data
+            git archive FETCH_HEAD crawl | tar -x -C .crawl-data
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No \`divar-data\` branch yet — nothing to import." >> "$GITHUB_STEP_SUMMARY"
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.data.outputs.found == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        if: steps.data.outputs.found == 'true'
+        run: npm ci --no-audit --no-fund
+
+      - name: Normalize into src/data
+        if: steps.data.outputs.found == 'true'
+        run: npm run -s import:divar-crawl -- .crawl-data/crawl --auto-hoods --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Anything new?
+        id: diff
+        if: steps.data.outputs.found == 'true'
+        run: |
+          if [ -z "$(git status --porcelain -- src/data)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing new since the last import." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A bad batch must never reach Production: the same checks a contributor runs.
+      - name: Test and build
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          npm test
+          npm run build
+
+      - name: Commit to main
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/divar.json src/data/auto-hoods.json
+          total=$(node -e "console.log(require('./src/data/divar.json').length)")
+          git commit --quiet -m "data: import Divar crawl ($total ads)"
+          for attempt in 1 2 3; do
+            if git pull --rebase --quiet origin main && git push --quiet origin HEAD:main; then exit 0; fi
+            git rebase --abort 2> /dev/null || true
+            sleep $((attempt * 10))
+          done
+          echo "::error::could not push to main (someone changed src/data meanwhile?) — the next run retries from scratch"
+          exit 1

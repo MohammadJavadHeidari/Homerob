@@ -1,3 +1,4 @@
+import AUTO_HOODS from "../data/auto-hoods.json";
 import { normalizeFa } from "./text";
 
 /**
@@ -140,7 +141,7 @@ const CITY_ALIASES: Record<string, string[]> = {
   "بندرعباس": ["بندر عباس"],
 };
 
-export const HOODS: HoodInfo[] = [
+const CURATED: HoodInfo[] = [
   { name: "الهیه", city: "مشهد", center: { lat: 36.3705, lng: 59.4835 }, aliases: ["الاهیه"], adjacent: ["وکیل‌آباد", "سجاد"] },
   { name: "سجاد", city: "مشهد", center: { lat: 36.3185, lng: 59.5525 }, aliases: ["بلوار سجاد", "سجاد شهر", "سجادشهر"], adjacent: ["احمدآباد", "الهیه"] },
   {
@@ -247,13 +248,26 @@ export const HOODS: HoodInfo[] = [
   { name: "کوه سنگی", city: "مشهد", center: { lat: 36.2872, lng: 59.5759 }, aliases: ["کوهسنگی"], adjacent: ["احمدآباد", "بهشت"] },
 ];
 
-// Adjacency is symmetric: a neighbor listed on either side counts for both.
-for (const h of HOODS) {
-  for (const a of h.adjacent) {
-    const other = HOODS.find((x) => x.name === a && x.city === h.city);
-    if (other && !other.adjacent.includes(h.name)) other.adjacent.push(h.name);
+/**
+ * Districts the crawl import registered on its own (`npm run import:divar-crawl -- … --auto-hoods`,
+ * src/lib/import/auto-hoods.ts): center = median of the ads' exact points, `strict` unless the name is
+ * clearly a place name. Curated entries above win; move an entry up there once it has been checked.
+ */
+export const HOODS: HoodInfo[] = [
+  ...CURATED,
+  ...(AUTO_HOODS as HoodInfo[]).filter((a) => !CURATED.some((c) => c.city === a.city && c.name === a.name)),
+];
+
+/** Adjacency is symmetric: a neighbor listed on either side counts for both. */
+export function linkAdjacent(hoods: HoodInfo[] = HOODS): void {
+  for (const h of hoods) {
+    for (const a of h.adjacent) {
+      const other = hoods.find((x) => x.name === a && x.city === h.city);
+      if (other && !other.adjacent.includes(h.name)) other.adjacent.push(h.name);
+    }
   }
 }
+linkAdjacent();
 
 /** Cities that have neighborhoods (and so listings). */
 export const COVERED_CITIES: string[] = [...new Set(HOODS.map((h) => h.city))];

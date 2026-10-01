@@ -54,47 +54,75 @@ Best export for the next batch: the **rent-residential** category of one neighbo
 (`divar.ir/s/mashhad/rent-residential?districts=…`), with each ad page opened so the second table has
 متراژ / ساخت / اتاق / طبقه / features.
 
-## Crawling Divar locally (owner's machine)
+## Crawling Divar — automated (owner's machine → `divar-data` → GitHub Action → `main`)
 
-Divar answers only Iranian IPs, so the sandbox can't crawl it. `scripts/divar_crawler.py` (Python 3.9+,
-standard library only — nothing to install) runs on the owner's machine and calls the same public JSON API
-divar.ir's web app uses (`/v8/postlist/w/search` newest first, then `/v8/posts-v2/web/<token>` per new ad).
+Divar answers only Iranian IPs, so the crawl runs on the owner's machine; everything after it is automatic.
 
-```bash
-python3 scripts/divar_crawler.py                        # one pass: Mashhad, residential rent (= npm run crawl:divar)
-python3 scripts/divar_crawler.py --every 30             # a pass every 30 min until Ctrl+C
-python3 scripts/divar_crawler.py --city tehran --pages 5 --max-new 100
-python3 scripts/divar_crawler.py --probe                # raw answers → data/raw/probe/ (if the parser breaks)
-python3 scripts/divar_crawler.py --refetch              # re-read stored ads with the current parser
+```
+owner's laptop (every 30 min)          GitHub                                   Vercel
+divar_crawler.py --push  ──push──▶  branch divar-data          Action "Import Divar crawl"
+  4 categories, Mashhad              crawl/<date>.jsonl  ──▶  (:10 and :40 every hour)
+  new ads only, sanitized            (append-only shards)      import → test → build ──▶ main ──▶ deploy
 ```
 
-- Output in gitignored `data/raw/`: `divar-crawl.jsonl` (checkpoint, appended per ad; the next pass skips
-  ads already there and stops after two pages with nothing new), `divar-crawl.json` (validated array — the
-  file to upload), `divar-crawl.log`.
-- Polite: robots.txt checked each pass, one request at a time, 3–6 s random pause, backoff on 429/5xx,
-  stops on 403. Defaults cap a pass at 10 pages / 150 new ads.
-- Privacy: never calls the contact endpoint; seller / agency / chat widgets are dropped; phone-like numbers
-  in text are masked.
+**Owner, once:**
+
+```bash
+git pull origin main
+python3 scripts/divar_crawler.py --refetch --push        # descriptions for the first 150 + first push (≈10 min)
+python3 scripts/divar_crawler.py --install-schedule 30   # then every 30 min: crawl + push (launchd / cron / Task Scheduler)
+python3 scripts/divar_crawler.py --uninstall-schedule    # to stop
+```
+
+Options (also kept by `--install-schedule`): `--cities mashhad,tehran` (Divar slugs or ids), `--categories`
+(default `residential-rent,residential-sale,commercial-rent,commercial-sale`), `--pages 30` and `--max-new 60`
+per city × category per pass. A pass keeps paging past ads it already has, so each pass reaches further back
+(backfill ≈ 240 new ads per pass ≈ 11k a day at most) until the newest ads are all that's left. A lock file
+keeps two runs from overlapping. `--probe` saves raw answers per category to `data/raw/probe/` if the parser
+breaks; `--refetch` re-reads stored ads with the current parser; `--every N` loops in a terminal instead.
+
+- **Crawler** (`scripts/divar_crawler.py`, stdlib Python 3.9+ and `git`): Divar's public web JSON API
+  (`/v8/postlist/w/search` newest first, `/v8/posts-v2/web/<token>` per new ad). Polite: robots.txt each pass,
+  one request at a time, 2–4 s per ad, backoff on 429/5xx, stop on 403.
+- **Privacy — the repo is public.** Never calls the contact endpoint; seller / agency / chat widgets are
+  dropped; phone-like numbers are masked; the card's «آژانس … در X» becomes «در X»; Divar business ids are
+  removed from `meta` (only the category tree, place and prices are kept). Applied again before every push,
+  so ads stored by older versions are cleaned too.
+- **`divar-data` branch** (orphan; has its own README and `vercel.json` with deployments off): one line per
+  crawled ad version in `crawl/<date>.jsonl`; a later line for the same token wins. The crawler keeps it in
+  the `.crawl-data/` worktree (gitignored) and pushes whatever the branch doesn't have yet — an offline pass
+  goes out with the next one.
+- **Action** (`.github/workflows/import-divar-crawl.yml`, also runnable by hand from the Actions tab): reads
+  all shards, `npm run import:divar-crawl -- .crawl-data/crawl --auto-hoods`, then `npm test` and
+  `npm run build`; only if both pass does it commit `src/data/divar.json` + `src/data/auto-hoods.json` to
+  `main` (Vercel deploys it). The run summary lists imports, new districts and skip reasons.
 - Live shape (first run, 2026-10-01): the location line is an `EXPANDABLE_SECTION` title, «انتشار آگهی» is a
   description row (→ `published`), deposit/rent of convertible ads live only in the slider (the card's
   «ودیعه: …» / «اجاره: …» lines are used), the page's image list holds only Divar's map snapshot (the
-  card thumbnail is used). The first batch was crawled before these fixes, so its ads have no description;
-  `--refetch` fills them in.
-- The ad page is read generically (every widget's title/value), so a renamed widget still lands in
-  `fields` / `rows`. Untested against the live API from here (sandbox can't reach it) — on a first run with
-  0 ads or empty `fields`, run `--probe` and send `data/raw/probe/`.
+  card thumbnail is used). Sale and commercial slugs (`residential-sell`, `commercial-rent`,
+  `commercial-sell`) were not seen live yet: the crawler logs a warning if Divar's `cat_2` differs from the
+  slug asked for, and the importer trusts `cat_2`.
 
-Import the upload:
+**Import rules** (`src/lib/import/divar-crawl.ts`, tested; text rules shared with the export importer in
+`src/lib/import/divar-text.ts`):
 
-```bash
-npm run import:divar-crawl -- data/raw/divar-crawl.json --verbose     # .jsonl works too
-```
+- Category from Divar's `cat_2`: `residential-rent` (left unset in `divar.json`), `residential-sale`,
+  `commercial-rent`, `commercial-sale`; anything else is skipped.
+- Rentals: deposit/rent from the ad's rows (not the «ودیعه و اجاره» row), else the card; symbolic rent = full
+  rahn; «رایگان» = 0; «قابل تبدیل» / the slider = convertible. Sales: `price` from «قیمت کل» (else the card);
+  «توافقی» is skipped. Placeholder prices stay in the data and are kept out of ranking by `src/lib/quality.ts`.
+- Area: «متراژ», else the text, else «متراژ زمین»; plausible range per category (homes for rent 15–1000 m²,
+  sales and commercial up to 50,000 m², commercial from 5 m²). Rooms only for residential ads.
+- Exact `postedAt` from «انتشار آگهی»; floors «۲ از ۴» / «تعداد کل طبقات»; the feature row and «X: هست» rows
+  → elevator / parking / storage / tags; Divar's map point.
+- **Unknown districts** (`--auto-hoods`, `src/lib/import/auto-hoods.ts`): registered in
+  `src/data/auto-hoods.json` at the median of their ads' exact map points (never without a point), neighbors
+  = districts within 2 km, and `strict` unless the name is clearly a place (has «آباد» / «شهر» or several
+  words) — strict names match a query only as «محله X». Curated entries in `src/lib/places.ts` win; move an
+  auto entry there once checked. `scripts/build-nearby.mjs` includes them.
 
-Rules in `src/lib/import/divar-crawl.ts` (tested), sharing the text rules of the export importer
-(`src/lib/import/divar-text.ts`): residential rent only for now, deposit/rent from the ad's rows (symbolic
-rent = full rahn), متراژ / اتاق / طبقه «۲ از ۴» / ساخت → age, the feature row («پارکینگ ندارد» = false),
-the rent slider = convertible, Divar's map point, «۲ ساعت پیش» → `postedAt`. Skips are printed with a
-reason; «neighborhood not registered (مشهد، X)» names districts to add to `HOODS` before re-importing.
+Manual route (no push): `npm run import:divar-crawl -- data/raw/divar-crawl.json --verbose` (files, `.jsonl`
+or directories; add `--auto-hoods` to register districts).
 
 ## Photos (owner's machine)
 

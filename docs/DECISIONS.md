@@ -147,3 +147,12 @@
   committed with the data), Divar's CDN link as the fallback. No object storage (ArvanCloud / Liara) for now: free,
   no account or key, and the copy shows from anywhere (Divar's CDN answers only Iranian IPs). Revisit storage if the
   set grows to thousands of ads or full galleries.
+- 2026-10-01 — **Automated crawl pipeline, four categories** (owner: "no manual uploads; rent and sale,
+  residential and commercial; more than 200 ads"). The owner's machine runs the crawler every 30 min
+  (`--install-schedule 30`) and pushes sanitized ads to the orphan `divar-data` branch (public repo → no
+  contact data, agency names or business ids); a scheduled GitHub Action (free on public repos) normalizes
+  them into `divar.json` on `main` only if tests and build pass. Unknown districts are auto-registered from
+  their ads' map points (`auto-hoods.json`, strict by default) instead of dropping their ads. Alternatives
+  not taken: pushing raw data to `main` (a deploy per crawl, conflicts with the owner's working copy);
+  normalizing on the laptop (needs Node there, no CI gate).
+

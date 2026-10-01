@@ -73,7 +73,7 @@ describe("crawledToListing", () => {
       const r = crawledToListing(ad);
       return "skip" in r ? r.skip : "";
     };
-    expect(skip({ ...base, category: "residential-sell" })).toMatch(/category/);
+    expect(skip({ ...base, category: "temporary-rent" })).toMatch(/category/);
     expect(skip({ ...base, fields: { متراژ: "۸۵" }, card: {} })).toMatch(/no deposit/);
     expect(skip({ ...base, meta: { category: "office-rent" } })).toBe("commercial");
     expect(skip({ ...base, district: "جای ناشناخته", subtitle: "", title: "آپارتمان", description: "" })).toMatch(/not registered/);
@@ -95,5 +95,34 @@ describe("crawledToListing", () => {
     expect(l).toMatchObject({ neighborhood: "الهیه", street: "خ نمونه", deposit: 0, monthlyRent: 13e6, floor: 2, totalFloors: 5, convertible: false, description: "" });
     expect(l.postedAt).toBe("2026-09-21T13:51:00.000Z");
     expect(l.imageUrl).toBe("https://s100.divarcdn.com/static/photo/b.webp");
+  });
+
+  it("imports sales and commercial ads with their own price model (category from Divar's cat_2)", () => {
+    const sale = listing({
+      ...base,
+      category: "residential-sell",
+      meta: { cat_2: "residential-sell", cat_3: "apartment-sell" },
+      fields: { متراژ: "۱۲۰", اتاق: "۲", "قیمت کل": "\u200f۴,۵۰۰,۰۰۰,۰۰۰ تومان", "قیمت هر متر": "۳۷,۵۰۰,۰۰۰ تومان" },
+      card: { top: "۴,۵۰۰,۰۰۰,۰۰۰ تومان" },
+    });
+    expect(sale).toMatchObject({ category: "residential-sale", price: 4.5e9, deposit: 0, monthlyRent: 0, rooms: 2, convertible: false });
+
+    const office = listing({
+      ...base,
+      title: "دفتر کار اداری ۴۰ متری",
+      category: "commercial-rent",
+      meta: { cat_2: "commercial-rent", cat_3: "office-rent" },
+      fields: { متراژ: "۴۰", اتاق: "۲", ودیعه: "۲۰۰ میلیون", "اجارهٔ ماهانه": "۲۰ میلیون", "ودیعه و اجاره": "قابل تبدیل" },
+    });
+    expect(office).toMatchObject({ category: "commercial-rent", deposit: 200e6, monthlyRent: 20e6, convertible: true });
+    expect(office.rooms).toBeUndefined();
+
+    const shop = crawledToListing({ ...base, category: "commercial-sell", meta: { cat_2: "commercial-sell" }, fields: { متراژ: "۱۲", "قیمت کل": "توافقی" }, card: {} });
+    expect(shop).toEqual({ skip: "price not stated (توافقی…)" });
+  });
+
+  it("ignores the «ودیعه و اجاره» row when looking for the deposit", () => {
+    const l = listing({ ...base, fields: { متراژ: "۸۰", "ودیعه و اجاره": "قابل تبدیل" }, card: { top: "ودیعه: ۳۰۰,۰۰۰,۰۰۰ تومان", middle: "اجاره: ۵,۰۰۰,۰۰۰ تومان" } });
+    expect(l).toMatchObject({ deposit: 300e6, monthlyRent: 5e6, convertible: true });
   });
 });

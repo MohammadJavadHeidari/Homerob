@@ -277,22 +277,32 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     `strict`: matched in a query only as «محله X» / «منطقه X» …, and an LLM pick of one is dropped unless the
     text says so. 166 tests. Checked at 390 and 1440 px, no page errors. `pois.json` not re-baked (Overpass
     down) → new districts show «هنوز اطلاعات کافی…» for nearby places.
+  - Owner request (2026-10-01) — **automated crawl, four categories:** crawler v2 (`--cities`, `--categories`
+    default rent/sale × residential/commercial, keeps paging past known ads → backfill, per-pass caps, lock
+    file, public-safe sanitizing, `--push` to the orphan `divar-data` branch via a `.crawl-data/` worktree,
+    `--install-schedule N` for launchd / cron / Task Scheduler). `.github/workflows/import-divar-crawl.yml`
+    (:10 / :40) imports all shards with `--auto-hoods`, runs tests + build, commits `src/data` to `main`.
+    Importer: categories from Divar's `cat_2`, sale `price` from «قیمت کل», per-category area ranges, no rooms
+    for commercial. `src/lib/import/auto-hoods.ts` + `src/data/auto-hoods.json` (merged into `HOODS`).
+    Tested against a 4-category mock of the live API shape and a local bare remote (crawl → push → shards →
+    import: 40/40). Sale/commercial slugs not seen live yet. 170 tests.
   - Owner decision (2026-10-01) — **photos of real ads:** route 2 (our own copy) with route 1 (Divar's link) as the
     fallback. `python3 scripts/divar_crawler.py --images` (owner's machine; Divar's CDN answers only Iranian IPs) saves
     each served ad's photo to `public/img/divar/<id>.webp` (larger `webp_post` size when ≤ 400 KB, else the
     thumbnail); `npm run link:divar-images` (also run by both importers) sets `Listing.photo`; ids in
     `src/data/hidden-photos.json` lose every photo (e.g. a phone number on the picture). UI: `<ListingPhoto>` tries
     our copy → Divar's link → nothing (the placeholder underneath shows) on «آگهی‌ها» tiles, home rail cards, the
-    results card (new 80/96 px thumbnail) and the ad page's gallery. 169 tests. Checked at 390 and 1440 px with
+    results card (new 80/96 px thumbnail) and the ad page's gallery. 173 tests after merging the crawl pipeline. Checked at 390 and 1440 px with
     temporary local files (not committed): copies load, Divar links fail in the sandbox and fall back, no page
     errors. No-photo tile (owner: the grey «بدون عکس» + broken-image icon looked like an error) → shared
     `<PhotoPlaceholder>`: neutral gradient + the category's icon in a white disc, no text (neighborhood on home
     cards, «عکسی برای این آگهی نیست» on the ad page); also the loading state under every photo; the results card now
-    always has the thumbnail slot. **No photos are committed yet** — 162 of 198 ads have a Divar link, waiting for the owner's `--images` run.
-- **Next:** owner runs `python3 scripts/divar_crawler.py --images` then `npm run link:divar-images` and pushes
-  `public/img/divar/` + `src/data/divar.json` (or uploads the folder); owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs
-  `npm run crawl:divar -- --refetch` (fills descriptions of the 150) and new passes (`--every 30`), uploads
-  `data/raw/divar-crawl.json` → `npm run import:divar-crawl`. Re-bake `pois.json` when Overpass answers.
+    always has the thumbnail slot. **No photos are committed yet** — waiting for the owner's `--images` run (not yet part of the automated pipeline).
+- **Next:** owner runs `python3 scripts/divar_crawler.py --images`, `npm run link:divar-images` and pushes
+  `public/img/divar/` + `src/data/divar.json` (photos); owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs once
+  `python3 scripts/divar_crawler.py --refetch --push` then `--install-schedule 30` (docs/DATA.md); check the
+  first «Import Divar crawl» run in the Actions tab and that Vercel deploys the bot's commit. Re-bake
+  `pois.json` when Overpass answers. Review `src/data/auto-hoods.json` now and then (promote checked names).
   Owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
