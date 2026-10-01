@@ -10,7 +10,9 @@
     "test": "vitest run",
     "import:divar": "tsx scripts/import-divar.ts",
     "import:divar-crawl": "tsx scripts/import-divar-crawl.ts",
-    "crawl:divar": "python3 scripts/divar_crawler.py"
+    "crawl:divar": "python3 scripts/divar_crawler.py",
+    "crawl:divar-images": "python3 scripts/divar_crawler.py --images",
+    "link:divar-images": "tsx scripts/link-divar-images.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

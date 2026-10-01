@@ -45,7 +45,10 @@ export interface Listing {
   description: string;
   /** ISO date-time. */
   postedAt: string;
+  /** The source's own photo (Divar's CDN answers only Iranian IPs); a data URL for ads posted on Torob. */
   imageUrl?: string;
+  /** Our copy of that photo, served from /public (`/img/divar/<id>.webp`) so it shows from anywhere. Tried first. */
+  photo?: string;
   /** Exact map position when the source gives one; otherwise derived inside the neighborhood. */
   lat?: number;
   lng?: number;

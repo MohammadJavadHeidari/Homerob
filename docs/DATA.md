@@ -124,6 +124,25 @@ breaks; `--refetch` re-reads stored ads with the current parser; `--every N` loo
 Manual route (no push): `npm run import:divar-crawl -- data/raw/divar-crawl.json --verbose` (files, `.jsonl`
 or directories; add `--auto-hoods` to register districts).
 
+## Photos (owner's machine)
+
+Each ad keeps Divar's photo link (`imageUrl`, the search card's thumbnail). Divar's CDN, like its API, answers only
+Iranian IPs, so the site serves **its own copy** from `public/img/divar/<id>.webp` and falls back to Divar's link
+(works for viewers in Iran), then to the «بدون عکس» tile.
+
+```bash
+python3 scripts/divar_crawler.py --images     # = npm run crawl:divar-images; downloads only what's missing
+npm run link:divar-images                     # sets `photo` on ads whose file exists
+git add public/img/divar src/data/divar.json  # commit both
+```
+
+- The crawler tries Divar's larger ad-page size (`webp_post`, ≤ 400 KB) first, then the thumbnail; 1–2 s apart.
+- Both importers run the link step too, so a re-import keeps the links.
+- A photo showing a phone number or a person: add the ad id to `src/data/hidden-photos.json` and run
+  `npm run link:divar-images` (drops both our copy and Divar's link). Delete the file from `public/img/divar/`.
+- Frontend: `photoSources()` (`src/lib/photo.ts`) + `<ListingPhoto>` (tries each source, renders nothing if all
+  fail). Plain `<img>`, not `next/image`: Vercel's optimizer can't fetch Divar's CDN either.
+
 ## Format
 
 `divar.json` is an array of `Listing` (`src/lib/types.ts`). Money is **Toman**.

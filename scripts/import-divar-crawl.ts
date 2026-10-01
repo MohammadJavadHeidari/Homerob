@@ -17,6 +17,8 @@ import { crawledToListing, type CrawledAd } from "../src/lib/import/divar-crawl"
 import { HOODS, linkAdjacent, type HoodInfo } from "../src/lib/places";
 import type { Listing } from "../src/lib/types";
 
+import { linkAll } from "./link-divar-images";
+
 const OUT = "src/data/divar.json";
 const AUTO_HOODS = "src/data/auto-hoods.json";
 
@@ -93,7 +95,7 @@ const existing: Listing[] = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8
 const byId = new Map(existing.map((l) => [l.id, l]));
 const before = byId.size;
 for (const l of imported) byId.set(l.id, JSON.parse(JSON.stringify(l)) as Listing); // drops undefined keys
-const all = [...byId.values()].sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+const all = linkAll([...byId.values()].sort((a, b) => b.postedAt.localeCompare(a.postedAt)));
 const out = `${JSON.stringify(all, null, 2)}\n`;
 if (!existsSync(OUT) || readFileSync(OUT, "utf8") !== out) writeFileSync(OUT, out);
 

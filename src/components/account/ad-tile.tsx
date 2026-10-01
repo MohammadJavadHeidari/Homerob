@@ -1,20 +1,12 @@
-import { Building2, House, ImageOff, Store, TentTree } from "lucide-react";
 import Link from "next/link";
 
-import { categoryOf, type CategoryKey } from "@/lib/categories";
+import { ListingPhoto } from "@/components/listing-photo";
+import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { priceLineFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { toFaDigits } from "@/lib/persian";
+import { photoSources } from "@/lib/photo";
 import type { Listing } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const ICON: Record<CategoryKey, typeof House> = {
-  "residential-rent": House,
-  "residential-sale": House,
-  "commercial-rent": Store,
-  "commercial-sale": Store,
-  "short-term": TentTree,
-  projects: Building2,
-};
 
 /**
  * Divar-style ad row: text on the start side, square photo on the end side. Used by «آگهی‌ها», «آگهی‌های من»
@@ -35,9 +27,8 @@ export function AdTile({
   footer?: React.ReactNode;
   className?: string;
 }) {
-  const Icon = ICON[categoryOf(l)];
-  // only photos posted on Torob; real ads' own thumbnails wait for the owner's go-ahead (PLAN: "Show the ad's thumbnail")
-  const photo = image;
+  // a photo posted on Torob, else the real ad's own (our copy, then Divar's CDN)
+  const sources = image ? [image] : photoSources(l);
   return (
     <article className={cn("bg-card flex flex-col rounded-2xl sm:rounded-lg", className)}>
       <Link href={href} className="group flex gap-3 p-3 transition-colors sm:p-4">
@@ -54,19 +45,13 @@ export function AdTile({
             {badge && <span className="bg-brand-soft text-brand-ink rounded px-1.5 py-0.5 text-[11px] font-bold">{badge}</span>}
           </p>
         </div>
-        <div className="bg-muted text-muted-foreground relative grid size-28 shrink-0 place-items-center overflow-hidden rounded-lg sm:size-32">
-          {photo ? (
-            // eslint-disable-next-line @next/next/no-img-element -- local data URL or the ad's own photo
-            <img src={photo} alt="" className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
-          ) : (
-            <span className="flex flex-col items-center gap-1 text-[11px]">
-              <Icon className="size-7 opacity-50" />
-              <span className="flex items-center gap-1 opacity-70">
-                <ImageOff className="size-3" />
-                بدون عکس
-              </span>
-            </span>
-          )}
+        <div className="relative size-28 shrink-0 overflow-hidden rounded-lg sm:size-32">
+          <PhotoPlaceholder listing={l} />
+          {/* covers the placeholder; if every source fails it renders nothing and the placeholder stays */}
+          <ListingPhoto
+            sources={sources}
+            className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
         </div>
       </Link>
       {footer && <div className="border-t px-3 py-2 sm:px-4">{footer}</div>}

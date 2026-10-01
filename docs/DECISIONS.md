@@ -142,6 +142,11 @@
   text / form) and see views, contacts and saves per file. No SMS service (paid) → the code is shown as an on-screen, labeled
   "SMS". No database (2026-09-26 decision) → sessions, posted ads and view events live on the device; posted ads ride along with
   each search request. Stats are real events only. Real ads keep no seller phone; posted ads show the poster's own number.
+- 2026-10-01 — **Real ads show their photo** (owner; answers the open question «عکس آگهی‌های واقعی», option (a)).
+  Our own copy first (`public/img/divar/<id>.webp`, downloaded on the owner's machine by `divar_crawler.py --images`,
+  committed with the data), Divar's CDN link as the fallback. No object storage (ArvanCloud / Liara) for now: free,
+  no account or key, and the copy shows from anywhere (Divar's CDN answers only Iranian IPs). Revisit storage if the
+  set grows to thousands of ads or full galleries.
 - 2026-10-01 — **Automated crawl pipeline, four categories** (owner: "no manual uploads; rent and sale,
   residential and commercial; more than 200 ads"). The owner's machine runs the crawler every 30 min
   (`--install-schedule 30`) and pushes sanitized ads to the orphan `divar-data` branch (public repo → no
