@@ -142,3 +142,6 @@
   text / form) and see views, contacts and saves per file. No SMS service (paid) → the code is shown as an on-screen, labeled
   "SMS". No database (2026-09-26 decision) → sessions, posted ads and view events live on the device; posted ads ride along with
   each search request. Stats are real events only. Real ads keep no seller phone; posted ads show the poster's own number.
+- 2026-10-01 — **Future own brand (post-Torob): "Hashti" (هشتی) rejected** — owner loved it, but it has a vulgar slang
+  meaning in Iran. New naming rule: every candidate is checked for double meanings/jokes and must not be a city or
+  neighborhood name. Finalists: Dalan (دالان) and Sedari (سه‌دری). The demo keeps Torob's identity until the owner picks.
