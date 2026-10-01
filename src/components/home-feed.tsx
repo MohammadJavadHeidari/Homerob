@@ -175,7 +175,7 @@ function RailView({ rail, onOpen, onRun }: { rail: Rail; onOpen: (r: SearchResul
           {rail.subtitle && <p className="text-muted-foreground truncate text-xs">{rail.subtitle}</p>}
         </div>
         {seeAll && (
-          <button type="button" onClick={seeAll} className="flex shrink-0 items-center text-xs font-medium text-sky-700">
+          <button type="button" onClick={seeAll} className="flex shrink-0 items-center text-primary text-xs font-medium">
             نمایش همه
             <ChevronLeft className="size-3.5" />
           </button>

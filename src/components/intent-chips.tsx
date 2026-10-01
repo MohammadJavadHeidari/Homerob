@@ -146,12 +146,13 @@ export function IntentChips({
       {chips.length === 0 ? (
         <p className="text-muted-foreground text-sm">چیز خاصی مشخص نکردی — همهٔ آگهی‌ها رو نشون می‌دم.</p>
       ) : (
-        <ul className="flex flex-wrap gap-2">
+        // phones: one swipeable row (Divar / Torob) instead of a growing block of wrapped chips
+        <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
           {chips.map((chip) => (
-            <li key={chip.id}>
+            <li key={chip.id} className="shrink-0">
               <span
                 className={cn(
-                  "inline-flex h-8 items-center gap-1 rounded-full border ps-3 pe-1 text-sm font-medium",
+                  "inline-flex h-9 items-center gap-1 rounded-full border ps-3 pe-1 text-sm font-medium whitespace-nowrap sm:h-8",
                   TONES[chip.tone],
                 )}
               >
@@ -162,7 +163,7 @@ export function IntentChips({
                     type="button"
                     disabled={disabled}
                     onClick={() => onChange(chip.remove!(intent))}
-                    className="hover:bg-foreground/10 inline-flex size-6 items-center justify-center rounded-full transition-colors disabled:opacity-50"
+                    className="hover:bg-foreground/10 active:bg-foreground/15 inline-flex size-7 items-center justify-center rounded-full transition-colors disabled:opacity-50 sm:size-6"
                     aria-label={`حذف ${chip.label}`}
                   >
                     <X className="size-3.5" />

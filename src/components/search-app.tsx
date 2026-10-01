@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 import { detectPlace } from "@/lib/where";
 
 const COMPARE_MAX = 3;
+/** history.state marker of the results "page" (the app is one route; see the popstate handler). */
+const RESULTS = "results";
 
 type Status = "idle" | "loading" | "done" | "error";
 
@@ -51,7 +53,10 @@ export function SearchApp() {
     const id = ++requestId.current;
     setStatus("loading");
     setCompareIds([]);
-    if (!intent) window.history.replaceState(null, "", `?q=${encodeURIComponent(text)}`);
+    const url = intent ? undefined : `?q=${encodeURIComponent(text)}`;
+    // home → results gets its own history entry, so the phone's back gesture returns home instead of leaving the site
+    if (window.history.state?.homerob !== RESULTS) window.history.pushState({ homerob: RESULTS }, "", url);
+    else if (url) window.history.replaceState(window.history.state, "", url);
 
     try {
       const res = await fetch("/api/search", {
@@ -85,10 +90,34 @@ export function SearchApp() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q) {
+      // a shared link opens on top of the home page, so back lands there
+      if (window.history.state?.homerob !== RESULTS) window.history.replaceState(null, "", "/");
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the input with the URL once on mount
       setQuery(q);
       void run(q);
     }
+  }, [run]);
+
+  // back / forward between the home page and results
+  useEffect(() => {
+    const onPop = () => {
+      const q = new URLSearchParams(window.location.search).get("q");
+      if (window.history.state?.homerob === RESULTS) {
+        if (q) {
+          setQuery(q);
+          void run(q);
+        }
+        return;
+      }
+      requestId.current++;
+      setStatus("idle");
+      setData(null);
+      setQuery("");
+      setCompareIds([]);
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, [run]);
 
   const submit = (q: string) => {
@@ -102,7 +131,8 @@ export function SearchApp() {
     setData(null);
     setQuery("");
     setCompareIds([]);
-    window.history.replaceState(null, "", "/");
+    if (window.history.state?.homerob === RESULTS) window.history.back();
+    else window.history.replaceState(null, "", "/");
   };
 
   const compact = status !== "idle";
@@ -134,22 +164,28 @@ export function SearchApp() {
       {!compact && <HeroMap className="z-0" focus={query.trim().length >= 3 ? guess : undefined} />}
       <div
         className={cn(
-          "relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
+          "relative z-10 mx-auto flex w-full flex-1 flex-col px-4 pt-6 transition-[max-width] duration-500 sm:pt-10",
+          compact ? "gap-4 sm:gap-6" : "gap-6",
           status === "done" && data?.total ? "max-w-7xl" : "max-w-5xl",
-          compareIds.length ? "pb-28" : "pb-16",
+          // phones: room for the floating map pill (and the compare bar above it)
+          compareIds.length ? "pb-40 lg:pb-28" : compact ? "pb-24 lg:pb-16" : "pb-16",
           !compact && "dark text-foreground pt-16 sm:pt-16",
           // phone home: the first screen is logo + search; the feed sheet peeks in below it
-          !compact && phone && "min-h-[72svh] flex-none",
+          !compact && phone && "min-h-[66svh] flex-none",
         )}
       >
         {/* results: torob.com's white header band (full-bleed via shadow + clip-path, no horizontal scroll) */}
         <div
           className={cn(
-            "flex flex-col gap-6",
-            compact && "bg-card -mt-6 pt-6 pb-5 shadow-[0_0_0_100vmax_var(--color-card)] [clip-path:inset(0_-100vmax)] sm:-mt-10 sm:pt-10",
+            "flex flex-col",
+            compact
+              ? "bg-card -mt-6 gap-3 pt-3 pb-3 shadow-[0_0_0_100vmax_var(--color-card)] [clip-path:inset(0_-100vmax)] sm:-mt-10 sm:gap-6 sm:pt-10 sm:pb-5"
+              : "gap-6",
           )}
         >
-          <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-10 text-center sm:pt-20")}>
+          {/* phones, results: logo and search share one row so the listings start higher up */}
+          <div className={compact ? "flex items-center gap-2.5 sm:flex-col sm:items-stretch sm:gap-6" : "contents"}>
+          <header className={cn("flex flex-col gap-3 transition-all", compact ? "items-start" : "items-center pt-2 text-center sm:pt-20")}>
             <button
               type="button"
               onClick={reset}
@@ -160,8 +196,8 @@ export function SearchApp() {
               {compact ? (
                 // torob.com's header: the mark with a 24px/700 «ترب» in the logo red
                 <span className="flex items-center gap-1.5">
-                  <TorobLogo className="size-9" />
-                  <span className="text-2xl font-bold text-(--logo-color-1)">ترب</span>
+                  <TorobLogo className="size-10 sm:size-9" />
+                  <span className="hidden text-2xl font-bold text-(--logo-color-1) sm:inline">ترب</span>
                 </span>
               ) : (
                 // torob.com's home: the 88px mark sits right on top of a 40px bold «ترب» (monochrome in dark).
@@ -179,12 +215,17 @@ export function SearchApp() {
               submit(query);
             }}
             data-hero-block
-            className={cn("flex w-full flex-col gap-2 sm:flex-row sm:gap-0", !compact && "mx-auto max-w-2xl")}
+            className={cn("flex w-full flex-col gap-2 sm:flex-row sm:gap-0", compact ? "min-w-0 flex-1" : "mx-auto max-w-2xl")}
           >
             {/* torob.com's search box: 48px, 8px radius, 1px border, search icon inside at the start; on wider
                 screens the red submit is attached to it (input rounded on the start side, button on the end) */}
             <div className="relative sm:flex-1">
-              <Search className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2" />
+              <Search
+                className={cn(
+                  "text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2",
+                  compact && "max-sm:hidden",
+                )}
+              />
               <input
                 ref={inputRef}
                 value={query}
@@ -192,17 +233,36 @@ export function SearchApp() {
                 placeholder="مثلاً: دوخوابه وکیل‌آباد، ۵۰۰ رهن"
                 className={cn(
                   "border-input focus-visible:border-ring focus-visible:ring-ring/40 h-12 w-full rounded-lg border ps-12 pe-4 text-base outline-none focus-visible:ring-3 sm:rounded-e-none sm:border-e-0",
-                  compact ? "bg-secondary" : "bg-card",
+                  compact ? "bg-secondary max-sm:ps-3.5 max-sm:pe-13" : "bg-card",
                 )}
                 aria-label="چی می‌خوای؟"
                 maxLength={300}
+                enterKeyHint="search"
+                autoComplete="off"
               />
+              {/* phones, results: the submit lives inside the box (thumb-sized), not as a full-width bar */}
+              {compact && (
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  aria-label="جستجو"
+                  className="bg-primary text-primary-foreground absolute end-1.5 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-md transition-transform active:scale-90 disabled:opacity-70 sm:hidden"
+                >
+                  {status === "loading" ? <LoaderCircle className="size-5 animate-spin" /> : <Search className="size-5" />}
+                </button>
+              )}
             </div>
-            <Button type="submit" size="lg" className="h-12 rounded-lg px-6 text-base font-bold sm:rounded-s-none" disabled={status === "loading"}>
+            <Button
+              type="submit"
+              size="lg"
+              className={cn("h-12 rounded-lg px-6 text-base font-bold active:scale-[0.98] sm:rounded-s-none sm:active:scale-100", compact && "max-sm:hidden")}
+              disabled={status === "loading"}
+            >
               {status === "loading" ? <LoaderCircle className="animate-spin" /> : <Search />}
               جستجو
             </Button>
           </form>
+          </div>
           {typing && (
             <PlaceLine
               query={query}
@@ -231,7 +291,7 @@ export function SearchApp() {
         {status === "error" && <ErrorState onRetry={() => run(query)} />}
         {status === "done" && data && (
           <ResultsBoundary key={data.query + JSON.stringify(data.intent)} onRetry={() => run(data.query, data.intent)}>
-            <section className="flex flex-col gap-5">
+            <section className="flex flex-col gap-4 sm:gap-5">
               <CategoryTabs
                 value={data.intent.category ?? DEFAULT_CATEGORY}
                 onChange={(k) => run(data.query, withCategory(data.intent, k))}
@@ -268,7 +328,7 @@ export function SearchApp() {
 
         {status === "done" && data && compareIds.length > 0 && (
           <>
-            <div className="bg-popover fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-md items-center gap-2 rounded-2xl border p-2 ps-4 shadow-lg">
+            <div className="bg-popover fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 mx-auto flex max-w-md items-center gap-2 rounded-2xl border p-2 ps-4 shadow-lg">
               <span className="flex-1 text-sm font-medium">
                 {toFaDigits(compareIds.length)} آگهی انتخاب شده
                 {compareIds.length < 2 && <span className="text-muted-foreground text-xs"> — یکی دیگه انتخاب کن</span>}

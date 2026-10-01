@@ -87,21 +87,9 @@ export function ListingCard({
         </div>
         <div className="flex shrink-0 flex-col items-center gap-2">
           <ScoreBadge score={score} />
-          <SaveButton id={l.id} />
+          <SaveButton id={l.id} className="max-sm:size-10" />
           {onToggleCompare && (
-            <button
-              type="button"
-              onClick={onToggleCompare}
-              disabled={compareDisabled && !comparing}
-              aria-pressed={comparing}
-              className={cn(
-                "flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-40",
-                comparing ? "border-foreground bg-foreground text-background" : "text-muted-foreground hover:border-foreground/40 hover:text-foreground",
-              )}
-            >
-              {comparing ? <Check className="size-3" /> : <GitCompareArrows className="size-3" />}
-              مقایسه
-            </button>
+            <CompareToggle on={comparing} disabled={compareDisabled} onClick={onToggleCompare} className="max-sm:hidden" />
           )}
         </div>
       </div>
@@ -188,16 +176,17 @@ export function ListingCard({
       </div>
 
       {/* neighborhood advantages (lazy: one AI call per opened listing) */}
-      <div className="-mt-1 rounded-xl border border-dashed">
+      <div className="-mt-1 flex items-start gap-2">
+      <div className="min-w-0 flex-1 rounded-xl border border-dashed">
         <button
           type="button"
           onClick={() => setNearbyOpen(!showNearby)}
           aria-expanded={showNearby}
-          className="hover:text-primary flex w-full items-center gap-2 px-3 py-2.5 text-sm font-bold transition-colors"
+          className="hover:text-primary flex min-h-11 w-full items-center gap-2 px-3 py-2.5 text-start text-sm font-bold transition-colors"
         >
-          <MapPinned className="text-primary size-4" />
+          <MapPinned className="text-primary size-4 shrink-0" />
           {category.residential ? "اطراف این خونه چی داره؟" : "اطراف اینجا چی داره؟"}
-          <span className="text-muted-foreground text-xs font-normal">مترو، خرید، درمانگاه…</span>
+          <span className="text-muted-foreground hidden text-xs font-normal sm:inline">مترو، خرید، درمانگاه…</span>
           <ChevronDown className={cn("text-muted-foreground ms-auto size-4 transition-transform", showNearby && "rotate-180")} />
         </button>
         <AnimatePresence initial={false}>
@@ -216,7 +205,31 @@ export function ListingCard({
           )}
         </AnimatePresence>
       </div>
+      {/* phones: compare sits at the bottom of the card, in thumb reach and full height */}
+      {onToggleCompare && (
+        <CompareToggle on={comparing} disabled={compareDisabled} onClick={onToggleCompare} className="h-11 shrink-0 rounded-xl px-3 text-xs sm:hidden" />
+      )}
+      </div>
     </article>
+  );
+}
+
+function CompareToggle({ on, disabled, onClick, className }: { on?: boolean; disabled?: boolean; onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled && !on}
+      aria-pressed={on}
+      className={cn(
+        "flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-[color,background-color,border-color,transform] active:scale-95 disabled:opacity-40",
+        on ? "border-foreground bg-foreground text-background" : "text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+        className,
+      )}
+    >
+      {on ? <Check className="size-3.5" /> : <GitCompareArrows className="size-3.5" />}
+      مقایسه
+    </button>
   );
 }
 

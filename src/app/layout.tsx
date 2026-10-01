@@ -29,6 +29,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // lets env(safe-area-inset-*) work, so the phone bars clear the iPhone home indicator
+  viewportFit: "cover",
   // torob.com's own values
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },

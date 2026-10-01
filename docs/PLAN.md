@@ -221,6 +221,16 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     bare-dot pins; it grows into the tag when the price label shows; pops in after the pin, reduced-motion respected);
     cards and the map's floating card get `new-badge.tsx`. Real data: 22 of 50 ads (پورسینا 4/10, وکیل‌آباد 2/12).
     Checked at 1440 and 390 px, no page errors. Card time stays wall-clock («دیروز» next to «جدید»).
+  - Owner request (2026-10-01) — **mobile-first pass** (project skill `redesign-existing-projects`: scan → audit → fix;
+    brand, font and icons kept per BRAND/DECISIONS). Results page on phones: logo mark + search box share one row with
+    the submit inside the box (the first listing moved from ~560px to ~330px on a 390×664 screen); only filters + sort stay
+    pinned (one slim row; the count scrolls away); list ↔ map is a floating ink pill at the bottom (thumb reach, lifts
+    above the compare bar); intent chips are one swipeable row; card ♥ is 40px and «مقایسه» sits next to «اطراف این خونه…»
+    at the bottom of the card (44px). Phone back gesture: home → results pushes a history entry, so back returns to
+    the home page (shared `?q=` links too) and forward re-runs the search. `viewportFit: cover` (safe-area insets now
+    apply to the bottom nav / pill / compare bar), no tap flash, `enterKeyHint="search"`. Home: less empty space above the
+    logo so the first rail peeks; «نمایش همه» in brand red (was sky blue). Desktop unchanged. Screenshots
+    `docs/screenshots/mobile-first-*.png`. 147 tests.
 - **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,

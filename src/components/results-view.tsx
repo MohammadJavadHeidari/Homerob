@@ -66,6 +66,12 @@ export function ResultsView({
     onRefine(next);
   };
 
+  const toggleMap = () => {
+    setMapPref(!showMap);
+    // small screens: the map replaces the list, bring it into view
+    if (!showMap && !wide) requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("results-map")?.scrollIntoView({ block: "start" })));
+  };
+
   const explain = useExplanations(data, refined.slice(0, EXPLAIN_TOP).map((r) => r.listing.id));
   const selected = refined.find((r) => r.listing.id === selectedId) ?? null;
   const focus = useMemo(
@@ -127,10 +133,10 @@ export function ResultsView({
       </aside>
 
       <div className="flex min-w-0 flex-col gap-4">
-        {/* toolbar */}
-        <div className="bg-background/85 sticky top-0 z-30 -mx-4 flex flex-col gap-3 px-4 py-2 backdrop-blur-md lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-bold">
+        {/* toolbar: the count scrolls away; on phones only filters + sort stay pinned (one slim row).
+            Both are direct children of the list column so the sticky row can stick all the way down. */}
+          <div className="-mb-2 flex flex-wrap items-center justify-between gap-2 lg:-mb-1">
+            <h2 className="text-base font-bold sm:text-lg">
               <AnimatedNumber value={refined.length} /> آگهی
               <span className="text-muted-foreground ms-1.5 text-sm font-normal">
                 {nActive > 0
@@ -138,16 +144,17 @@ export function ResultsView({
                   : `${data.intent.nearMe && !data.intent.neighborhoods.length ? "نزدیک خودت " : ""}با بودجه‌ات جور است`}
               </span>
             </h2>
-            <div className="flex items-center gap-2">
-            <Button variant="outline" className={cn("h-9 rounded-full", showMap && "bg-foreground text-background hover:bg-foreground/90 hover:text-background")} onClick={() => {
-                setMapPref(!showMap);
-                // small screens: the map replaces the list, bring it into view
-                if (!showMap && !wide) requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("results-map")?.scrollIntoView({ block: "start" })));
-              }}>
+            <Button
+              variant="outline"
+              className={cn("hidden h-9 rounded-full lg:inline-flex", showMap && "bg-foreground text-background hover:bg-foreground/90 hover:text-background")}
+              onClick={toggleMap}
+            >
               {showMap && !wide ? <List /> : <MapIcon />}
               {showMap ? (wide ? "بستن نقشه" : "لیست") : "نقشه"}
             </Button>
-            <Button variant="outline" className="relative h-9 rounded-full lg:hidden" onClick={() => setSheetOpen(true)}>
+          </div>
+          <div className="bg-background/90 sticky top-0 z-30 -mx-4 flex items-center gap-2 px-4 py-2 backdrop-blur-md lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+            <Button variant="outline" className="relative h-9 shrink-0 rounded-full active:scale-95 lg:hidden" onClick={() => setSheetOpen(true)}>
               <SlidersHorizontal />
               فیلترها
               <AnimatePresence>
@@ -164,15 +171,14 @@ export function ResultsView({
                 )}
               </AnimatePresence>
             </Button>
-            </div>
+            <span className="bg-border h-5 w-px shrink-0 lg:hidden" aria-hidden />
+            <SortBar value={refine.sort} onChange={(sort) => change({ ...refine, sort })} />
           </div>
-          <SortBar value={refine.sort} onChange={(sort) => change({ ...refine, sort })} />
-        </div>
 
         <ActiveFilters refine={refine} model={model} onChange={change} />
 
         {showMap && !wide ? (
-          <div id="results-map" className="h-[calc(100dvh-8.5rem)] scroll-mt-32 overflow-hidden rounded-2xl">
+          <div id="results-map" className="h-[calc(100dvh-4.5rem)] scroll-mt-14 overflow-hidden rounded-2xl">
             {map}
           </div>
         ) : refined.length === 0 ? (
@@ -247,6 +253,22 @@ export function ResultsView({
         </motion.div>
       )}
 
+      {/* phones/tablets: list ↔ map as a floating pill in thumb reach (Airbnb / Divar), above the compare bar */}
+      <div
+        className={cn(
+          "pointer-events-none fixed inset-x-0 z-40 flex justify-center transition-[bottom] duration-300 lg:hidden",
+          compareIds.length ? "bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))]" : "bottom-[calc(1rem+env(safe-area-inset-bottom,0px))]",
+        )}
+      >
+        <Button
+          onClick={toggleMap}
+          className="bg-foreground text-background hover:bg-foreground/90 pointer-events-auto h-11 gap-2 rounded-full px-5 text-sm font-bold shadow-[0_8px_24px_-6px_rgb(15_23_43/0.45)] active:scale-95"
+        >
+          {showMap ? <List /> : <MapIcon />}
+          {showMap ? "لیست" : "نقشه"}
+        </Button>
+      </div>
+
       {/* mobile bottom sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="bottom" showCloseButton={false} className="max-h-[88dvh] gap-0 rounded-t-2xl lg:hidden">
@@ -310,8 +332,8 @@ function PanelHeader({ count, onClear, onClose }: { count: number; onClear: () =
 function SortBar({ value, onChange }: { value: SortKey; onChange: (s: SortKey) => void }) {
   return (
     <LayoutGroup id="sort">
-      <div className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:px-0">
-        <span className="text-muted-foreground me-1 shrink-0 text-xs">مرتب‌سازی:</span>
+      <div className="-me-4 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto pe-4 [scrollbar-width:none] lg:me-0 lg:pe-0">
+        <span className="text-muted-foreground me-1 hidden shrink-0 text-xs lg:inline">مرتب‌سازی:</span>
         {(Object.keys(SORTS) as SortKey[]).map((k) => {
           const on = k === value;
           return (
@@ -321,7 +343,7 @@ function SortBar({ value, onChange }: { value: SortKey; onChange: (s: SortKey) =
               onClick={() => onChange(k)}
               aria-pressed={on}
               className={cn(
-                "relative shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                "relative shrink-0 rounded-full px-3 py-2 text-xs font-medium transition-colors lg:py-1.5",
                 on ? "text-background" : "text-muted-foreground hover:text-foreground",
               )}
             >

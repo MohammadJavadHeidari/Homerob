@@ -150,6 +150,10 @@ html:root {
   }
   html {
     @apply font-sans;
+    /* phones: keep our own sizes on rotate, and no grey flash on tap (every control has its own press state) */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 /* ---------- map pins (listing-map.tsx) ---------- */
