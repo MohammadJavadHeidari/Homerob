@@ -43,3 +43,6 @@ next-env.d.ts
 
 # raw listing exports (may contain agency/seller names) — only the cleaned output is committed
 /data/raw/
+
+# python
+__pycache__/

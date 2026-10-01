@@ -175,6 +175,12 @@
       "skillPath": "product-team/skills/ui-design-system/SKILL.md",
       "computedHash": "dbbe0acbc9754f84d217d60c76a03b4508307aad3750c7496cee336f8ded79fb"
     },
+    "universal-scraping-architect": {
+      "source": "alirezarezvani/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/universal-scraping-architect/skills/universal-scraping-architect/SKILL.md",
+      "computedHash": "8c90fdb582461cbecb5f7c14235669154efc46a1766249d504af0b0dfad01411"
+    },
     "ux-researcher-designer": {
       "source": "alirezarezvani/claude-skills",
       "sourceType": "github",
