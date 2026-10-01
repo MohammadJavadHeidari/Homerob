@@ -255,6 +255,8 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     - 160 tests (13 new). Checked the full flow in Chromium at 1440 and 390 px (customer sign-in → AI fill → publish → detail →
       «ترب من» → agency sign-in → onboarding → paste 3 rows (1 invalid) → publish → search finds the posted ads → dashboard), no page errors.
       Walkthrough for the demo: `docs/DEMO_SCRIPT.md` § «پنل‌ها».
+    - **PR #34 merged 2026-10-01 → live on Production** (all panel routes 200; `/api/search` ranks an `extra` ad; `/api/parse-ad`
+      on Gemini). Gemini read «۹۰ متری» as 76 m² once → the area written in the text now wins over the LLM's.
   - Owner request (2026-10-01) — **mobile-first pass** (project skill `redesign-existing-projects`: scan → audit → fix;
     brand, font and icons kept per BRAND/DECISIONS). Results page on phones: logo mark + search box share one row with
     the submit inside the box (the first listing moved from ~560px to ~330px on a 390×664 screen); only filters + sort stay
@@ -264,7 +266,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     the home page (shared `?q=` links too) and forward re-runs the search. `viewportFit: cover` (safe-area insets now
     apply to the bottom nav / pill / compare bar), no tap flash, `enterKeyHint="search"`. Home: less empty space above the
     logo so the first rail peeks; «نمایش همه» in brand red (was sky blue). Desktop unchanged. Screenshots
-    `docs/screenshots/mobile-first-*.png`. 147 tests.
+    `docs/screenshots/mobile-first-*.png`. 164 tests (after merging the panels).
 - **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs `python3 scripts/divar_crawler.py` (or `--probe` first) and uploads
   `data/raw/divar-crawl.json` → import it, register the districts it names, re-bake `pois.json`.
   Owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
