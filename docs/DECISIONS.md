@@ -136,3 +136,9 @@
   uploads `data/raw/divar-crawl.json` and `npm run import:divar-crawl` cleans it into `divar.json`. Data stays
   real; nothing is crawled from the sandbox. Built with the `universal-scraping-architect` skill (Mode 2,
   local Python; Firecrawl not used: paid + can't reach Divar).
+- 2026-10-01 — **Customer + agency panels (prototype)** (owner request, for a stakeholder demo; supersedes "no account" for the
+  new panels only, the phone home still works without one). Customers sign in with mobile + one-time code, post ads (photos, AI
+  form fill from pasted text) and browse every ad; agencies sign in, register once, upload files (CSV / cells pasted from Excel /
+  text / form) and see views, contacts and saves per file. No SMS service (paid) → the code is shown as an on-screen, labeled
+  "SMS". No database (2026-09-26 decision) → sessions, posted ads and view events live on the device; posted ads ride along with
+  each search request. Stats are real events only. Real ads keep no seller phone; posted ads show the poster's own number.

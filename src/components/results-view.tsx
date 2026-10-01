@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 
 import { AnimatedNumber, FilterPanel } from "@/components/filter-panel";
 import { ListingCard } from "@/components/listing-card";
+import { isPostedId } from "@/lib/account/ads";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AMENITIES } from "@/lib/amenities";
@@ -431,7 +432,13 @@ function useExplanations(data: SearchApiResponse, topIds: string[]) {
       const ex = await fetch("/api/explain", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: data.query, intent: data.intent, ids: missing }),
+        body: JSON.stringify({
+          query: data.query,
+          intent: data.intent,
+          ids: missing,
+          // ads posted on this device aren't in the server data; send the ones being explained
+          extra: data.results.filter((r) => isPostedId(r.listing.id) && missing.includes(r.listing.id)).map((r) => r.listing),
+        }),
       })
         .then((r) => (r.ok ? (r.json() as Promise<ExplainApiResponse>) : null))
         .catch(() => null);
@@ -444,7 +451,7 @@ function useExplanations(data: SearchApiResponse, topIds: string[]) {
       });
     }, 250);
     return () => clearTimeout(t);
-  }, [key, byId, data.query, data.intent]);
+  }, [key, byId, data.query, data.intent, data.results]);
 
   return { byId, pending };
 }

@@ -1,6 +1,7 @@
 import type { CategoryKey } from "./categories";
 
-export type ListingSource = "divar" | "sheypoor";
+/** "homerob" = posted on Torob itself by a signed-in user or agency (kept on their device in this prototype). */
+export type ListingSource = "divar" | "sheypoor" | "homerob";
 
 /** Canonical neighborhood name (see HOODS in src/lib/places.ts). Unique within a city. */
 export type Neighborhood = string;
