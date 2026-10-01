@@ -50,6 +50,42 @@ Best export for the next batch: the **rent-residential** category of one neighbo
 (`divar.ir/s/mashhad/rent-residential?districts=…`), with each ad page opened so the second table has
 متراژ / ساخت / اتاق / طبقه / features.
 
+## Crawling Divar locally (owner's machine)
+
+Divar answers only Iranian IPs, so the sandbox can't crawl it. `scripts/divar_crawler.py` (Python 3.9+,
+standard library only — nothing to install) runs on the owner's machine and calls the same public JSON API
+divar.ir's web app uses (`/v8/postlist/w/search` newest first, then `/v8/posts-v2/web/<token>` per new ad).
+
+```bash
+python3 scripts/divar_crawler.py                        # one pass: Mashhad, residential rent (= npm run crawl:divar)
+python3 scripts/divar_crawler.py --every 30             # a pass every 30 min until Ctrl+C
+python3 scripts/divar_crawler.py --city tehran --pages 5 --max-new 100
+python3 scripts/divar_crawler.py --probe                # raw answers → data/raw/probe/ (if the parser breaks)
+```
+
+- Output in gitignored `data/raw/`: `divar-crawl.jsonl` (checkpoint, appended per ad; the next pass skips
+  ads already there and stops after two pages with nothing new), `divar-crawl.json` (validated array — the
+  file to upload), `divar-crawl.log`.
+- Polite: robots.txt checked each pass, one request at a time, 3–6 s random pause, backoff on 429/5xx,
+  stops on 403. Defaults cap a pass at 10 pages / 150 new ads.
+- Privacy: never calls the contact endpoint; seller / agency / chat widgets are dropped; phone-like numbers
+  in text are masked.
+- The ad page is read generically (every widget's title/value), so a renamed widget still lands in
+  `fields` / `rows`. Untested against the live API from here (sandbox can't reach it) — on a first run with
+  0 ads or empty `fields`, run `--probe` and send `data/raw/probe/`.
+
+Import the upload:
+
+```bash
+npm run import:divar-crawl -- data/raw/divar-crawl.json --verbose     # .jsonl works too
+```
+
+Rules in `src/lib/import/divar-crawl.ts` (tested), sharing the text rules of the export importer
+(`src/lib/import/divar-text.ts`): residential rent only for now, deposit/rent from the ad's rows (symbolic
+rent = full rahn), متراژ / اتاق / طبقه «۲ از ۴» / ساخت → age, the feature row («پارکینگ ندارد» = false),
+the rent slider = convertible, Divar's map point, «۲ ساعت پیش» → `postedAt`. Skips are printed with a
+reason; «neighborhood not registered (مشهد، X)» names districts to add to `HOODS` before re-importing.
+
 ## Format
 
 `divar.json` is an array of `Listing` (`src/lib/types.ts`). Money is **Toman**.

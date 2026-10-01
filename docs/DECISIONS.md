@@ -130,6 +130,12 @@
   alternative): (1) «دوخوابه مفتح رهن کامل تا ۱.۵ میلیارد», (2) «دوخوابه وکیل‌آباد با ۵۰۰ میلیون رهن»,
   (3) «خونه ویلایی پورسینا رهن ۲۰۰ ماهی ۱۰ تومن» + remove the «پورسینا» chip. Script:
   `docs/DEMO_SCRIPT.md`. Owner asked to merge and update the live site.
+- 2026-10-01 — **Divar crawler on the owner's machine** (owner request: "Torob started with a crawler"; adds
+  to the export route). `scripts/divar_crawler.py` (stdlib Python, Divar's public web JSON API, polite rate,
+  no contact data) runs locally — Divar blocks non-Iranian IPs — on demand or every N minutes; the owner
+  uploads `data/raw/divar-crawl.json` and `npm run import:divar-crawl` cleans it into `divar.json`. Data stays
+  real; nothing is crawled from the sandbox. Built with the `universal-scraping-architect` skill (Mode 2,
+  local Python; Firecrawl not used: paid + can't reach Divar).
 - 2026-10-01 — **Customer + agency panels (prototype)** (owner request, for a stakeholder demo; supersedes "no account" for the
   new panels only, the phone home still works without one). Customers sign in with mobile + one-time code, post ads (photos, AI
   form fill from pasted text) and browse every ad; agencies sign in, register once, upload files (CSV / cells pasted from Excel /

@@ -221,6 +221,13 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     bare-dot pins; it grows into the tag when the price label shows; pops in after the pin, reduced-motion respected);
     cards and the map's floating card get `new-badge.tsx`. Real data: 22 of 50 ads (پورسینا 4/10, وکیل‌آباد 2/12).
     Checked at 1440 and 390 px, no page errors. Card time stays wall-clock («دیروز» next to «جدید»).
+  - Owner request (2026-10-01) — **Divar crawler** (run locally by the owner; the sandbox can't reach Divar):
+    `scripts/divar_crawler.py` (stdlib Python; newest ads of a city + category via Divar's web JSON API, details
+    per new ad, JSONL checkpoint, `--every N` minutes, `--probe`, robots.txt + 3–6 s pauses, no contact data,
+    phones masked) → `data/raw/divar-crawl.json`; `npm run import:divar-crawl` (`src/lib/import/divar-crawl.ts`,
+    tested) → `divar.json`. Export importer's text rules moved to `src/lib/import/divar-text.ts` (shared, no
+    behavior change). Skill `universal-scraping-architect` added to `.claude/skills/`. Tested end to end
+    against a local mock of the API only — **not yet against live Divar**. Docs: `docs/DATA.md`.
   - Owner request (2026-10-01) — **customer panel + agency panel prototype** (for a stakeholder demo on 2026-10-02):
     - **Sign-in** (`src/lib/account/session.ts`, `src/components/account/otp-login.tsx`): Torob/Divar style, mobile → 5-digit code.
       No SMS provider (paid / new account) → the code arrives as an on-screen «پیامک · نمایشی» toast; tap fills it. Separate
@@ -248,7 +255,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     - 160 tests (13 new). Checked the full flow in Chromium at 1440 and 390 px (customer sign-in → AI fill → publish → detail →
       «ترب من» → agency sign-in → onboarding → paste 3 rows (1 invalid) → publish → search finds the posted ads → dashboard), no page errors.
       Walkthrough for the demo: `docs/DEMO_SCRIPT.md` § «پنل‌ها».
-- **Next:** owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
+- **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs `python3 scripts/divar_crawler.py` (or `--probe` first) and uploads
+  `data/raw/divar-crawl.json` → import it, register the districts it names, re-bake `pois.json`.
+  Owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
   re-bake `pois.json` with `scripts/build-nearby.mjs`). Importer for the other five categories (`price` /
