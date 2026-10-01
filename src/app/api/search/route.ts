@@ -6,6 +6,8 @@ import { SearchIntentSchema } from "@/lib/intent/schema";
 import { applyMetroText } from "@/lib/metro";
 import { hoodInfo } from "@/lib/places";
 import { DEFAULT_CATEGORY } from "@/lib/categories";
+import { listings as REAL_LISTINGS } from "@/data/listings";
+import { ExtraListings } from "@/lib/account/listing-schema";
 import { search } from "@/lib/search";
 import { categoryCount, suggest } from "@/lib/search/suggest";
 import { detectPlace } from "@/lib/where";
@@ -20,6 +22,8 @@ const Body = z.object({
     .max(60)
     .optional()
     .transform((n) => (n && hoodInfo(n) ? n : undefined)),
+  /** Ads posted on this device (Torob's own «ثبت آگهی» / agency panel); ranked together with the real ads. */
+  extra: ExtraListings,
 });
 
 export async function POST(request: Request) {
@@ -42,7 +46,8 @@ export async function POST(request: Request) {
     : applyMetroText(fillNeighborhoods(applyPlace(parsed.intent, where), body.data.query), body.data.query);
   // resolvePlace drops "near me" when the query names another city.
   const intent = resolvePlace(!body.data.intent && near && !placed.neighborhoods.length ? { ...placed, nearMe: near } : placed);
-  const { results, total, excluded } = search(intent, undefined, Infinity);
+  const pool = body.data.extra?.length ? [...body.data.extra, ...REAL_LISTINGS] : REAL_LISTINGS;
+  const { results, total, excluded } = search(intent, pool, Infinity);
 
   return Response.json({
     query: body.data.query,

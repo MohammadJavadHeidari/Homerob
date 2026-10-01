@@ -3,7 +3,7 @@
 Time boxes are hard limits. Over budget → cut to simplest demoable version, note it in Status.
 
 ## Status
-- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26; categories — 2026-09-27)
+- **Current phase:** Phase 6 + owner requests (nationwide scale, real data only — 2026-09-26; categories — 2026-09-27; customer + agency panels — 2026-10-01)
 - **Done:**
   - Phase 0 (PR #1 merged, Production green): Next.js 16 + TS + Tailwind v4 + ESLint, shadcn/ui
     (base-nova, RTL), Vazirmatn, `src/lib/persian.ts`, `.env.example`, placeholder home.
@@ -228,7 +228,34 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     tested) → `divar.json`. Export importer's text rules moved to `src/lib/import/divar-text.ts` (shared, no
     behavior change). Skill `universal-scraping-architect` added to `.claude/skills/`. Tested end to end
     against a local mock of the API only — **not yet against live Divar**. Docs: `docs/DATA.md`.
-- **Next:** owner runs `python3 scripts/divar_crawler.py` (or `--probe` first) and uploads
+  - Owner request (2026-10-01) — **customer panel + agency panel prototype** (for a stakeholder demo on 2026-10-02):
+    - **Sign-in** (`src/lib/account/session.ts`, `src/components/account/otp-login.tsx`): Torob/Divar style, mobile → 5-digit code.
+      No SMS provider (paid / new account) → the code arrives as an on-screen «پیامک · نمایشی» toast; tap fills it. Separate
+      customer and agency sessions on one device (switch sides without signing out). Sessions, posted ads and events live in
+      localStorage (`src/lib/account/local-store.ts`), per DECISIONS "no database".
+    - **Landing:** torob.com top bar over the map (آگهی‌ها · پنل املاک … ثبت آگهی · «ورود / ثبت نام»), two entry tiles under the
+      search («آگهی ملکت رو رایگان ثبت کن» → `/new`, «مشاور املاکی؟» → `/agency`); results header got «ورود / ثبت نام» too.
+    - **Customer:** `/new` (Divar field order, photos compressed to JPEG ≤ 960 px, max 4; category-aware price; «متن آگهی رو
+      بچسبون» → `/api/parse-ad` fills the form with the search intent parser, phone numbers stripped), `/my` «ترب من» (my ads with
+      views/contacts, edit/pause/delete; saved; recently viewed via `/api/listings`), `/ads` Divar-style feed of every ad (real +
+      posted) with category/city chips, `/ads/[id]` detail (specs, price, features, «اطلاعات تماس», نشان کردن, nearby places for
+      real ads). Result-card titles now link to the detail page.
+    - **Posted ads are searchable:** the client sends its published ads as `extra` to `/api/search` and `/api/explain`
+      (`src/lib/account/listing-schema.ts`: strict zod, `hr-` ids, invalid entries dropped, no photos/phone). Cards say «ثبت‌شده در ترب».
+    - **Agency** (`/agency`, `src/components/agency/`): pitch + sign-in → one-time profile (name, manager, city, licence) → panel with
+      sidebar. **Upload** (`/agency/upload`): CSV file or cells pasted from Excel (`src/lib/account/import-file.ts`: columns by
+      Persian/English name in any order, «۵۰۰» = ۵۰۰ میلیون, per-row validation, preview, publish valid rows, «اصلاح» opens a row in
+      the form; downloadable header-only template; .xlsx → "save as CSV" hint), pasted ad text (AI), or the single form.
+      **Files** list with numbers + edit/pause/delete. **Dashboard:** KPI tiles (views 7d with week-over-week delta, contacts + rate,
+      saves, shown in results, active files), 14-day views chart (hover tooltip), shown → opened → contacted funnel, per-file table
+      with sparkline, «پیشنهادهای ترب» (rule-based: price vs the real-ad median of the same category/city/neighborhood via
+      `/api/market` when ≥ 5 samples, views without contacts, shown-but-not-opened, no photos).
+    - **Stats are real events** (`src/lib/account/events-store.ts`): impression (posted ad shown in `/ads` or search results, once per
+      page load), view (detail opened), contact, save. Nothing generated; in this prototype they're counted on the device.
+    - 160 tests (13 new). Checked the full flow in Chromium at 1440 and 390 px (customer sign-in → AI fill → publish → detail →
+      «ترب من» → agency sign-in → onboarding → paste 3 rows (1 invalid) → publish → search finds the posted ads → dashboard), no page errors.
+      Walkthrough for the demo: `docs/DEMO_SCRIPT.md` § «پنل‌ها».
+- **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs `python3 scripts/divar_crawler.py` (or `--probe` first) and uploads
   `data/raw/divar-crawl.json` → import it, register the districts it names, re-bake `pois.json`.
   Owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
@@ -261,6 +288,11 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **Preview URLs:** per-branch, behind Vercel login (owner only)
 
 ## Open questions
+- **آمار پنل املاک بین دستگاه‌ها:** الان بازدید/تماس هر آگهی روی همون دستگاهی شمرده می‌شه که آگهی رو باز کرده (دیتابیس نداریم).
+  برای دمو روی یه لپ‌تاپ کافیه. (الف) **پیشنهاد من برای بعد از دمو:** یه دیتابیس رایگان (مثلاً Vercel KV/Upstash) تا آگهی‌ها و آمار بین
+  همه مشترک بشه؛ حساب جدید لازم داره. (ب) همین‌طور روی دستگاه بمونه. تا جواب: روی دستگاه.
+- **عکس آگهی‌های واقعی:** آگهی‌های ثبت‌شده در ترب عکس دارن، ولی آگهی‌های واقعی دیوار بدون عکس نشون داده می‌شن (هنوز تأیید نشده).
+  (الف) **پیشنهاد من:** عکس کوچک آگهی‌های واقعی هم نشون داده بشه؛ «آگهی‌ها» خیلی زنده‌تر می‌شه. (ب) بدون عکس بمونه.
 - **مرز وکیل‌آباد روی نقشه:** مرز «وکیل آباد» در OSM یه محله‌ی دیگه (غرب شهره)، برای همین دایره‌ی خط‌چین نشون می‌دیم.
   مثل طلاب، از دیوار با همون محله‌ی انتخاب‌شده یه اسکرین‌شات به‌همراه لینک صفحه (که `bbox` داره) بفرستید تا مرز دیوار
   کشیده بشه. (هاشمیه، قاسم‌آباد، سجاد و اگه خواستید بقیه‌ی محله‌های دمو هم همین‌طور.) تا جواب: دایره‌ی خط‌چین.
@@ -371,6 +403,9 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [ ] Show the ad's thumbnail (`imageUrl`) on real cards — propose to the owner with the next batch
 - [x] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data
 - [ ] Importer for the other categories (sales, short-term, commercial, projects) from the same exports
+- [x] Customer panel prototype: OTP sign-in, post an ad (photos, AI fill from text), «ترب من», «آگهی‌ها» feed, ad detail (2026-10-01)
+- [x] Agency panel prototype: sign-in + profile, upload files (CSV / Excel paste / text / form), files list, views dashboard (2026-10-01)
+- [x] Landing: top bar with «ورود / ثبت نام» + two entry tiles (post an ad / agency panel) (2026-10-01)
 
 ## Stretch (only if everything above is done)
 - [x] Cross-source duplicate detection (exact-match version, done in Phase 3) (same listing on Divar & Sheypoor merged — very "Torob")
