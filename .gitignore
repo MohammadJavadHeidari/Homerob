@@ -43,6 +43,8 @@ next-env.d.ts
 
 # raw listing exports (may contain agency/seller names) — only the cleaned output is committed
 /data/raw/
+# git worktree of the divar-data branch (scripts/divar_crawler.py --push)
+/.crawl-data/
 
 # python
 __pycache__/

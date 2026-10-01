@@ -142,3 +142,12 @@
   text / form) and see views, contacts and saves per file. No SMS service (paid) → the code is shown as an on-screen, labeled
   "SMS". No database (2026-09-26 decision) → sessions, posted ads and view events live on the device; posted ads ride along with
   each search request. Stats are real events only. Real ads keep no seller phone; posted ads show the poster's own number.
+- 2026-10-01 — **Automated crawl pipeline, four categories** (owner: "no manual uploads; rent and sale,
+  residential and commercial; more than 200 ads"). The owner's machine runs the crawler every 30 min
+  (`--install-schedule 30`) and pushes sanitized ads to the orphan `divar-data` branch (public repo → no
+  contact data, agency names or business ids); a scheduled GitHub Action (free on public repos) normalizes
+  them into `divar.json` on `main` only if tests and build pass. Unknown districts are auto-registered from
+  their ads' map points (`auto-hoods.json`, strict by default) instead of dropping their ads. Alternatives
+  not taken: pushing raw data to `main` (a deploy per crawl, conflicts with the owner's working copy);
+  normalizing on the laptop (needs Node there, no CI gate).
+

@@ -23,6 +23,11 @@ const src = readFileSync(new URL("../src/lib/places.ts", import.meta.url), "utf8
 const hoods = [...src.matchAll(/name: "([^"]+)",\s*city: "([^"]+)",\s*center: \{ lat: ([\d.]+), lng: ([\d.]+) \}/g)].map(
   ([, name, city, lat, lng]) => ({ name, city, lat: +lat, lng: +lng }),
 );
+// …plus the districts the crawl import registered on its own (src/data/auto-hoods.json).
+const autoFile = new URL("../src/data/auto-hoods.json", import.meta.url);
+if (existsSync(autoFile)) {
+  for (const h of JSON.parse(readFileSync(autoFile, "utf8"))) hoods.push({ name: h.name, city: h.city, lat: h.center.lat, lng: h.center.lng });
+}
 if (!hoods.length) throw new Error("no HOODS found in places.ts");
 
 const cities = new Map();

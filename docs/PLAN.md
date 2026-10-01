@@ -277,9 +277,19 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     `strict`: matched in a query only as «محله X» / «منطقه X» …, and an LLM pick of one is dropped unless the
     text says so. 166 tests. Checked at 390 and 1440 px, no page errors. `pois.json` not re-baked (Overpass
     down) → new districts show «هنوز اطلاعات کافی…» for nearby places.
-- **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs
-  `npm run crawl:divar -- --refetch` (fills descriptions of the 150) and new passes (`--every 30`), uploads
-  `data/raw/divar-crawl.json` → `npm run import:divar-crawl`. Re-bake `pois.json` when Overpass answers.
+  - Owner request (2026-10-01) — **automated crawl, four categories:** crawler v2 (`--cities`, `--categories`
+    default rent/sale × residential/commercial, keeps paging past known ads → backfill, per-pass caps, lock
+    file, public-safe sanitizing, `--push` to the orphan `divar-data` branch via a `.crawl-data/` worktree,
+    `--install-schedule N` for launchd / cron / Task Scheduler). `.github/workflows/import-divar-crawl.yml`
+    (:10 / :40) imports all shards with `--auto-hoods`, runs tests + build, commits `src/data` to `main`.
+    Importer: categories from Divar's `cat_2`, sale `price` from «قیمت کل», per-category area ranges, no rooms
+    for commercial. `src/lib/import/auto-hoods.ts` + `src/data/auto-hoods.json` (merged into `HOODS`).
+    Tested against a 4-category mock of the live API shape and a local bare remote (crawl → push → shards →
+    import: 40/40). Sale/commercial slugs not seen live yet. 170 tests.
+- **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs once
+  `python3 scripts/divar_crawler.py --refetch --push` then `--install-schedule 30` (docs/DATA.md); check the
+  first «Import Divar crawl» run in the Actions tab and that Vercel deploys the bot's commit. Re-bake
+  `pois.json` when Overpass answers. Review `src/data/auto-hoods.json` now and then (promote checked names).
   Owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
   `homerob-server`) + credit, `NESHAN_API_KEY` in Vercel (Open questions) → check `/api/nearby?id=dv-ga5qRqkW` on
   Production says `"neshan":"ok"`. More real exports → `npm run import:divar` (+ register new districts in `HOODS`,
