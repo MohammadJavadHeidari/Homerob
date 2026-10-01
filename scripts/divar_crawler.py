@@ -15,6 +15,7 @@ HTML selectors to break. Standard library only — nothing to pip install. Pytho
     python3 scripts/divar_crawler.py --every 30            # repeat every 30 minutes (Ctrl+C stops)
     python3 scripts/divar_crawler.py --city tehran --pages 5 --max-new 100
     python3 scripts/divar_crawler.py --probe               # save raw API answers for debugging
+    python3 scripts/divar_crawler.py --images              # download served ads' thumbnails to public/img/divar/
 
 Output (data/raw/ is gitignored):
     data/raw/divar-crawl.jsonl   working store, one ad per line, appended as each ad is fetched
@@ -53,7 +54,12 @@ SEARCH_PATH = "/v8/postlist/w/search"
 POST_PATH = "/v8/posts-v2/web/{token}"
 CITIES_PATH = "/v8/places/cities"
 
-OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
+ROOT = Path(__file__).resolve().parent.parent
+OUT_DIR = ROOT / "data" / "raw"
+LISTINGS = ROOT / "src" / "data" / "divar.json"
+IMG_DIR = ROOT / "public" / "img" / "divar"
+IMG_DELAY_S = (1.0, 2.0)  # static CDN files: lighter than the API, still one at a time
+IMG_MAX_BYTES = 400_000  # a bigger file falls back to the thumbnail
 STORE = "divar-crawl.jsonl"
 SNAPSHOT = "divar-crawl.json"
 LOG = "divar-crawl.log"
@@ -476,6 +482,66 @@ def refetch() -> None:
     log(f"refetch done: {len(fresh)} refreshed, {len(merged)} stored")
 
 
+def fetch_image(url: str) -> Optional[bytes]:
+    """One image from Divar's CDN with retries. None = gone (404/410) or not an image. Raises Blocked."""
+    headers = {"User-Agent": USER_AGENT, "Accept": "image/webp,image/*", "Referer": "https://divar.ir/"}
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=TIMEOUT_S) as r:
+                if not r.headers.get("Content-Type", "").startswith("image/"):
+                    return None
+                data = r.read(IMG_MAX_BYTES + 1)
+                return data if 0 < len(data) <= IMG_MAX_BYTES else None
+        except urllib.error.HTTPError as e:
+            if e.code in (404, 410):
+                return None
+            if e.code == 403:
+                raise Blocked(f"403 Forbidden on {url} — Divar's CDN refused us")
+            wait = 2 ** attempt * 5 if e.code == 429 else 2 ** attempt
+            log(f"HTTP {e.code} on image (attempt {attempt}/{MAX_RETRIES}); waiting {wait}s", "WARNING")
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            wait = 2 ** attempt
+            log(f"network error on image (attempt {attempt}/{MAX_RETRIES}): {e}; waiting {wait}s", "WARNING")
+        time.sleep(wait)
+    raise Blocked(f"giving up on {url} after {MAX_RETRIES} attempts")
+
+
+def download_images(listings: Path, img_dir: Path) -> None:
+    """Thumbnail of every served ad (src/data/divar.json) → public/img/divar/<id>.webp, so the site shows it
+    from anywhere (Divar's CDN answers only Iranian IPs). Files already there are skipped. Then run
+    `npm run link:divar-images` and commit public/img/divar/ with src/data/divar.json."""
+    ads = json.loads(listings.read_text(encoding="utf-8"))
+    img_dir.mkdir(parents=True, exist_ok=True)
+    todo = [
+        a for a in ads
+        if re.fullmatch(r"dv-[A-Za-z0-9_-]+", a.get("id", ""))
+        and a.get("imageUrl", "").startswith("http")
+        and not (img_dir / f"{a['id']}.webp").exists()
+    ]
+    log(f"images: {len(ads)} ads, {len(todo)} thumbnails to download → {img_dir}")
+    saved = gone = 0
+    try:
+        for n, a in enumerate(todo, 1):
+            url = a["imageUrl"]
+            # the card shows a ~220 px thumbnail; the ad page's size (webp_post) is sharper on the detail page
+            big = url.replace("/webp_thumbnail/", "/webp_post/")
+            data = (fetch_image(big) if big != url else None) or fetch_image(url)
+            if data is None:
+                gone += 1
+            else:
+                tmp = img_dir / f"{a['id']}.webp.tmp"
+                tmp.write_bytes(data)
+                os.replace(tmp, img_dir / f"{a['id']}.webp")
+                saved += 1
+            if n % 25 == 0:
+                log(f"images: {n}/{len(todo)}")
+            if n < len(todo):
+                time.sleep(random.uniform(*IMG_DELAY_S))
+    except Blocked as e:
+        log(f"{e}; re-run later to fetch the rest", "ERROR")
+    log(f"images done: {saved} saved, {gone} gone or not an image. Next: npm run link:divar-images")
+
+
 def probe(city_id: str, category: str) -> None:
     """Save one raw search page and one raw ad, to fix the parser if Divar's answers changed."""
     d = OUT_DIR / "probe"
@@ -495,7 +561,7 @@ def probe(city_id: str, category: str) -> None:
 
 
 def main() -> None:
-    global API, OUT_DIR, DELAY_S
+    global API, OUT_DIR, DELAY_S, IMG_DELAY_S
     ap = argparse.ArgumentParser(description="Crawl newest Divar real-estate ads into data/raw/ (run from Iran).")
     ap.add_argument("--city", default="mashhad", help="Divar city slug or id (default: mashhad)")
     ap.add_argument("--category", default="residential-rent",
@@ -505,17 +571,25 @@ def main() -> None:
     ap.add_argument("--every", type=float, default=0, help="repeat every N minutes (default: run once)")
     ap.add_argument("--probe", action="store_true", help="save one raw search page + ad to data/raw/probe/ and exit")
     ap.add_argument("--refetch", action="store_true", help="re-read every stored ad with the current parser and exit")
+    ap.add_argument("--images", action="store_true",
+                    help="download the thumbnail of every ad in src/data/divar.json to public/img/divar/ and exit")
     # Tests point these at a local mock server and a temp folder.
     ap.add_argument("--api", default=API, help=argparse.SUPPRESS)
     ap.add_argument("--out", default=str(OUT_DIR), help=argparse.SUPPRESS)
     ap.add_argument("--delay", type=float, default=None, help=argparse.SUPPRESS)
+    ap.add_argument("--listings", default=str(LISTINGS), help=argparse.SUPPRESS)
+    ap.add_argument("--img-dir", default=str(IMG_DIR), help=argparse.SUPPRESS)
     args = ap.parse_args()
 
     API = args.api.rstrip("/")
     OUT_DIR = Path(args.out)
     if args.delay is not None:
         DELAY_S = (args.delay, args.delay)
+        IMG_DELAY_S = (args.delay, args.delay)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    if args.images:
+        download_images(Path(args.listings), Path(args.img_dir))
+        return
     category = CATEGORIES.get(args.category, args.category)
     city_id = resolve_city(args.city)
 

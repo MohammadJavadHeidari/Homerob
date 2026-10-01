@@ -4,6 +4,7 @@ import { ArrowRight, BarChart3, Building2, Check, ChevronLeft, ChevronRight, Ima
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ListingPhoto } from "@/components/listing-photo";
 import { NearbyAdvantages } from "@/components/nearby-advantages";
 import { Button } from "@/components/ui/button";
 import { isPostedId, type PostedAd } from "@/lib/account/ads";
@@ -14,6 +15,7 @@ import { formatMobile, useSessions } from "@/lib/account/session";
 import { CATEGORIES, categoryOf } from "@/lib/categories";
 import { ageFa, floorFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import { photoSources } from "@/lib/photo";
 import { toggleSave, markViewed, useTaste } from "@/lib/taste-store";
 import type { Listing } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -58,7 +60,9 @@ function Detail({ listing: l, ad }: { listing: Listing; ad?: PostedAd }) {
   const info = CATEGORIES[categoryOf(l)];
   const mine = ad && sessions[ad.owner]?.phone === ad.ownerPhone;
   const views = useMemo(() => (mine ? events.filter((e) => e.id === l.id && e.type === "view").length : 0), [mine, events, l.id]);
-  const images = ad?.images ?? [];
+  // photos posted on Torob; a real ad has one photo with fallbacks (our copy, then Divar's CDN)
+  const sources = photoSources(l);
+  const photos = ad ? ad.images.map((src) => [src]) : sources.length ? [sources] : [];
 
   const specs: [string, string][] = [
     ["متراژ", `${toFaDigits(l.areaM2)} متر`],
@@ -95,7 +99,7 @@ function Detail({ listing: l, ad }: { listing: Listing; ad?: PostedAd }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         {/* photos (end side on desktop, like Divar) */}
-        <Gallery images={images} className="lg:order-2" />
+        <Gallery photos={photos} className="lg:order-2" />
 
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
@@ -245,28 +249,29 @@ function PriceBlock({ l }: { l: Listing }) {
   );
 }
 
-function Gallery({ images, className }: { images: string[]; className?: string }) {
+/** `photos[i]` = one photo's sources, best first. */
+function Gallery({ photos, className }: { photos: string[][]; className?: string }) {
   const [i, setI] = useState(0);
-  if (!images.length)
-    return (
-      <div className={cn("bg-muted text-muted-foreground grid aspect-[4/3] place-items-center rounded-2xl sm:rounded-lg", className)}>
-        <span className="flex flex-col items-center gap-2 text-sm">
-          <ImageOff className="size-8 opacity-50" />
-          این آگهی عکس نداره
-        </span>
-      </div>
-    );
+  const empty = (
+    <div className={cn("bg-muted text-muted-foreground grid aspect-[4/3] place-items-center rounded-2xl sm:rounded-lg", className)}>
+      <span className="flex flex-col items-center gap-2 text-sm">
+        <ImageOff className="size-8 opacity-50" />
+        این آگهی عکس نداره
+      </span>
+    </div>
+  );
+  if (!photos.length) return empty;
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div className="bg-muted relative aspect-[4/3] overflow-hidden rounded-2xl sm:rounded-lg">
-        {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
-        <img src={images[i]} alt="" className="size-full object-cover" />
-        {images.length > 1 && (
+      <div className="bg-muted text-muted-foreground relative grid aspect-[4/3] place-items-center overflow-hidden rounded-2xl sm:rounded-lg">
+        <ImageOff className="size-8 opacity-50" />
+        <ListingPhoto sources={photos[i]} className="absolute inset-0 size-full object-cover" />
+        {photos.length > 1 && (
           <>
             <button
               type="button"
               aria-label="عکس قبلی"
-              onClick={() => setI((i - 1 + images.length) % images.length)}
+              onClick={() => setI((i - 1 + photos.length) % photos.length)}
               className="bg-card/90 absolute start-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full shadow-xs"
             >
               <ChevronRight className="size-4" />
@@ -274,7 +279,7 @@ function Gallery({ images, className }: { images: string[]; className?: string }
             <button
               type="button"
               aria-label="عکس بعدی"
-              onClick={() => setI((i + 1) % images.length)}
+              onClick={() => setI((i + 1) % photos.length)}
               className="bg-card/90 absolute end-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full shadow-xs"
             >
               <ChevronLeft className="size-4" />
@@ -282,9 +287,9 @@ function Gallery({ images, className }: { images: string[]; className?: string }
           </>
         )}
       </div>
-      {images.length > 1 && (
+      {photos.length > 1 && (
         <div className="flex gap-2">
-          {images.map((src, j) => (
+          {photos.map((sources, j) => (
             <button
               key={j}
               type="button"
@@ -292,8 +297,7 @@ function Gallery({ images, className }: { images: string[]; className?: string }
               aria-label={`عکس ${toFaDigits(j + 1)}`}
               className={cn("size-16 overflow-hidden rounded-md ring-2 ring-transparent", j === i && "ring-foreground")}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
-              <img src={src} alt="" className="size-full object-cover" />
+              <ListingPhoto sources={sources} className="size-full object-cover" />
             </button>
           ))}
         </div>

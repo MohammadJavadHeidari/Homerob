@@ -277,7 +277,17 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     `strict`: matched in a query only as «محله X» / «منطقه X» …, and an LLM pick of one is dropped unless the
     text says so. 166 tests. Checked at 390 and 1440 px, no page errors. `pois.json` not re-baked (Overpass
     down) → new districts show «هنوز اطلاعات کافی…» for nearby places.
-- **Next:** owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs
+  - Owner decision (2026-10-01) — **photos of real ads:** route 2 (our own copy) with route 1 (Divar's link) as the
+    fallback. `python3 scripts/divar_crawler.py --images` (owner's machine; Divar's CDN answers only Iranian IPs) saves
+    each served ad's photo to `public/img/divar/<id>.webp` (larger `webp_post` size when ≤ 400 KB, else the
+    thumbnail); `npm run link:divar-images` (also run by both importers) sets `Listing.photo`; ids in
+    `src/data/hidden-photos.json` lose every photo (e.g. a phone number on the picture). UI: `<ListingPhoto>` tries
+    our copy → Divar's link → nothing (the placeholder underneath shows) on «آگهی‌ها» tiles, home rail cards, the
+    results card (new 80/96 px thumbnail) and the ad page's gallery. 169 tests. Checked at 390 and 1440 px with
+    temporary local files (not committed): copies load, Divar links fail in the sandbox and fall back, no page
+    errors. **No photos are committed yet** — 162 of 198 ads have a Divar link, waiting for the owner's `--images` run.
+- **Next:** owner runs `python3 scripts/divar_crawler.py --images` then `npm run link:divar-images` and pushes
+  `public/img/divar/` + `src/data/divar.json` (or uploads the folder); owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs
   `npm run crawl:divar -- --refetch` (fills descriptions of the 150) and new passes (`--every 30`), uploads
   `data/raw/divar-crawl.json` → `npm run import:divar-crawl`. Re-bake `pois.json` when Overpass answers.
   Owner records the video (`docs/DEMO_SCRIPT.md`). Owner: Neshan ticket (enable Search + Nearby on
@@ -314,8 +324,6 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - **آمار پنل املاک بین دستگاه‌ها:** الان بازدید/تماس هر آگهی روی همون دستگاهی شمرده می‌شه که آگهی رو باز کرده (دیتابیس نداریم).
   برای دمو روی یه لپ‌تاپ کافیه. (الف) **پیشنهاد من برای بعد از دمو:** یه دیتابیس رایگان (مثلاً Vercel KV/Upstash) تا آگهی‌ها و آمار بین
   همه مشترک بشه؛ حساب جدید لازم داره. (ب) همین‌طور روی دستگاه بمونه. تا جواب: روی دستگاه.
-- **عکس آگهی‌های واقعی:** آگهی‌های ثبت‌شده در ترب عکس دارن، ولی آگهی‌های واقعی دیوار بدون عکس نشون داده می‌شن (هنوز تأیید نشده).
-  (الف) **پیشنهاد من:** عکس کوچک آگهی‌های واقعی هم نشون داده بشه؛ «آگهی‌ها» خیلی زنده‌تر می‌شه. (ب) بدون عکس بمونه.
 - **مرز وکیل‌آباد روی نقشه:** مرز «وکیل آباد» در OSM یه محله‌ی دیگه (غرب شهره)، برای همین دایره‌ی خط‌چین نشون می‌دیم.
   مثل طلاب، از دیوار با همون محله‌ی انتخاب‌شده یه اسکرین‌شات به‌همراه لینک صفحه (که `bbox` داره) بفرستید تا مرز دیوار
   کشیده بشه. (هاشمیه، قاسم‌آباد، سجاد و اگه خواستید بقیه‌ی محله‌های دمو هم همین‌طور.) تا جواب: دایره‌ی خط‌چین.
@@ -423,7 +431,7 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
 - [x] Real-data importer (`scripts/import-divar.ts`) + first real batch (13 وکیل‌آباد rentals from the owner's export)
 - [x] Replace the Mashhad sample set — removed (owner chose (b)); only real ads served
 - [ ] More real ads: rent-residential exports for other neighborhoods / cities (owner exports, I import)
-- [ ] Show the ad's thumbnail (`imageUrl`) on real cards — propose to the owner with the next batch
+- [x] Show the ad's photo on real cards (our copy in `public/img/divar/`, Divar's CDN as fallback) (2026-10-01)
 - [x] Revise `docs/DEMO_SCRIPT.md` + README for nationwide scale and real data
 - [ ] Importer for the other categories (sales, short-term, commercial, projects) from the same exports
 - [x] Customer panel prototype: OTP sign-in, post an ad (photos, AI fill from text), «ترب من», «آگهی‌ها» feed, ad detail (2026-10-01)

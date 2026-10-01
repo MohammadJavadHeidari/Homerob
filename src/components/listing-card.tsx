@@ -21,6 +21,7 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { ListingPhoto } from "@/components/listing-photo";
 import { NearbyAdvantages } from "@/components/nearby-advantages";
 import { NewBadge } from "@/components/new-badge";
 import { SaveButton } from "@/components/save-button";
@@ -29,6 +30,7 @@ import type { SearchResult } from "@/lib/api-types";
 import { CATEGORIES, categoryOf, PRICE_LABEL } from "@/lib/categories";
 import { ageFa, floorFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import { photoSources } from "@/lib/photo";
 import { isSharedHousing } from "@/lib/quality";
 import { cn } from "@/lib/utils";
 
@@ -69,7 +71,11 @@ export function ListingCard({
     <article className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl p-4 sm:rounded-lg sm:p-5">
       {/* header */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1.5">
+        {/* the ad's photo (our copy, then Divar's CDN); gone if none loads */}
+        <Link href={`/ads/${l.id}`} tabIndex={-1} aria-hidden className="shrink-0 empty:hidden">
+          <ListingPhoto sources={photoSources(l)} className="bg-muted size-20 rounded-lg object-cover sm:size-24" />
+        </Link>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {rank !== undefined && <span className="text-muted-foreground font-medium">#{toFaDigits(rank)}</span>}
             {result.isNew && <NewBadge />}

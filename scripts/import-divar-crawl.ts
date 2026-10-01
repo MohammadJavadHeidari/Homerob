@@ -10,6 +10,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { crawledToListing, type CrawledAd } from "../src/lib/import/divar-crawl";
 import type { Listing } from "../src/lib/types";
 
+import { linkAll } from "./link-divar-images";
+
 const OUT = "src/data/divar.json";
 
 const args = process.argv.slice(2);
@@ -40,7 +42,7 @@ for (const ad of ads) {
 const existing: Listing[] = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : [];
 const byId = new Map(existing.map((l) => [l.id, l]));
 for (const l of imported) byId.set(l.id, JSON.parse(JSON.stringify(l)) as Listing); // drops undefined keys
-const all = [...byId.values()].sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+const all = linkAll([...byId.values()].sort((a, b) => b.postedAt.localeCompare(a.postedAt)));
 writeFileSync(OUT, `${JSON.stringify(all, null, 2)}\n`);
 
 console.log(`${ads.length} ads read, ${imported.length} imported → ${OUT} (${all.length} total)`);

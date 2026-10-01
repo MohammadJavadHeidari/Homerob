@@ -30,6 +30,8 @@ import { canonicalCity, canonicalNeighborhood, findNeighborhoods } from "../src/
 import { normalizeFa } from "../src/lib/text";
 import type { Listing } from "../src/lib/types";
 
+import { linkAll } from "./link-divar-images";
+
 const OUT = "src/data/divar.json";
 
 // ---------- args ----------
@@ -296,7 +298,7 @@ for (const row of cardsTable.slice(1)) {
 const existing: Listing[] = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : [];
 const byId = new Map(existing.map((l) => [l.id, l]));
 for (const l of imported) byId.set(l.id, JSON.parse(JSON.stringify(l)) as Listing); // drops undefined keys
-const all = [...byId.values()].sort((a, b) => b.postedAt.localeCompare(a.postedAt));
+const all = linkAll([...byId.values()].sort((a, b) => b.postedAt.localeCompare(a.postedAt)));
 writeFileSync(OUT, `${JSON.stringify(all, null, 2)}\n`);
 
 console.log(`${cardsTable.length - 1} ads read, ${imported.length} imported → ${OUT} (${all.length} total)`);

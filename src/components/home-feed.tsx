@@ -4,6 +4,7 @@ import { Building2, ChevronLeft, Heart, History, House, Sparkles, Store, TentTre
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ListingCard } from "@/components/listing-card";
+import { ListingPhoto } from "@/components/listing-photo";
 import { readLastCity } from "@/components/place-hint";
 import { SaveButton } from "@/components/save-button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -14,6 +15,7 @@ import { HERO_EXAMPLES } from "@/lib/demo-queries";
 import type { Feed, Rail, RailItem, Signal } from "@/lib/feed";
 import { roomsFa } from "@/lib/format";
 import { formatToman, toFaDigits } from "@/lib/persian";
+import { photoSources } from "@/lib/photo";
 import type { SortKey } from "@/lib/search/refine";
 import { clearTaste, markViewed, useTaste } from "@/lib/taste-store";
 import { cn } from "@/lib/utils";
@@ -232,10 +234,11 @@ function RailCard({ item, onOpen, className }: { item: RailItem; onOpen: (r: Sea
         className,
       )}
     >
-      {/* no photos in the sample set yet → a quiet tile with the category and the neighborhood */}
+      {/* the ad's photo over a quiet tile with the category and the neighborhood (shown when there's no photo) */}
       <div className="from-muted to-border text-muted-foreground relative flex aspect-[4/3] flex-col items-center justify-center gap-1 bg-gradient-to-br">
         <Icon className="size-7 opacity-60" />
         <span className="text-[11px] font-medium">{l.neighborhood}</span>
+        <ListingPhoto sources={photoSources(l)} className="absolute inset-0 size-full object-cover" />
         <SaveButton id={l.id} variant="overlay" className="absolute top-1.5 start-1.5" />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
