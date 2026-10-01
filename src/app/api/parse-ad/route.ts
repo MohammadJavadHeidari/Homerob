@@ -31,7 +31,8 @@ export async function POST(request: Request) {
 
   const floor = /همکف/.test(text) ? 0 : num(text.match(/طبقه\s*(\d{1,2})/));
   const age = /نوساز|کلید ?نخورده|تازه ساز/.test(text) ? 0 : num(text.match(/(\d{1,2})\s*(?:سال ساخت|ساله|سال سن)/));
-  const area = intent.minArea ?? num(text.match(/(\d{2,4})\s*(?:متر|متری)/));
+  // what the text literally says beats the LLM's reading (Gemini once turned «۹۰ متری» into 76)
+  const area = num(text.match(/(\d{2,4})\s*(?:متر|متری)/)) ?? intent.minArea;
   const rooms = intent.minRooms ?? intent.maxRooms;
   const hood = intent.neighborhoods[0] ?? "";
   const amenities = new Set([...intent.mustHave, ...intent.niceToHave]);
