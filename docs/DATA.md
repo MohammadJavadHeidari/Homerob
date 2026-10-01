@@ -2,14 +2,18 @@
 
 Since 2026-09-26 Homerob uses **real** ads only (see `docs/DECISIONS.md`).
 
-`src/data/divar.json` holds **real** Divar ads, written by the importer below — 50 so far, all Mashhad:
+`src/data/divar.json` holds **real** Divar ads, written by the importers below — 198 so far, all Mashhad:
 
 | export (in gitignored `data/raw/`) | captured | ads | imported |
 |---|---|---|---|
 | `divar-mashhad-vakilabad-2026-09-27.html` | `2026-09-27` | 169 (all real-estate) | 14 |
 | `divar-mashhad-mofatteh-2026-09-27.rtf` | `2026-09-27T22:00` | 45 (rent-residential) | 36 |
+| `divar-crawl-mashhad-2026-10-01.json` (crawler, `import:divar-crawl`) | 2026-10-01 20:09–20:22 | 150 (rent-residential, newest) | 148 |
 
-Rebuild from scratch: delete `divar.json`, then import each export in the order above.
+Rebuild from scratch: delete `divar.json`, then import each export in the order above. The crawl batch registered 62
+Mashhad districts in `HOODS` (centers = median of the batch's exact ad points; `strict` for names that are
+everyday words). `pois.json` was **not** re-baked for them (Overpass 503/504/429 on 2026-10-01) — re-run
+`node scripts/build-nearby.mjs` when it answers.
 `src/data/listings.ts` serves it. The generated sample set was removed on 2026-09-27 (owner). Unit tests
 use hand-written fixtures (`src/test/fixtures.ts`), never served.
 
@@ -61,6 +65,7 @@ python3 scripts/divar_crawler.py                        # one pass: Mashhad, res
 python3 scripts/divar_crawler.py --every 30             # a pass every 30 min until Ctrl+C
 python3 scripts/divar_crawler.py --city tehran --pages 5 --max-new 100
 python3 scripts/divar_crawler.py --probe                # raw answers → data/raw/probe/ (if the parser breaks)
+python3 scripts/divar_crawler.py --refetch              # re-read stored ads with the current parser
 ```
 
 - Output in gitignored `data/raw/`: `divar-crawl.jsonl` (checkpoint, appended per ad; the next pass skips
@@ -70,6 +75,11 @@ python3 scripts/divar_crawler.py --probe                # raw answers → data/r
   stops on 403. Defaults cap a pass at 10 pages / 150 new ads.
 - Privacy: never calls the contact endpoint; seller / agency / chat widgets are dropped; phone-like numbers
   in text are masked.
+- Live shape (first run, 2026-10-01): the location line is an `EXPANDABLE_SECTION` title, «انتشار آگهی» is a
+  description row (→ `published`), deposit/rent of convertible ads live only in the slider (the card's
+  «ودیعه: …» / «اجاره: …» lines are used), the page's image list holds only Divar's map snapshot (the
+  card thumbnail is used). The first batch was crawled before these fixes, so its ads have no description;
+  `--refetch` fills them in.
 - The ad page is read generically (every widget's title/value), so a renamed widget still lands in
   `fields` / `rows`. Untested against the live API from here (sandbox can't reach it) — on a first run with
   0 ads or empty `fields`, run `--probe` and send `data/raw/probe/`.

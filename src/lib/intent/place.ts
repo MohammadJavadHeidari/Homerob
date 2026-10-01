@@ -1,4 +1,4 @@
-import { canonicalNeighborhood, cityName, cityOfHood, findNeighborhoods } from "@/lib/places";
+import { canonicalNeighborhood, cityName, cityOfHood, findNeighborhoods, hoodInfo } from "@/lib/places";
 import type { PlaceGuess } from "@/lib/where";
 
 import type { SearchIntent } from "./schema";
@@ -36,7 +36,11 @@ export function applyPlace(intent: SearchIntent, said: PlaceGuess): SearchIntent
  * notes. When it named none, take the registered neighborhoods the text mentions (within its city).
  */
 export function fillNeighborhoods(intent: SearchIntent, text: string): SearchIntent {
-  if (intent.neighborhoods.length || intent.nearMe) return intent;
   const found = findNeighborhoods(text, intent.city);
+  // A strict name the LLM picked from an everyday word («دانشجوام» → دانشجو) is dropped unless the text
+  // names it as a place («محله دانشجو»).
+  const kept = intent.neighborhoods.filter((n) => !hoodInfo(n, intent.city)?.strict || found.includes(n));
+  if (kept.length !== intent.neighborhoods.length) intent = { ...intent, neighborhoods: kept };
+  if (intent.neighborhoods.length || intent.nearMe) return intent;
   return found.length ? resolvePlace({ ...intent, neighborhoods: found }) : intent;
 }

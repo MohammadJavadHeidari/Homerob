@@ -79,4 +79,21 @@ describe("crawledToListing", () => {
     expect(skip({ ...base, district: "جای ناشناخته", subtitle: "", title: "آپارتمان", description: "" })).toMatch(/not registered/);
     expect(skip({ ...base, fields: { ...base.fields, متراژ: "۸" }, title: "اتاق", description: "" })).toMatch(/area/);
   });
+
+  it("reads the first live crawl's shape (date rows in description, location in rows, card prices)", () => {
+    const l = listing({
+      ...base,
+      subtitle: "",
+      description: "انتشار آگهی: ۳۰ شهریور ۱۴۰۵، ۱۷:۲۱\nآخرین نردبان: ۹ مهر ۱۴۰۵، ۱۸:۲۷",
+      rows: [["EXPANDABLE_SECTION", "هفته پیش در مشهد، الهیه، خ نمونه", ""]],
+      district: "الهیه",
+      fields: { متراژ: "۵۰", اتاق: "۱", ودیعه: "توافقی", "اجارهٔ ماهانه": "\u200f۱۳,۰۰۰,۰۰۰ تومان", "ودیعه و اجاره": "غیر قابل تبدیل", "تعداد کل طبقات ساختمان": "۵", طبقه: "۲" },
+      convertible: true,
+      images: ["https://mapimage.divarcdn.com/v8/mapimage?encrypted_data=x"],
+      card: { top: "ودیعه: رایگان", middle: "اجاره: ۱۳,۰۰۰,۰۰۰ تومان", image: "https://s100.divarcdn.com/static/photo/b.webp" },
+    });
+    expect(l).toMatchObject({ neighborhood: "الهیه", street: "خ نمونه", deposit: 0, monthlyRent: 13e6, floor: 2, totalFloors: 5, convertible: false, description: "" });
+    expect(l.postedAt).toBe("2026-09-21T13:51:00.000Z");
+    expect(l.imageUrl).toBe("https://s100.divarcdn.com/static/photo/b.webp");
+  });
 });

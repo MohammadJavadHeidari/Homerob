@@ -84,6 +84,7 @@ PERSONAL_WIDGET = re.compile(r"CONTACT|CHAT|BUSINESS|AGENCY|SELLER|USER|PROFILE|
 # Iranian mobile / landline numbers in Latin or Persian digits, with optional separators.
 PHONE = re.compile(r"(?:\+98|0098|۰۰۹۸|0|۰)[\s\-]?(?:9|۹)(?:[\s\-]?[0-9۰-۹]){9}|(?:0|۰)(?:[0-9۰-۹]){2}[\s\-]?(?:[0-9۰-۹][\s\-]?){8}")
 TOKEN = re.compile(r"^[A-Za-z0-9_-]{6,12}$")
+WHEN_WHERE = re.compile(r"(?:پیش|دیروز|پریروز|لحظاتی|دقایقی)\s+در\s+\S")
 
 
 # =============================================================================
@@ -269,7 +270,8 @@ def parse_post(token: str, post: dict, card: dict, city_id: str, category: str) 
     features: list[dict] = []
     rows: list[list[str]] = []  # [widget_type, title, value/text] for anything not otherwise captured
     images: list[str] = []
-    description = subtitle = title = ""
+    subtitle = title = published = ""
+    texts: list[str] = []  # every description-like text block, in page order
     lat = lng = None
     exact: Optional[bool] = None
     convertible = False
@@ -284,8 +286,13 @@ def parse_post(token: str, post: dict, card: dict, city_id: str, category: str) 
         if wtype == "LEGEND_TITLE_ROW":
             title = title or text(d.get("title"))
             subtitle = subtitle or text(d.get("subtitle"))
-        elif wtype == "DESCRIPTION_ROW":
-            description = description or text(d.get("text"))
+        elif "DESCRIPTION" in wtype:
+            # Divar renders «انتشار آگهی: ۳۰ شهریور ۱۴۰۵، ۱۷:۲۱» as a description row too.
+            t = text(d.get("text"))
+            if t.startswith("انتشار آگهی") or "آخرین نردبان" in t:
+                published = published or t
+            elif t and t not in texts:
+                texts.append(t)
         elif wtype == "MAP_ROW":
             loc = d.get("location") if isinstance(d.get("location"), dict) else {}
             for kind, is_exact in (("exact_data", True), ("fuzzy_data", False)):
@@ -308,10 +315,13 @@ def parse_post(token: str, post: dict, card: dict, city_id: str, category: str) 
                 fields[t] = mask_phones(v)
         for it in walk(d):
             img = text(it.get("image_url")) or text(it.get("image"))
-            if img.startswith("http") and "divarcdn" in img and img not in images:
+            if img.startswith("http") and "divarcdn" in img and "mapimage" not in img and img not in images:
                 images.append(img)
-        if wtype not in ("LEGEND_TITLE_ROW", "DESCRIPTION_ROW", "MAP_ROW", "BREADCRUMB") and "FEATURE" not in wtype:
+        if wtype not in ("LEGEND_TITLE_ROW", "MAP_ROW", "BREADCRUMB") and not re.search("FEATURE|DESCRIPTION", wtype):
             t, v = text(d.get("title")), text(d.get("value")) or text(d.get("text")) or text(d.get("subtitle"))
+            # The location line («۱ ساعت پیش در مشهد، الهیه، خ …») sits in an EXPANDABLE_SECTION title.
+            if not subtitle and WHEN_WHERE.search(t):
+                subtitle = t
             if (t or v) and [wtype, t, v] not in rows:
                 rows.append([wtype, t, mask_phones(v)])
 
@@ -331,7 +341,8 @@ def parse_post(token: str, post: dict, card: dict, city_id: str, category: str) 
         "subtitle": subtitle,  # "۲ ساعت پیش در مشهد، وکیل‌آباد"
         "city": text(web.get("city_persian")) or card.get("city", ""),
         "district": text(web.get("district_persian")) or card.get("district", ""),
-        "description": mask_phones(description),
+        "description": mask_phones("\n\n".join(texts)),
+        "published": published,  # "انتشار آگهی: ۳۰ شهریور ۱۴۰۵، ۱۷:۲۱\nآخرین نردبان: …"
         "fields": fields,  # {"متراژ": "۸۵", "ساخت": "۱۳۹۵", "اتاق": "دو", "ودیعه": "…", "طبقه": "۲ از ۴", …}
         "features": features,  # [{"title": "آسانسور"}, {"title": "پارکینگ ندارد"}]
         "convertible": convertible,
@@ -437,6 +448,34 @@ def crawl_pass(city_id: str, category: str, pages: int, max_new: int) -> int:
     return new
 
 
+def refetch() -> None:
+    """Re-read every stored ad with the current parser (e.g. after a parser fix). Removed ads are dropped."""
+    ads = load_store()
+    log(f"refetch: {len(ads)} stored ads")
+    robots_allow([POST_PATH.format(token="x")])
+    fresh: dict[str, dict] = {}
+    removed: set[str] = set()
+    try:
+        for n, (token, old) in enumerate(ads.items(), 1):
+            pause()
+            post = http("GET", POST_PATH.format(token=token))
+            if post is None:
+                log(f"{token} was removed from Divar; dropped")
+                removed.add(token)
+                continue
+            fresh[token] = parse_post(token, post, {"token": token, **old.get("card", {})}, old.get("city_id", ""), old.get("category", ""))
+            if n % 25 == 0:
+                log(f"refetch: {n}/{len(ads)}")
+    except Blocked as e:
+        log(f"{e}; ads not refetched keep their old version", "ERROR")
+    merged = {t: fresh.get(t, a) for t, a in ads.items() if t not in removed}
+    tmp = OUT_DIR / (STORE + ".tmp")
+    tmp.write_text("".join(json.dumps(a, ensure_ascii=False) + "\n" for a in merged.values()), encoding="utf-8")
+    os.replace(tmp, OUT_DIR / STORE)
+    write_snapshot(merged)
+    log(f"refetch done: {len(fresh)} refreshed, {len(merged)} stored")
+
+
 def probe(city_id: str, category: str) -> None:
     """Save one raw search page and one raw ad, to fix the parser if Divar's answers changed."""
     d = OUT_DIR / "probe"
@@ -465,6 +504,7 @@ def main() -> None:
     ap.add_argument("--max-new", type=int, default=150, help="max new ads fetched per pass (default 150)")
     ap.add_argument("--every", type=float, default=0, help="repeat every N minutes (default: run once)")
     ap.add_argument("--probe", action="store_true", help="save one raw search page + ad to data/raw/probe/ and exit")
+    ap.add_argument("--refetch", action="store_true", help="re-read every stored ad with the current parser and exit")
     # Tests point these at a local mock server and a temp folder.
     ap.add_argument("--api", default=API, help=argparse.SUPPRESS)
     ap.add_argument("--out", default=str(OUT_DIR), help=argparse.SUPPRESS)
@@ -481,6 +521,9 @@ def main() -> None:
 
     if args.probe:
         probe(city_id, category)
+        return
+    if args.refetch:
+        refetch()
         return
     while True:
         crawl_pass(city_id, category, args.pages, args.max_new)

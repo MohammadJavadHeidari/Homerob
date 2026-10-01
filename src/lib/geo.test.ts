@@ -13,7 +13,7 @@ const search = (i: SearchIntent) => searchAll(i, FIXTURES);
 describe("locate", () => {
   it("finds Mashhad and the nearest neighborhood", () => {
     expect(locate({ lat: 36.335, lng: 59.49 })).toEqual({ city: "مشهد", supported: true, neighborhood: "وکیل‌آباد" });
-    expect(locate({ lat: 36.3, lng: 59.59 }).neighborhood).toBe("احمدآباد");
+    expect(locate({ lat: 36.296, lng: 59.574 }).neighborhood).toBe("احمدآباد");
   });
 
   it("names cities without listings but marks them unsupported", () => {
