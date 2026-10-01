@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowRight, BarChart3, Building2, Check, ChevronLeft, ChevronRight, ImageOff, MapPin, Phone, Share2, Sparkles } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, Check, ChevronLeft, ChevronRight, MapPin, Phone, Share2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ListingPhoto } from "@/components/listing-photo";
 import { NearbyAdvantages } from "@/components/nearby-advantages";
+import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { Button } from "@/components/ui/button";
 import { isPostedId, type PostedAd } from "@/lib/account/ads";
 import { usePostedAds } from "@/lib/account/ads-store";
@@ -99,7 +100,7 @@ function Detail({ listing: l, ad }: { listing: Listing; ad?: PostedAd }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         {/* photos (end side on desktop, like Divar) */}
-        <Gallery photos={photos} className="lg:order-2" />
+        <Gallery listing={l} photos={photos} className="lg:order-2" />
 
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
@@ -249,22 +250,19 @@ function PriceBlock({ l }: { l: Listing }) {
   );
 }
 
-/** `photos[i]` = one photo's sources, best first. */
-function Gallery({ photos, className }: { photos: string[][]; className?: string }) {
+/** `photos[i]` = one photo's sources, best first. No photo (or none loads): the category placeholder. */
+function Gallery({ listing, photos, className }: { listing: Listing; photos: string[][]; className?: string }) {
   const [i, setI] = useState(0);
-  const empty = (
-    <div className={cn("bg-muted text-muted-foreground grid aspect-[4/3] place-items-center rounded-2xl sm:rounded-lg", className)}>
-      <span className="flex flex-col items-center gap-2 text-sm">
-        <ImageOff className="size-8 opacity-50" />
-        این آگهی عکس نداره
-      </span>
-    </div>
-  );
-  if (!photos.length) return empty;
+  if (!photos.length)
+    return (
+      <div className={cn("relative aspect-[4/3] overflow-hidden rounded-2xl sm:rounded-lg", className)}>
+        <PhotoPlaceholder listing={listing} size="lg" label="عکسی برای این آگهی نیست" />
+      </div>
+    );
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div className="bg-muted text-muted-foreground relative grid aspect-[4/3] place-items-center overflow-hidden rounded-2xl sm:rounded-lg">
-        <ImageOff className="size-8 opacity-50" />
+      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl sm:rounded-lg">
+        <PhotoPlaceholder listing={listing} size="lg" />
         <ListingPhoto sources={photos[i]} className="absolute inset-0 size-full object-cover" />
         {photos.length > 1 && (
           <>
@@ -295,9 +293,10 @@ function Gallery({ photos, className }: { photos: string[][]; className?: string
               type="button"
               onClick={() => setI(j)}
               aria-label={`عکس ${toFaDigits(j + 1)}`}
-              className={cn("size-16 overflow-hidden rounded-md ring-2 ring-transparent", j === i && "ring-foreground")}
+              className={cn("relative size-16 overflow-hidden rounded-md ring-2 ring-transparent", j === i && "ring-foreground")}
             >
-              <ListingPhoto sources={sources} className="size-full object-cover" />
+              <PhotoPlaceholder listing={listing} className="[&>span]:size-8 [&_svg]:size-4" />
+              <ListingPhoto sources={sources} className="absolute inset-0 size-full object-cover" />
             </button>
           ))}
         </div>

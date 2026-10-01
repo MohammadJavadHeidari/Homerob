@@ -1,22 +1,12 @@
-import { Building2, House, ImageOff, Store, TentTree } from "lucide-react";
 import Link from "next/link";
 
 import { ListingPhoto } from "@/components/listing-photo";
-import { categoryOf, type CategoryKey } from "@/lib/categories";
+import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { priceLineFa, roomsFa, timeAgoFa } from "@/lib/format";
 import { toFaDigits } from "@/lib/persian";
 import { photoSources } from "@/lib/photo";
 import type { Listing } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const ICON: Record<CategoryKey, typeof House> = {
-  "residential-rent": House,
-  "residential-sale": House,
-  "commercial-rent": Store,
-  "commercial-sale": Store,
-  "short-term": TentTree,
-  projects: Building2,
-};
 
 /**
  * Divar-style ad row: text on the start side, square photo on the end side. Used by «آگهی‌ها», «آگهی‌های من»
@@ -37,7 +27,6 @@ export function AdTile({
   footer?: React.ReactNode;
   className?: string;
 }) {
-  const Icon = ICON[categoryOf(l)];
   // a photo posted on Torob, else the real ad's own (our copy, then Divar's CDN)
   const sources = image ? [image] : photoSources(l);
   return (
@@ -56,15 +45,9 @@ export function AdTile({
             {badge && <span className="bg-brand-soft text-brand-ink rounded px-1.5 py-0.5 text-[11px] font-bold">{badge}</span>}
           </p>
         </div>
-        <div className="bg-muted text-muted-foreground relative grid size-28 shrink-0 place-items-center overflow-hidden rounded-lg sm:size-32">
-          <span className="flex flex-col items-center gap-1 text-[11px]">
-            <Icon className="size-7 opacity-50" />
-            <span className="flex items-center gap-1 opacity-70">
-              <ImageOff className="size-3" />
-              بدون عکس
-            </span>
-          </span>
-          {/* covers the placeholder; if every source fails it renders nothing and the placeholder shows */}
+        <div className="relative size-28 shrink-0 overflow-hidden rounded-lg sm:size-32">
+          <PhotoPlaceholder listing={l} />
+          {/* covers the placeholder; if every source fails it renders nothing and the placeholder stays */}
           <ListingPhoto
             sources={sources}
             className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"

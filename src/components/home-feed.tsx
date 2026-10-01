@@ -1,16 +1,17 @@
 "use client";
 
-import { Building2, ChevronLeft, Heart, History, House, Sparkles, Store, TentTree } from "lucide-react";
+import { ChevronLeft, Heart, History, House, Sparkles } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { ListingCard } from "@/components/listing-card";
 import { ListingPhoto } from "@/components/listing-photo";
+import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { readLastCity } from "@/components/place-hint";
 import { SaveButton } from "@/components/save-button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SearchIntent, SearchResult } from "@/lib/api-types";
-import { CATEGORIES, categoryOf, type CategoryKey } from "@/lib/categories";
+import { CATEGORIES, categoryOf } from "@/lib/categories";
 import { HERO_EXAMPLES } from "@/lib/demo-queries";
 import type { Feed, Rail, RailItem, Signal } from "@/lib/feed";
 import { roomsFa } from "@/lib/format";
@@ -203,15 +204,6 @@ function RailView({ rail, onOpen, onRun }: { rail: Rail; onOpen: (r: SearchResul
   );
 }
 
-const CATEGORY_ICON: Record<CategoryKey, typeof House> = {
-  "residential-rent": House,
-  "residential-sale": House,
-  "commercial-rent": Store,
-  "commercial-sale": Store,
-  "short-term": TentTree,
-  projects: Building2,
-};
-
 const SIGNAL_TONE: Record<Signal["tone"], string> = {
   why: "bg-brand-soft text-brand-ink",
   deal: "bg-success/10 text-success",
@@ -222,7 +214,6 @@ const SIGNAL_TONE: Record<Signal["tone"], string> = {
 function RailCard({ item, onOpen, className }: { item: RailItem; onOpen: (r: SearchResult) => void; className?: string }) {
   const l = item.listing;
   const category = CATEGORIES[categoryOf(l)];
-  const Icon = CATEGORY_ICON[categoryOf(l)];
   return (
     <div
       role="button"
@@ -234,10 +225,9 @@ function RailCard({ item, onOpen, className }: { item: RailItem; onOpen: (r: Sea
         className,
       )}
     >
-      {/* the ad's photo over a quiet tile with the category and the neighborhood (shown when there's no photo) */}
-      <div className="from-muted to-border text-muted-foreground relative flex aspect-[4/3] flex-col items-center justify-center gap-1 bg-gradient-to-br">
-        <Icon className="size-7 opacity-60" />
-        <span className="text-[11px] font-medium">{l.neighborhood}</span>
+      {/* the ad's photo over a calm tile with the category and the neighborhood (shown when there's no photo) */}
+      <div className="relative aspect-[4/3]">
+        <PhotoPlaceholder listing={l} label={l.neighborhood} />
         <ListingPhoto sources={photoSources(l)} className="absolute inset-0 size-full object-cover" />
         <SaveButton id={l.id} variant="overlay" className="absolute top-1.5 start-1.5" />
       </div>

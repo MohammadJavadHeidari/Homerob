@@ -23,6 +23,7 @@ import { useState } from "react";
 
 import { ListingPhoto } from "@/components/listing-photo";
 import { NearbyAdvantages } from "@/components/nearby-advantages";
+import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { NewBadge } from "@/components/new-badge";
 import { SaveButton } from "@/components/save-button";
 import { isPostedId } from "@/lib/account/ads";
@@ -71,9 +72,10 @@ export function ListingCard({
     <article className="bg-card text-card-foreground flex flex-col gap-4 rounded-2xl p-4 sm:rounded-lg sm:p-5">
       {/* header */}
       <div className="flex items-start justify-between gap-3">
-        {/* the ad's photo (our copy, then Divar's CDN); gone if none loads */}
-        <Link href={`/ads/${l.id}`} tabIndex={-1} aria-hidden className="shrink-0 empty:hidden">
-          <ListingPhoto sources={photoSources(l)} className="bg-muted size-20 rounded-lg object-cover sm:size-24" />
+        {/* the ad's photo (our copy, then Divar's CDN) over a calm placeholder */}
+        <Link href={`/ads/${l.id}`} tabIndex={-1} aria-hidden className="relative size-20 shrink-0 overflow-hidden rounded-lg sm:size-24">
+          <PhotoPlaceholder listing={l} />
+          <ListingPhoto sources={photoSources(l)} className="absolute inset-0 size-full object-cover" />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">

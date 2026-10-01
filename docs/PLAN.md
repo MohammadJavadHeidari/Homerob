@@ -285,7 +285,10 @@ Time boxes are hard limits. Over budget → cut to simplest demoable version, no
     our copy → Divar's link → nothing (the placeholder underneath shows) on «آگهی‌ها» tiles, home rail cards, the
     results card (new 80/96 px thumbnail) and the ad page's gallery. 169 tests. Checked at 390 and 1440 px with
     temporary local files (not committed): copies load, Divar links fail in the sandbox and fall back, no page
-    errors. **No photos are committed yet** — 162 of 198 ads have a Divar link, waiting for the owner's `--images` run.
+    errors. No-photo tile (owner: the grey «بدون عکس» + broken-image icon looked like an error) → shared
+    `<PhotoPlaceholder>`: neutral gradient + the category's icon in a white disc, no text (neighborhood on home
+    cards, «عکسی برای این آگهی نیست» on the ad page); also the loading state under every photo; the results card now
+    always has the thumbnail slot. **No photos are committed yet** — 162 of 198 ads have a Divar link, waiting for the owner's `--images` run.
 - **Next:** owner runs `python3 scripts/divar_crawler.py --images` then `npm run link:divar-images` and pushes
   `public/img/divar/` + `src/data/divar.json` (or uploads the folder); owner presents the panels (`docs/DEMO_SCRIPT.md` § «پنل‌ها»); owner runs
   `npm run crawl:divar -- --refetch` (fills descriptions of the 150) and new passes (`--every 30`), uploads
